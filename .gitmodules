@@ -4,3 +4,6 @@
 [submodule "cavorite"]
 	path = cavorite
 	url = https://github.com/mlockett42/cavorite.git
+[submodule "pypyjs-release"]
+	path = pypyjs-release
+	url = https://github.com/pypyjs/pypyjs-release.git
