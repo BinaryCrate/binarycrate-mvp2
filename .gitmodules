@@ -1,0 +1,3 @@
+[submodule "historygraph"]
+	path = historygraph
+	url = https://github.com/mlockett42/historygraph.git
