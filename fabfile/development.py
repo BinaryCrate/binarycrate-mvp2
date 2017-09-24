@@ -39,7 +39,7 @@ def migrate():
 def test():
     print(yellow('Running docker process...'))
     with lcd('.'):
-        local('docker run --tty --interactive --volume "${PWD}":/opt/project --publish=8000:8000 "${PWD##*/}" test')
+        local('docker run --tty --interactive --volume "${PWD}":/opt/project --entrypoint="pytest" --publish=8000:8000 "${PWD##*/}"')
 
 @task
 def makemigrations():
