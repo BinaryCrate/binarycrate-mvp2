@@ -18,7 +18,7 @@ def build():
 def runserver():
     print(yellow('Running docker process...'))
     with lcd('.'):
-        local('docker run --tty --interactive --volume "${PWD}":/opt/project --publish=8000:8000 "${PWD##*/}" runserver')
+        local('docker run --tty --interactive --volume "${PWD}":/opt/project --publish=8000:8000 "${PWD##*/}" runserver 0.0.0.0:8000')
 
 
 @task
