@@ -20,7 +20,8 @@ RUN apt-get update --quiet --yes && apt-get install --quiet --yes --force-yes ca
     python3-pip \
     python3-setuptools \
     curl \
-    unzip
+    unzip \
+    git
 
 # Install required packages
 ADD requirements.txt /root/requirements.txt
