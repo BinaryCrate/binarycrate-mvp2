@@ -36,6 +36,12 @@ def migrate():
         local('docker run --tty --interactive --volume "${PWD}":/opt/project --publish=8000:8000 "${PWD##*/}" migrate')
 
 @task
+def makemigrations():
+    print(yellow('Running docker process...'))
+    with lcd('.'):
+        local('docker run --tty --interactive --volume "${PWD}":/opt/project --publish=8000:8000 "${PWD##*/}" makemigrations')
+
+@task
 def bash():
     print(yellow('Running docker process...'))
     with lcd('.'):
