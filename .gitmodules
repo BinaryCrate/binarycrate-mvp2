@@ -10,3 +10,4 @@
 [submodule "lettuce"]
 	path = lettuce
 	url = https://github.com/mlockett42/lettuce.git
+	branch = development-python3
