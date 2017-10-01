@@ -6,5 +6,5 @@ Feature: Cannot use the site if not logged in
   Scenario: Browse to root page
     Given I browse to "http://webserve/"
     When I wait for the browser to render the page
-    Then I the browsers URL is "http://webserve/account/login"
+    Then I the browsers URL is "http://webserver:8000/accounts/login/?next=/"
 
