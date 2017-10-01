@@ -1,5 +1,13 @@
 django==1.11.5
 django-allauth==0.32.0
 pytest-django==3.1.2
+#git+https://github.com/gabrielfalcao/lettuce.git@6d68a72e3b89f6f05d7805845b61cd15be3ac6ce
+
+# Requirements for lettuce
+six==1.11.0
+fuzzywuzzy==0.3.3
+python-subunit==1.2.0
+sure==1.2.24
+
 
 

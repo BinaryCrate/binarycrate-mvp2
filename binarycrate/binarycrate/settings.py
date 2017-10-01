@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
 
+    'lettuce.django',
+
     'accounts',
     'landingpage',
 ]
@@ -140,4 +142,8 @@ AUTHENTICATION_BACKENDS = (
 )
 
 SITE_ID = 1
+
+#Lettuce configuration
+LETTUCE_USE_TEST_DATABASE = True
+
 

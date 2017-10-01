@@ -20,7 +20,8 @@ RUN apt-get update --quiet --yes && apt-get install --quiet --yes --force-yes ca
     python3-pip \
     python3-setuptools \
     curl \
-    unzip
+    unzip \
+    git
 
 # Install required packages
 ADD requirements.txt /root/requirements.txt
@@ -37,6 +38,10 @@ RUN curl -SLO "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION
   && echo "$CHROMEDRIVER_SHA256  chromedriver_linux64.zip" | sha256sum -c - \
   && unzip "chromedriver_linux64.zip" -d /usr/local/bin \
   && rm "chromedriver_linux64.zip"
+
+ENV last_update_to_lettuce 20170929
+
+RUN ln -s /opt/project/lettuce/lettuce /usr/local/lib/python3.5/dist-packages/lettuce
 
 # Configure environment
 ENV PYTHONDONTWRITEBYTECODE 1
