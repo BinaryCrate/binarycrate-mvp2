@@ -8,6 +8,7 @@ six==1.11.0
 fuzzywuzzy==0.3.3
 python-subunit==1.2.0
 sure==1.2.24
+factory-boy==2.8.1
 
 
 
