@@ -145,4 +145,5 @@ SITE_ID = 1
 #Lettuce configuration
 LETTUCE_USE_TEST_DATABASE = True
 
+ACCOUNT_USER_MODEL_USERNAME_FIELD = 'email'
 
