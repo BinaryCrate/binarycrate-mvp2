@@ -24,7 +24,7 @@ def runserver():
 
 @task
 def harvest():
-    run(command='harvest')
+    run(command='harvest -a landingpage --verbosity=3')
 
 @task
 def run(**kwargs):

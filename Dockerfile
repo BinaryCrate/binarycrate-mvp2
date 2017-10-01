@@ -39,6 +39,10 @@ RUN curl -SLO "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION
   && unzip "chromedriver_linux64.zip" -d /usr/local/bin \
   && rm "chromedriver_linux64.zip"
 
+ENV last_update_to_lettuce 20170929
+
+RUN ln -s /opt/project/lettuce/lettuce /usr/local/lib/python3.5/dist-packages/lettuce
+
 # Configure environment
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONWARNINGS d
