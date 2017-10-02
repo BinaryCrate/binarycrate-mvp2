@@ -131,6 +131,7 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     #os.path.join(BASE_DIR, 'static'),
     '/opt/project/pypyjs-release',
+    '/opt/project/front-end',
 ]
 
 STATICFILES_FINDERS = [

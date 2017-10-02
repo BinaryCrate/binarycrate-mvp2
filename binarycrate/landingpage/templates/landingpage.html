@@ -85,7 +85,7 @@ $(function () {
         pypyjs.stdout.reset();
 
         pypyjs.stdout("load 'binary_crate.py'...");
-        $.get( "binary_crate.py", function( data ) {
+        $.get( "static/front-end/binary_crate.py", function( data ) {
             console_exec( data );
         }).done(function() {
             pypyjs.stdout("OK\n");
