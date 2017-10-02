@@ -21,7 +21,8 @@ RUN apt-get update --quiet --yes && apt-get install --quiet --yes --force-yes ca
     python3-setuptools \
     curl \
     unzip \
-    git
+    git \
+    python
 
 # Install required packages
 ADD requirements.txt /root/requirements.txt
@@ -42,6 +43,7 @@ RUN curl -SLO "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION
 ENV last_update_to_lettuce 20170929
 
 RUN ln -s /opt/project/lettuce/lettuce /usr/local/lib/python3.5/dist-packages/lettuce
+#RUN python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py add /opt/project/pypyjs-release/pypyjs-release/lib/modules/ /opt/project/cavorite/cavorite/
 
 # Configure environment
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -51,5 +53,6 @@ ENV PYTHONWARNINGS d
 # Also need
 EXPOSE 8000
 WORKDIR /opt/project/binarycrate
-ENTRYPOINT ["python3", "/opt/project/binarycrate/manage.py"]
+#ENTRYPOINT ["python3", "/opt/project/binarycrate/manage.py"]
+ENTRYPOINT ["/opt/project/run-django"]
 CMD ["check"]
