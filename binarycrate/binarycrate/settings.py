@@ -42,10 +42,13 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
 
+    'mptt',
+
     'lettuce.django',
 
     'accounts',
     'landingpage',
+    'project',
 ]
 
 MIDDLEWARE = [

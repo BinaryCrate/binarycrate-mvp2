@@ -2,6 +2,7 @@ django==1.11.5
 django-allauth==0.32.0
 pytest-django==3.1.2
 #git+https://github.com/gabrielfalcao/lettuce.git@6d68a72e3b89f6f05d7805845b61cd15be3ac6ce
+django-mptt==0.8.7
 
 # General requirements for testing
 selenium==3.5.0
