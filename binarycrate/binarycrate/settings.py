@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'mptt',
 
     'lettuce.django',
+    'behave_django',
 
     'accounts',
     'landingpage',

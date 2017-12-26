@@ -21,7 +21,7 @@ RUN apt-get update --quiet --yes && apt-get install --quiet --yes --force-yes ca
     python3-setuptools \
     curl \
     unzip \
-    git \
+    git \ 
     python
 
 # Install required packages
