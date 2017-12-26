@@ -1,6 +1,6 @@
 [submodule "historygraph"]
 	path = historygraph
-	url = https://github.com/mlockett42/historygraph.git
+	url = https://github.com/BinaryCrate/historygraph.git
 [submodule "cavorite"]
 	path = cavorite
 	url = https://github.com/mlockett42/cavorite.git
