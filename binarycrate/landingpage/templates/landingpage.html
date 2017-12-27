@@ -68,29 +68,32 @@ function console_exec(code) {
 $(function () {
     out = $("#output");
     pypyjs.stdout = pypyjs.stderr = function(data) {
-        out.append(data);
-        out.scrollTop(out.prop("scrollHeight")); // scoll down
+        console.log(data);
     }
     pypyjs.stdout.reset = pypyjs.stderr.reset = function(data) {
-        out.empty();
     }
 
+    function status_printout(data) {
+        out.append(data);
+        out.scrollTop(out.prop("scrollHeight")); // scoll down
+    };
+
     // Display a helpful message and twiddle thumbs as it loads.
-    pypyjs.stdout("Loading PyPy.js.\n\n");
-    pypyjs.stdout('It\'s big, so this might take a while...');
+    status_printout("Loading PyPy.js.\n\n");
+    status_printout('It\'s big, so this might take a while...');
     var pseudo_status = setInterval(function(){ pypyjs.stdout("."); }, 500);
 
     pypyjs.ready().then(function() {
         clearInterval(pseudo_status);
         pypyjs.stdout.reset();
 
-        pypyjs.stdout("load 'binary_crate.py'...");
-        $.get( "static/front-end/binary_crate.py", function( data ) {
+        pypyjs.stdout("load 'bootbc.py'...");
+        $.get( "static/front-end/bootbc.py", function( data ) {
             console_exec( data );
         }).done(function() {
-            pypyjs.stdout("OK\n");
+            status_printout("OK\n");
         }).fail(function() {
-            pypyjs.stderr("error!");
+            status_printout("error!");
         });
     });
 });
