@@ -16,9 +16,9 @@ ENV last_update 20170911
 # Install required packages
 
 RUN apt-get update --quiet --yes && apt-get install --quiet --yes --force-yes ca-certificates \
-    python3-dev \
-    python3-pip \
-    python3-setuptools \
+    python-dev \
+    python-pip \
+    python-setuptools \
     curl \
     unzip \
     git \ 
@@ -26,9 +26,9 @@ RUN apt-get update --quiet --yes && apt-get install --quiet --yes --force-yes ca
 
 # Install required packages
 ADD requirements.txt /root/requirements.txt
-RUN pip3 install --upgrade pip 
-RUN pip3 install --upgrade setuptools urllib3[secure]
-RUN pip3 install -r /root/requirements.txt
+RUN pip install --upgrade pip 
+RUN pip install --upgrade setuptools urllib3[secure]
+RUN pip install -r /root/requirements.txt
 
 # These are stored in https://chromedriver.storage.googleapis.com/index.html
 # from time to time they will need to be updated
@@ -48,6 +48,5 @@ ENV PYTHONWARNINGS d
 # Also need
 EXPOSE 8000
 WORKDIR /opt/project/binarycrate
-#ENTRYPOINT ["python3", "/opt/project/binarycrate/manage.py"]
 ENTRYPOINT ["/opt/project/run-django"]
 CMD ["check"]

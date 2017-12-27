@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, unicode_literals
+
 """binarycrate URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
