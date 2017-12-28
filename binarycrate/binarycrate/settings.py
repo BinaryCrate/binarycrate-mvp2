@@ -138,6 +138,7 @@ STATICFILES_DIRS = [
     #os.path.join(BASE_DIR, 'static'),
     '/opt/project/pypyjs-release',
     '/opt/project/front-end',
+    '/opt/project/binarycrate/static',
 ]
 
 STATICFILES_FINDERS = [

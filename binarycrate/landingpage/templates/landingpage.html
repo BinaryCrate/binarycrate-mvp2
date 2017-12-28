@@ -1,8 +1,18 @@
 <html>
 <head>
-    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
-    <meta charset="utf-8">
-    <title>PyPy.js - Cavorite Demo</title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <title>Binary Crate - Learn, Code, Share</title>
+  <!-- Bootstrap core CSS-->
+  <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom fonts for this template-->
+  <link href="static/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+  <!-- Custom styles for this template-->
+  <link href="static/css/sb-admin.css" type="text/css" rel="stylesheet">
+  <link href="static/css/bc-custom.css" type="text/css" rel="stylesheet">
     <style>
     pre {
         width: 90%;
@@ -21,35 +31,26 @@
     }
     .parentdiv {
     }
-    .previewdiv {
-        border: 1px solid green;
-        float: left;
-    }
     </style>
+
+    <!-- Bootstrap core JavaScript-->
+    <script src="static/jquery/jquery.min.js"></script>
+    <script src="static/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- Core plugin JavaScript-->
+    <script src="static/jquery-easing/jquery.easing.min.js"></script>
+    <!-- Custom scripts for all pages-->
+    <script src="static/js/sb-admin.min.js"></script>
 </head>
-<body>
-    <h1>PyPy.js - Cavorite Demo</h1>
-    <p>
-        Demonstrate cavorite with <a href="http://pypyjs.org">PyPy.js</a>
-    </p>
-    <noscript><h3>Please enable JavaScript for using PyPy.js</h3></noscript>
-    <div class="previewdiv"  style="width: 400; height: 400;">
-    </div>
+<body class="fixed-nav sticky-footer bg-dark" id="page-top">
+<div>
+    <h1>Binary Crate</h1>
+    <noscript><h3>Please enable JavaScript for using Binary Create</h3></noscript>
     <pre id="output"></pre>
     <hr />
-    <p>
-        PyPy.js is an experiment in building a fast and compliant python environment for the web.
-    <br/>
-        It uses the <a href="http://pypy.org/">PyPy</a> python interpreter, compiled for the web via
-        <a href="http://emscripten.org">emscripten</a>, with a custom JIT backend that emits <a href="http://asmjs.org">asm.js</a>
-        code at runtime.
-    </p>
 </div>
 <script src="static/pypyjs-release/lib/Promise.min.js" type="text/javascript" charset="utf-8" onerror="JavaScript:alert('Error loading file ['+this.src+'] !');"></script>
 <script src="static/pypyjs-release/lib/FunctionPromise.js" type="text/javascript" charset="utf-8" onerror="JavaScript:alert('Error loading file ['+this.src+'] !');"></script>
 <script src="static/pypyjs-release/lib/pypyjs.js" type="text/javascript" charset="utf-8" onerror="JavaScript:alert('Error loading file ['+this.src+'] !');"></script>
-<script src="https://code.jquery.com/jquery-1.11.3.min.js" onerror="JavaScript:alert('Error loading file ['+this.src+'] !');"></script>
-<script src="https://code.jquery.com/jquery-migrate-1.2.1.min.js" onerror="JavaScript:alert('Error loading file ['+this.src+'] !');"></script>
 <script type="text/javascript" charset="utf-8">
 try {
     jQuery(document);
