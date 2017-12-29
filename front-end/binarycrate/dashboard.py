@@ -1,18 +1,16 @@
 from __future__ import absolute_import, print_function
 from cavorite import c, t, Router
 
-class NavItem(c):
-    def __init__(self, title, icon_class, href):
-        super(NavItem, self).__init__("li", {'class':"nav-item", 'data-toggle':"tooltip", 'data-placement':"right", 'title':title}, [
+def navitem(title, icon_class, href):
+    return c("li", {'class':"nav-item", 'data-toggle':"tooltip", 'data-placement':"right", 'title':title}, [
             c("a", {'class': "nav-link", 'href': href}, [
                   c("i", {'class': "fa fa-fw " + icon_class}),
                     c("span", {'class': "nav-link-text"}, title),
                   ]),
             ])
 
-class ProjectDropdownItem(c):
-    def __init__(self, title, data_target):    
-        super(ProjectDropdownItem, self).__init__("li", {'data-toggle':"modal", 'data-target':data_target}, [c("a", {'href': '#'}, title)])
+def projectdropdownitem(title, data_target):
+    return c("li", {'data-toggle':"modal", 'data-target':data_target}, [c("a", {'href': '#'}, title)])
 
 
 projects = ['Pong Game', 'Resume Website', 'Twitter Clone', 'Website', 'Python Functions', 'Space Invaders']
@@ -28,9 +26,9 @@ class Project(c):
               c("div", {'class': 'dropdown'}, [
                 c("li", {'class': "fa fa-pencil fa-lg edit", 'id': "menu1", 'data-toggle': "dropdown"}, [
                   c("ul", {'class': "dropdown-menu", 'role': "menu", 'aria-labelledby':"menu1"}, [
-                    ProjectDropdownItem('Rename', "#renameProj"),
-                    ProjectDropdownItem('Share', "#shareProj"),
-                    ProjectDropdownItem('Delete', "#deleteProj"),
+                    projectdropdownitem('Rename', "#renameProj"),
+                    projectdropdownitem('Share', "#shareProj"),
+                    projectdropdownitem('Delete', "#deleteProj"),
                   ]),
                 ]),
               ]),
@@ -39,14 +37,8 @@ class Project(c):
           ]),
         ])
 
-class Projects(c):
-    def __init__(self):
-        super(Projects, self).__init__("div", {'class': 'row'})
-
-    def get_children(self):
-        global projects
-        return [Project(projname) for projname in projects]
-             
+def projectsfn():
+    return [Project(projname) for projname in projects]     
 
 dashboard_view = \
               c("div", [ 
@@ -63,9 +55,9 @@ dashboard_view = \
                   ]),
                   c("div", {'class':"collapse navbar-collapse", 'id':"navbarResponsive"}, [
                     c("ul", {'class':"navbar-nav navbar-sidenav", 'id':"exampleAccordion"}, [
-                      NavItem('Dashboard', 'fa-dashboard', '#!'),
-                      NavItem('Editor', 'fa-area-chart', '#!editor'),
-                      NavItem('Classrom', 'fa-table', '#!classroom'),
+                      navitem('Dashboard', 'fa-dashboard', '#!'),
+                      navitem('Editor', 'fa-area-chart', '#!editor'),
+                      navitem('Classrom', 'fa-table', '#!classroom'),
                     ]),
                     c("ul", {'class': 'navbar-nav mr-auto'}, [
                       c("li", {'class': 'nav-item'}, [
@@ -85,7 +77,7 @@ dashboard_view = \
                   ]),
                 ]),
                 c("div", {'class': "content-wrapper"}, [c("div", {'class': "container-fluid"}, [
-                  Projects(),
+                  c("div", {'class': 'row'}, children=projectsfn),
                 ])]),
                 c("footer", {'class': "sticky-footer"}, [
                   c("div", {'class':"container"}, [
