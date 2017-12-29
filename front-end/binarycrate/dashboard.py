@@ -1,13 +1,14 @@
 from __future__ import absolute_import, print_function
 from cavorite import c, t, Router
+from cavorite.HTML import *
 
 def navitem(title, icon_class, href):
-    return c("li", {'class':"nav-item", 'data-toggle':"tooltip", 'data-placement':"right", 'title':title}, [
-            c("a", {'class': "nav-link", 'href': href}, [
-                  c("i", {'class': "fa fa-fw " + icon_class}),
-                    c("span", {'class': "nav-link-text"}, title),
-                  ]),
-            ])
+    return li({'class':"nav-item", 'data-toggle':"tooltip", 'data-placement':"right", 'title':title}, [
+             a(href=href, cssClass="nav-link", children=[
+               i(cssClass=["fa", "fa-fw"] + [icon_class]),
+               span(title, cssClass="nav-link-text"),
+             ]),
+           ])
 
 def projectdropdownitem(title, data_target):
     return c("li", {'data-toggle':"modal", 'data-target':data_target}, [c("a", {'href': '#'}, title)])
