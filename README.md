@@ -26,14 +26,14 @@ This will run the application.
 
 fab development.run:command=shell
 
-This will start `python3 manage.py shell` inside the docker container
+This will start `python manage.py shell` inside the docker container
 
 fab development.run
 
-This will start `python3 manage.py check` inside the docker container.
+This will start `python manage.py check` inside the docker container.
 Ie check is ther default command
 
 
 To run unit tests fab development.test
 
-To run BDD tests fab development.harvest
+To run BDD tests fab development.behave
