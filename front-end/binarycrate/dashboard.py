@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function
 from cavorite import c, t, Router
 from cavorite.HTML import *
+import js
 
 def navitem(title, icon_class, href):
     return li({'class':"nav-item", 'data-toggle':"tooltip", 'data-placement':"right", 'title':title}, [
@@ -39,13 +40,27 @@ class Project(div):
         ])
 
 def projectsfn():
-    return [Project(projname) for projname in projects]     
+    return [Project(projname) for projname in projects]
+
+body = js.globals.document.body
+
+menu_collapsed = False
+
+def collapse_menu(e):
+    global menu_collapsed
+    menu_collapsed = not menu_collapsed
+    if menu_collapsed:
+        body.classList.add("sidenav-toggled")
+    else:
+        body.classList.remove("sidenav-toggled")
+    e.preventDefault()    
+    return False
 
 dashboard_view = \
               div([ 
                 nav({'class': "navbar navbar-expand-lg navbar-dark bg-dark fixed-top", 'id': 'mainNav'}, [
                   a({'class': "nav-link", 'id':"sidenavToggler", 'style':"padding: 0px 10px 0px 0px; color:white;"}, [
-                    i({'class': "fa fa-fw fa-bars"})
+                    i({'class': "fa fa-fw fa-bars", "onclick": collapse_menu})
                   ]),
                   a({'class': "navbar-brand", 'href':"#!"}, "Binary Crate"),
                   html_button({'class':"navbar-toggler navbar-toggler-right",
