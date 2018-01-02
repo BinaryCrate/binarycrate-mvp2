@@ -11,7 +11,9 @@ def start():
                                c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
 
 
-    r = Router({r'^$': dashboard_view,
+    r = Router({#r'^$': c("p", "Hello world"),
+                r'^$': dashboard_view,
+                r'^dashboard/$': dashboard_view,
                 },
                 error_404_page, body)
     r.route()

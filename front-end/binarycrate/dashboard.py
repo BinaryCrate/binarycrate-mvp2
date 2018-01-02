@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function
 from cavorite import c, t, Router
 from cavorite.HTML import *
 import js
+import copy
 
 def navitem(title, icon_class, href):
     return li({'class':"nav-item", 'data-toggle':"tooltip", 'data-placement':"right", 'title':title}, [
@@ -56,6 +57,45 @@ def collapse_menu(e):
     e.preventDefault()    
     return False
 
+def get_current_hash():
+    return str(js.globals.window.location.hash)
+
+
+class ModalTrigger(a):
+    def __init__(self, attribs, children, target):
+        attribs = copy.copy(attribs)
+        attribs.update({'data-toggle': "modal", 'data-target': target, 'href': get_current_hash()})
+        super(ModalTrigger, self).__init__(attribs, children)
+
+
+class Modal(div):
+    def __init__(self, id, title, body):
+        self.id = id
+        self.title = title
+        self.body = body
+        super(Modal, self).__init__({'class': "modal fade", "id":id, "tabindex": "-1", "role": "dialog", "aria-labeledby": "{}Label".format(id), "aria-hidden": "true"})
+
+    def get_children(self):
+        return  [
+                  div({'class': "modal-dialog", "role": "document"}, [
+                    div({'class': 'modal-content'}, [
+                      div({'class': 'modal-header'}, [
+                        h5({'class': 'modal-title', 'id':  "{}Label".format(self.id)}, self.title),
+                        html_button({'type': 'button', 'class': 'close', 'data-dismiss': 'modal', 'aria-label': 'Close'}, [
+                          span({'aria-hidden': 'true'}, 'X'),
+                        ]),
+                      ]),
+                      div({'class': 'modal-body'}, [
+                        form(self.body)
+                      ]),
+                      div({'class': 'modal-footer'}, [
+                        html_button({'type': "button", 'class':"btn btn-secondary", 'data-dismiss':"modal"}, 'Cancel'),
+                        html_button({'type': "button", 'class':"btn btn-primary"}, 'OK'),
+                      ]),
+                    ]),
+                  ]),
+                ]
+
 dashboard_view = \
               div([ 
                 nav({'class': "navbar navbar-expand-lg navbar-dark bg-dark fixed-top", 'id': 'mainNav'}, [
@@ -73,21 +113,21 @@ dashboard_view = \
                     ul({'class':"navbar-nav navbar-sidenav", 'id':"exampleAccordion"}, [
                       navitem('Dashboard', 'fa-dashboard', '#!'),
                       navitem('Editor', 'fa-area-chart', '#!editor'),
-                      navitem('Classrom', 'fa-table', '#!classroom'),
+                      navitem('Classroom', 'fa-table', '#!classroom'),
                     ]),
                     ul({'class': 'navbar-nav mr-auto'}, [
                       li({'class': 'nav-item'}, [
                         form({'action': '#'}, [
-                          html_button({'class': "btn btn-default navbar-btn crt-btn", 'data-toggle': "modal", 'data-target':"#createNew"}, "Create New"),
+                          ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Create New", "#createNew"),
                         ]),
                       ]),
                     ]),
                     ul({'class': 'navbar-nav ml-auto'}, [
                       li({'class': 'nav-item'}, [
-                        a({'class':"nav-link", 'data-toggle': "modal", 'data-target':"#exampleModal"}, [
+                        ModalTrigger({'class':"nav-link"}, [
                           i({'class': "fa fa-fw fa-sign-out"}),
                           t("Logout"),
-                        ]),
+                        ], "#logoutModal"),
                       ]),
                     ]),
                   ]),
@@ -101,6 +141,25 @@ dashboard_view = \
                       small("Copyright (C) Binary Crate 2018"),
                     ]),
                   ]),
+                ]),
+                Modal("createNew", "Create New", [
+                  div({'class': 'form-group'}, [
+                    label({'class': 'col-form-label', 'for': 'formGroupExampleInput'}, 'Title'),
+                    html_input({'type': 'text', 'class': 'form-control', 'id': 'formGroupExampleInput', 'placeholder': "Title of project"}),
+                  ]),
+                  div({'class': 'form-group'}, [
+                    label({'for': 'exampleFormControlTextarea1'}, 'Description'),
+                    textarea({'class': 'form-control', 'id':"exampleFormControlTextarea1", 'placeholder':"Description of project", 'rows':"3"}),
+                  ]),
+                  div({'class': 'form-group'}, [
+                    label({'for': 'exampleFormControlSelect1'}, 'Example Select'),
+                    select({'class': 'form-control', 'id': 'exampleFormControlSelect1'}, [
+                      option('Python'),
+                    ]),
+                  ]),
+                ]),
+                Modal("logoutModal", "Logout", [
+                  div("Select \"Logout\" below if you are ready to end your current session."),
                 ]),
               ])
 
