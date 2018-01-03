@@ -6,9 +6,9 @@ import copy
 
 def navitem(title, icon_class, href):
     return li({'class':"nav-item", 'data-toggle':"tooltip", 'data-placement':"right", 'title':title}, [
-             a(href=href, cssClass="nav-link", children=[
+             a({'class':"nav-link", 'href': href, 'style': {'min-height': '56px'}}, children=[
                i(cssClass=["fa", "fa-fw"] + [icon_class]),
-               span(title, cssClass="nav-link-text"),
+               span({'class':"nav-link-text"}, title),
              ]),
            ])
 
@@ -41,12 +41,11 @@ class Project(div):
             ]),
             div(cssClass="wrimagecard-topimage_title", children=[
               div(cssClass='dropdown', children=[
-                li({'class': "fa fa-pencil fa-lg edit", 'id': "menu1", 'data-toggle': "dropdown"}, [
-                  ul({'class': "dropdown-menu", 'role': "menu", 'aria-labelledby':"menu1"}, [
-                    projectdropdownitem('Rename', "#renameProj", self.title, self.get_root().mount_redraw),
-                    projectdropdownitem('Share', "#shareProj", self.title, self.get_root().mount_redraw),
-                    projectdropdownitem('Delete', "#deleteProj", self.title, self.get_root().mount_redraw),
-                  ]),
+              li({'class': "fa fa-pencil fa-lg edit", 'id': "menu1", 'data-toggle': "dropdown"}),
+                ul({'class': "dropdown-menu", 'role': "menu", 'aria-labelledby':"menu1"}, [
+                  projectdropdownitem('Rename', "#renameProj", self.title, self.get_root().mount_redraw),
+                  projectdropdownitem('Share', "#shareProj", self.title, self.get_root().mount_redraw),
+                  projectdropdownitem('Delete', "#deleteProj", self.title, self.get_root().mount_redraw),
                 ]),
               ]),
               p(self.title),
@@ -70,6 +69,9 @@ def collapse_menu(e):
         body.classList.add("sidenav-toggled")
     else:
         body.classList.remove("sidenav-toggled")
+    jquery = js.globals['$']
+    jquery(".navbar-sidenav .nav-link-collapse").addClass("collapsed");
+    jquery(".navbar-sidenav .sidenav-second-level, .navbar-sidenav .sidenav-third-level").removeClass("show");
     e.preventDefault()    
     return False
 
@@ -137,7 +139,7 @@ dashboard_view = \
                       navitem('Classroom', 'fa-table', '#!classroom'),
                     ]),
                     ul({'class': 'navbar-nav mr-auto'}, [
-                      li({'class': 'nav-item'}, [
+                      li({'class': 'nav-item li-create-new'}, [
                         form({'action': '#'}, [
                           ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Create New", "#createNew"),
                         ]),
