@@ -66,8 +66,8 @@ transition: color 0.3s ease;
   color:#fff;
 }
 
-.fa-dashboard, .fa-area-chart,
-.fa-table, .fa-wrench, .fa-bars{
+.fa-dashboard, .fa-code,
+.fa-laptop, .fa-wrench, .fa-bars{
   color: #50e3c2;
 }
 

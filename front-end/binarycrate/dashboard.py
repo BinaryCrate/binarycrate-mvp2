@@ -13,6 +13,19 @@ def navitem(title, icon_class, href):
            ])
 
 
+def navsubmenu(title, parent_id, sublist_id, subitems):
+    return \
+    li({'class': 'nav-item', 'data-toggle': 'tooltip', 'data-placement': 'right', 'title': title}, [
+      a({'class': 'nav-link nav-link-collapse collapsed', 'data-toggle': 'collapse', 'href': '#' + sublist_id, 'data-parent':'#' + parent_id}, [
+        i({'class': "fa fa-fw fa-wrench"}),
+        span({'class': "nav-link-text"}, title),
+      ]),
+      ul({'class': "sidenav-second-level collapse", 'id':sublist_id}, subitems),
+    ])
+
+def navsubmenuitem(title, url):
+    return li([a({'href': url}, title)])
+
 
 def projectdropdownitem(title, data_target, projectname, redraw_function):
     source = None
@@ -135,18 +148,12 @@ dashboard_view = \
                   div({'class':"collapse navbar-collapse", 'id':"navbarResponsive"}, [
                     ul({'class':"navbar-nav navbar-sidenav", 'id':"exampleAccordion"}, [
                       navitem('Dashboard', 'fa-dashboard', '#!'),
-                      navitem('Editor', 'fa-area-chart', '#!editor'),
-                      navitem('Classroom', 'fa-table', '#!classroom'),
-                      li({'class': 'nav-item', 'data-toggle': 'tooltip', 'data-placement': 'right', 'title': 'Components'}, [
-                        a({'class': 'nav-link nav-link-collapse collapsed', 'data-toggle': 'collapse', 'href': '#collapseComponents', 'data-parent':'#exampleAccordion'}, [
-                          i({'class': "fa fa-fw fa-wrench"}),
-                          span({'class': "nav-link-text"}, 'Settings'),
-                        ]),
-                        ul({'class': "sidenav-second-level collapse", 'id':"collapseComponents"}, [
-                          li([a({'href': '#!navbar'}, 'Navbar')]),
-                          li([a({'href': '#!cards'}, 'Cards')]),
-                        ]),
-                      ]),
+                      navitem('Editor', 'fa-code', '#!editor'),
+                      navitem('Classroom', 'fa-laptop', '#!classroom'),
+                      navsubmenu('Settings', 'exampleAccordion', 'collapseComponents', [
+                        navsubmenuitem('Navbar', '#!navbar'),
+                        navsubmenuitem('Cards', '#!cards'),
+                      ])
                     ]),
                     ul({'class': 'navbar-nav mr-auto'}, [
                       li({'class': 'nav-item li-create-new'}, [
