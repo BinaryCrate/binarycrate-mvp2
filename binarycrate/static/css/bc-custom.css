@@ -18,7 +18,6 @@ Date Last Updated:
 
 .wrimagecard{
   margin-top: 0;
-  width: 250px;
 margin-bottom: 1.5rem;
 text-align: left;
 position: relative;
@@ -31,9 +30,16 @@ transition: all 0.3s ease;
 position: relative;
 }
 
+/* Pencil dropdown menu */
+
+.show{
+  padding: 7px;
+}
+
 .edit{
   float: right;
 }
+
 
 .wrimagecard-topimage_header{
 padding: 20px;
@@ -79,14 +85,12 @@ transition: color 0.3s ease;
    background-color: #f7f7f7;
 }
 
-
-
 /* Code Mirror Customs */
 
 .CodeMirror {
   float: left;
-  height: 680px;
-  width: 50%;
+  height: 600px;
+  width: 40%;
   border: 1px solid black;
 }
 iframe {
@@ -96,6 +100,71 @@ iframe {
   border: 1px solid black;
   border-left: 0px;
 }
+
+article{
+  width: calc(100% - 150px);
+}
+/* Project Files and Folders */
+.project-fnf{s
+  margin: 0;
+  padding: 0;
+  width: 150px;
+}
+
+.content-wrapper .row{
+  padding: 0;
+  margin: 0;
+}
+
+/* Tree Structure */
+.top-tree{
+  padding: 5px;
+}
+.top-tree span{
+  float: right;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+.project-fnf .tree{
+  display: inline-block;
+  padding: 10px;
+  margin: 0 auto;
+}
+
+ul.tree, ul.tree ul {
+    list-style: none;
+     margin: 0;
+     padding: 0;
+   }
+   ul.tree ul {
+     margin-left: 10px;
+   }
+   ul.tree li {
+     margin: 0;
+     padding: 0 7px;
+     line-height: 20px;
+     color: #369;
+     font-weight: bold;
+     border-left:1px solid rgb(100,100,100);
+
+   }
+   ul.tree li:last-child {
+       border-left:none;
+   }
+   ul.tree li:before {
+      position:relative;
+      top:-0.3em;
+      height:1em;
+      width:12px;
+      color:white;
+      border-bottom:1px solid rgb(100,100,100);
+      content:"";
+      display:inline-block;
+      left:-7px;
+   }
+   ul.tree li:last-child:before {
+      border-left:1px solid rgb(100,100,100);
+   }
 
 .nav-link-text {
   margin-left: 5px;

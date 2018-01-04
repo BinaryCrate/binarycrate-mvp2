@@ -13,6 +13,15 @@
   <!-- Custom styles for this template-->
   <link href="static/css/sb-admin.css" type="text/css" rel="stylesheet">
   <link href="static/css/bc-custom.css" type="text/css" rel="stylesheet">
+  <!-- Code Mirror CSS -->
+  <link rel=stylesheet href="static/doc/docs.css">
+  <link rel=stylesheet href=static/lib/codemirror.css>
+  <script src=static/lib/codemirror.js></script>
+  <script src=static/mode/xml/xml.js></script>
+  {#<script src=static/mode/javascript/javascript.js></script>#}
+  {#<script src=static/mode/css/css.js></script>#}
+  <script src=static/mode/htmlmixed/htmlmixed.js></script>
+  {#<script src=static/mode/python/python.js></script>#}
     <style>
     pre {
         width: 90%;
@@ -98,6 +107,35 @@ $(function () {
         });
     });
 });
+
+function initialiseCodeMirror() {
+      var delay;
+      var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+        lineNumbers: true,
+        mode: 'text/html',
+        //mode: 'python',
+        viewportMargin: Infinity
+      });
+
+      editor.on("change", function() {
+        clearTimeout(delay);
+        delay = setTimeout(updatePreview, 300);
+      });
+
+      function updatePreview() {
+        var previewFrame = document.getElementById('preview');
+        var preview =  previewFrame.contentDocument ||  previewFrame.contentWindow.document;
+        preview.open();
+        //console.log('editor', editor);
+        //console.log('editor.getValue()', editor.getValue());
+        preview.write(editor.getValue());
+        preview.close();
+      }
+      setTimeout(updatePreview, 300);
+}
+
+document.initialiseCodeMirror = initialiseCodeMirror
+
 </script>
 </body>
 </html>

@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function
 import js
 from cavorite import c, t, Router, callbacks
 from .dashboard import dashboard_view
+from .editor import editor_view
 
 def start():
     callbacks.initialise_global_callbacks()
@@ -11,9 +12,8 @@ def start():
                                c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
 
 
-    r = Router({#r'^$': c("p", "Hello world"),
-                r'^$': dashboard_view,
-                r'^dashboard/$': dashboard_view,
+    r = Router({r'^$': dashboard_view,
+                r'^editor$': editor_view,
                 },
                 error_404_page, body)
     r.route()
