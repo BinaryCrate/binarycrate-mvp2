@@ -137,6 +137,16 @@ dashboard_view = \
                       navitem('Dashboard', 'fa-dashboard', '#!'),
                       navitem('Editor', 'fa-area-chart', '#!editor'),
                       navitem('Classroom', 'fa-table', '#!classroom'),
+                      li({'class': 'nav-item', 'data-toggle': 'tooltip', 'data-placement': 'right', 'title': 'Components'}, [
+                        a({'class': 'nav-link nav-link-collapse collapsed', 'data-toggle': 'collapse', 'href': '#collapseComponents', 'data-parent':'#exampleAccordion'}, [
+                          i({'class': "fa fa-fw fa-wrench"}),
+                          span({'class': "nav-link-text"}, 'Settings'),
+                        ]),
+                        ul({'class': "sidenav-second-level collapse", 'id':"collapseComponents"}, [
+                          li([a({'href': '#!navbar'}, 'Navbar')]),
+                          li([a({'href': '#!cards'}, 'Cards')]),
+                        ]),
+                      ]),
                     ]),
                     ul({'class': 'navbar-nav mr-auto'}, [
                       li({'class': 'nav-item li-create-new'}, [
