@@ -110,12 +110,12 @@ class CodeMirrorHandlerVNode(div):
     def mount(self, element):
         #print('CodeMirrorHandlerVNode mount called')
         super(CodeMirrorHandlerVNode, self).mount(element)
-        js.globals.setTimeout(js.globals.document.initialiseCodeMirror, 300)
+        js.globals.setTimeout(js.globals.document.initialiseCodeMirror, 1)
 
     def mount_redraw(self):
         #print('CodeMirrorHandlerVNode mount_redraw called')
         super(CodeMirrorHandlerVNode, self).mount_redraw()
-        js.globals.setTimeout(js.globals.document.initialiseCodeMirror, 300)
+        js.globals.setTimeout(js.globals.document.initialiseCodeMirror, 1)
 
 
 editor_view = \
