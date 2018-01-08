@@ -109,33 +109,6 @@ $(function () {
     });
 });
 
-function initialiseCodeMirror() {
-      var delay;
-      var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
-        lineNumbers: true,
-        mode: 'text/html',
-        //mode: 'python',
-        viewportMargin: Infinity,
-        cursorHeight: 0.9,
-      });
-
-      editor.on("change", function() {
-        clearTimeout(delay);
-        delay = setTimeout(updatePreview, 300);
-      });
-
-      function updatePreview() {
-        var previewFrame = document.getElementById('preview');
-        var preview =  previewFrame.contentDocument ||  previewFrame.contentWindow.document;
-        preview.open();
-        preview.write(editor.getValue());
-        preview.close();
-      }
-      setTimeout(updatePreview, 1);
-}
-
-document.initialiseCodeMirror = initialiseCodeMirror
-
 </script>
 </body>
 </html>

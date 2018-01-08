@@ -1,5 +1,5 @@
 from __future__ import absolute_import, print_function
-from cavorite import c, t, Router
+from cavorite import c, t, Router, callbacks
 from cavorite.HTML import *
 import js
 import copy
@@ -106,20 +106,46 @@ example_html = """<!doctype html>
   </body>
 </html>"""
 
-class CodeMirrorHandlerVNode(div):
-    def mount(self, element):
-        #print('CodeMirrorHandlerVNode mount called')
-        super(CodeMirrorHandlerVNode, self).mount(element)
-        js.globals.setTimeout(js.globals.document.initialiseCodeMirror, 1)
 
-    def mount_redraw(self):
-        #print('CodeMirrorHandlerVNode mount_redraw called')
-        super(CodeMirrorHandlerVNode, self).mount_redraw()
-        js.globals.setTimeout(js.globals.document.initialiseCodeMirror, 1)
+editor = None
+
+@js.Function
+def codemirror_init():
+    global editor
+    textarea = js.globals.document.getElementById("code")
+    editor = js.globals.CodeMirror.fromTextArea(textarea, {
+        'lineNumbers': True,
+        'mode': 'text/html',
+        #'mode': 'python',
+        'viewportMargin': js.globals.Infinity,
+      })
+
+    @js.Function
+    def change_callback_handler(a, b):
+        callbacks.global_callbacks['onchange'][str(textarea.getAttribute('_cavorite_id'))](editor)
+
+    editor.on('change', change_callback_handler)
+
+    onchange_codemirror(None)
+
+
+class CodeMirrorHandlerVNode(textarea):
+    def was_rendered(self):
+        super(CodeMirrorHandlerVNode, self).was_rendered()
+        js.globals.setTimeout(codemirror_init, 1)
+
+
+def onchange_codemirror(e):
+    global editor
+    previewFrame = js.globals.document.getElementById('preview');
+    preview =  previewFrame.contentDocument or  previewFrame.contentWindow.document;
+    preview.open();
+    preview.write(editor.getValue());
+    preview.close();
 
 
 editor_view = \
-              CodeMirrorHandlerVNode([ 
+              div([ 
                 nav({'class': "navbar navbar-expand-lg navbar-dark bg-dark fixed-top", 'id': 'mainNav'}, [
                   a({'class': "nav-link", 'id':"sidenavToggler", 'style':"padding: 0px 10px 0px 0px; color:white;"}, [
                     i({'class': "fa fa-fw fa-bars", "onclick": collapse_menu})
@@ -192,7 +218,7 @@ editor_view = \
                       ]),
                     ]),
                     article([
-                      textarea({'id': 'code', 'name': 'code'}, example_html),
+                      CodeMirrorHandlerVNode({'id': 'code', 'name': 'code', 'onchange': onchange_codemirror}, example_html),
                       iframe({'id': 'preview'}),
                     ]),
                   ]),
