@@ -149,35 +149,43 @@ editor_view = \
                     ]),
                   ]),
                 ]),
-                div({'class': "content-wrapper"}, [c("div", {'class': "container-fluid"}, [
+                div({'class': "content-wrapper", 'style': {'padding-top': '1px'}}, [c("div", {'class': "container-fluid", 'style': {'padding-left': '1px'}}, [
                   div({'class': 'row'}, [
                     div({'class': "project-fnf"}, [
                       div({'class': 'top-tree'}, [
                         span({'class': 'fa fa-1x fa-file-code-o'}),
                         span({'class': 'fa fa-1x fa-folder-o'}),
                       ]),
-                      ul({'class': 'tree'}, [
-                        li([t('Animals'), 
-                          ul([
-                            li('Birds'),
-                            li([t('Mammals'), 
-                              ul([
-                                li('Elephants'),
-                                li('Mouse'),
+                      ol({'class': 'tree'}, [
+                        li([
+                          label({'for': 'menu-animal'}, 'Animals'),
+                          html_input({'type': 'checkbox', 'checked': 'checked', 'id':'menu-animal'}),
+                          ol([
+                            li({'class': 'file'}, [a({'href': ''}, 'Birds')]),
+                            li([
+                              label({'for': 'menu-mammals'}, 'Mammals'),
+                              html_input({'type': 'checkbox', 'id':'menu-mammals'}),
+                              ol([
+                                li({'class': 'file'}, [a({'href': ''}, 'Elephants')]),
+                                li({'class': 'file'}, [a({'href': ''}, 'Mouse')]),
                               ]),
                             ]),
-                            li('Reptiles'),
+                            li({'class': 'file'}, [a({'href': ''}, 'Reptiles')]),
                           ]),
                         ]),
-                        li([t('Plants'), 
-                          ul([
-                            li([t('Flowers'),
-                              ul([
-                                li('Rose'),
-                                li('Tulip'),
+                        li([
+                          label({'for': 'menu-plants'}, 'Plants'),
+                          html_input({'type': 'checkbox', 'checked': 'checked', 'id':'menu-plants'}),
+                          ol([
+                            li([
+                              label({'for': 'menu-flowers'}, 'Flowers'),
+                              html_input({'type': 'checkbox', 'id':'menu-flowers'}),
+                              ol([
+                                li({'class': 'file'}, [a({'href': ''}, 'Rose')]),
+                                li({'class': 'file'}, [a({'href': ''}, 'Tulip')]),
                               ]),
                             ]),
-                            li('Trees'),
+                            li({'class': 'file'}, [a({'href': ''}, 'Trees')]),
                           ]),
                         ]),
                       ]),
