@@ -1,8 +1,9 @@
 from __future__ import absolute_import, print_function
-from cavorite import c, t, Router, callbacks
+from cavorite import c, t, Router, callbacks, timeouts
 from cavorite.HTML import *
 import js
 import copy
+from .controls import CodeMirrorHandlerVNode
 
 def navitem(title, icon_class, href):
     return li({'class':"nav-item", 'data-toggle':"tooltip", 'data-placement':"right", 'title':title}, [
@@ -107,42 +108,6 @@ example_html = """<!doctype html>
 </html>"""
 
 
-editor = None
-
-@js.Function
-def codemirror_init():
-    global editor
-    textarea = js.globals.document.getElementById("code")
-    editor = js.globals.CodeMirror.fromTextArea(textarea, {
-        'lineNumbers': True,
-        'mode': 'text/html',
-        #'mode': 'python',
-        'viewportMargin': js.globals.Infinity,
-      })
-
-    @js.Function
-    def change_callback_handler(a, b):
-        callbacks.global_callbacks['onchange'][str(textarea.getAttribute('_cavorite_id'))](editor)
-
-    editor.on('change', change_callback_handler)
-
-    onchange_codemirror(None)
-
-
-class CodeMirrorHandlerVNode(textarea):
-    def was_rendered(self):
-        super(CodeMirrorHandlerVNode, self).was_rendered()
-        js.globals.setTimeout(codemirror_init, 1)
-
-
-def onchange_codemirror(e):
-    global editor
-    previewFrame = js.globals.document.getElementById('preview');
-    preview =  previewFrame.contentDocument or  previewFrame.contentWindow.document;
-    preview.open();
-    preview.write(editor.getValue());
-    preview.close();
-
 
 editor_view = \
               div([ 
@@ -218,7 +183,7 @@ editor_view = \
                       ]),
                     ]),
                     article([
-                      CodeMirrorHandlerVNode({'id': 'code', 'name': 'code', 'onchange': onchange_codemirror}, example_html),
+                      CodeMirrorHandlerVNode({'id': 'code', 'name': 'code'}, example_html),
                       iframe({'id': 'preview'}),
                     ]),
                   ]),

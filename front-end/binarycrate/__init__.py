@@ -1,11 +1,12 @@
 from __future__ import absolute_import, print_function
 import js
-from cavorite import c, t, Router, callbacks
+from cavorite import c, t, Router, callbacks, timeouts
 from .dashboard import dashboard_view
 from .editor import editor_view
 
 def start():
     callbacks.initialise_global_callbacks()
+    timeouts.initialise_timeout_callbacks()
     body = js.globals.document.body
 
     error_404_page = c("div", [c("p", "No match 404 error"),
