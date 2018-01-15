@@ -49,6 +49,8 @@ INSTALLED_APPS = [
 
     'behave_django',
 
+    'rest_framework',
+
     'accounts',
     'landingpage',
     'project',

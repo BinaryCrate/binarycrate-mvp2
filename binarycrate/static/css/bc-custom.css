@@ -39,7 +39,7 @@ position: relative;
 /* Pencil dropdown menu */
 
 .show{
-  padding: 7px;
+  padding: 0px;
 }
 
 .edit{
@@ -353,3 +353,8 @@ h1{
 .li-create-new {
   max-height: 38px;
 }
+
+.dropdown-menu-header {
+  margin-right: 8px;
+}
+

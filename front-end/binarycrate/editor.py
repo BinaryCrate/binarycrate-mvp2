@@ -4,6 +4,8 @@ from cavorite.HTML import *
 import js
 import copy
 from .controls import CodeMirrorHandlerVNode
+import uuid
+
 
 def navitem(title, icon_class, href):
     return li({'class':"nav-item", 'data-toggle':"tooltip", 'data-placement':"right", 'title':title}, [
@@ -107,7 +109,32 @@ example_html = """<!doctype html>
   </body>
 </html>"""
 
+class BCProjectTree(ol):
+    def __init__(self, children):
+        super(BCProjectTree, self).__init__( {'class': 'tree'}, children)
 
+
+class BCPFolder(li):
+    def __init__(self, title, checked, folder_children):
+        self.title = title
+        self.folder_children = folder_children
+        self.checked = checked
+        self.id = str(uuid.uuid4())
+        super(BCPFolder, self).__init__()
+
+    def get_children(self):
+        input_styles = {'type': 'checkbox', 'id':self.id}
+        if self.checked:
+            input_styles.update({'checked': 'checked'})
+        return [label({'for': self.id}, self.title),
+                html_input(input_styles),
+                ol(self.folder_children)]
+
+class BCPFile(li):
+    def __init__(self, title):
+        super(BCPFile,self).__init__({'class': 'file'}, [a({'href': ''}, title)])
+
+    
 
 editor_view = \
               div([ 
@@ -133,7 +160,58 @@ editor_view = \
                       ])
                     ]),
                     ul({'class': 'navbar-nav mr-auto'}, [
-                      li({'class': 'nav-item li-create-new'}, [
+                      div({'class':"dropdown nav-item shapes__dropdown dropdown-menu-header"}, [
+                        html_button({'class':"btn dropdown-toggle crt-btn", 'type':"button", 'id':"dropdownMenuButton", 'data-toggle':"dropdown", 'aria-haspopup':"true", 'aria-expanded':"false"}, 'File'),
+                        div({'class': "dropdown-menu", 'aria-labelledby':"dropdownMenuButton"}, [
+                          a({'class':"dropdown-item",'href':"#"}, [
+                            i({'class': "fa fa-1x fa-caret-up", 'aria-hidden':"true"}),
+                            t('Triangle'),
+                          ]),
+                          a({'class':"dropdown-item",'href':"#"}, [
+                            i({'class': "fa fa-1x fa-square", 'aria-hidden':"true"}),
+                            t('Square'),
+                          ]),
+                          a({'class':"dropdown-item",'href':"#"}, [
+                            i({'class': "fa fa-1x fa-btc", 'aria-hidden':"true"}),
+                            t('Something else here'),
+                          ]),
+                        ]),
+                      ]),
+                      div({'class':"dropdown nav-item shapes__dropdown dropdown-menu-header"}, [
+                        html_button({'class':"btn dropdown-toggle crt-btn", 'type':"button", 'id':"dropdownMenuButton", 'data-toggle':"dropdown", 'aria-haspopup':"true", 'aria-expanded':"false"}, 'Edit'),
+                        div({'class': "dropdown-menu", 'aria-labelledby':"dropdownMenuButton"}, [
+                          a({'class':"dropdown-item",'href':"#"}, [
+                            i({'class': "fa fa-1x fa-caret-up", 'aria-hidden':"true"}),
+                            t('Triangle'),
+                          ]),
+                          a({'class':"dropdown-item",'href':"#"}, [
+                            i({'class': "fa fa-1x fa-square", 'aria-hidden':"true"}),
+                            t('Square'),
+                          ]),
+                          a({'class':"dropdown-item",'href':"#"}, [
+                            i({'class': "fa fa-1x fa-btc", 'aria-hidden':"true"}),
+                            t('Something else here'),
+                          ]),
+                        ]),
+                      ]),
+                      div({'class':"dropdown nav-item shapes__dropdown dropdown-menu-header"}, [
+                        html_button({'class':"btn dropdown-toggle crt-btn", 'type':"button", 'id':"dropdownMenuButton", 'data-toggle':"dropdown", 'aria-haspopup':"true", 'aria-expanded':"false"}, 'Options'),
+                        div({'class': "dropdown-menu", 'aria-labelledby':"dropdownMenuButton"}, [
+                          a({'class':"dropdown-item",'href':"#"}, [
+                            i({'class': "fa fa-1x fa-caret-up", 'aria-hidden':"true"}),
+                            t('Triangle'),
+                          ]),
+                          a({'class':"dropdown-item",'href':"#"}, [
+                            i({'class': "fa fa-1x fa-square", 'aria-hidden':"true"}),
+                            t('Square'),
+                          ]),
+                          a({'class':"dropdown-item",'href':"#"}, [
+                            i({'class': "fa fa-1x fa-btc", 'aria-hidden':"true"}),
+                            t('Something else here'),
+                          ]),
+                        ]),
+                      ]),
+                      li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
                         form({'action': '#'}, [
                           ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
                         ]),
@@ -156,37 +234,21 @@ editor_view = \
                         span({'class': 'fa fa-1x fa-file-code-o'}),
                         span({'class': 'fa fa-1x fa-folder-o'}),
                       ]),
-                      ol({'class': 'tree'}, [
-                        li([
-                          label({'for': 'menu-animal'}, 'Animals'),
-                          html_input({'type': 'checkbox', 'checked': 'checked', 'id':'menu-animal'}),
-                          ol([
-                            li({'class': 'file'}, [a({'href': ''}, 'Birds')]),
-                            li([
-                              label({'for': 'menu-mammals'}, 'Mammals'),
-                              html_input({'type': 'checkbox', 'id':'menu-mammals'}),
-                              ol([
-                                li({'class': 'file'}, [a({'href': ''}, 'Elephants')]),
-                                li({'class': 'file'}, [a({'href': ''}, 'Mouse')]),
-                              ]),
-                            ]),
-                            li({'class': 'file'}, [a({'href': ''}, 'Reptiles')]),
+                      BCProjectTree([
+                        BCPFolder('Animals', True, [
+                          BCPFile('Birds'),
+                          BCPFolder('Mammals', True, [
+                            BCPFile('Elephants'),
+                            BCPFile('Mouse'),
                           ]),
+                          BCPFile('Reptiles'),
                         ]),
-                        li([
-                          label({'for': 'menu-plants'}, 'Plants'),
-                          html_input({'type': 'checkbox', 'checked': 'checked', 'id':'menu-plants'}),
-                          ol([
-                            li([
-                              label({'for': 'menu-flowers'}, 'Flowers'),
-                              html_input({'type': 'checkbox', 'id':'menu-flowers'}),
-                              ol([
-                                li({'class': 'file'}, [a({'href': ''}, 'Rose')]),
-                                li({'class': 'file'}, [a({'href': ''}, 'Tulip')]),
-                              ]),
-                            ]),
-                            li({'class': 'file'}, [a({'href': ''}, 'Trees')]),
+                        BCPFolder('Plants', True, [
+                          BCPFolder('Flowers', False, [
+                            BCPFile('Rose'),
+                            BCPFile('Tulip'),
                           ]),
+                          BCPFile('Trees'),
                         ]),
                       ]),
                     ]),

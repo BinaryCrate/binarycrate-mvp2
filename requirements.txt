@@ -3,6 +3,7 @@ django-allauth==0.34.0
 pytest-django==3.1.2
 django-mptt==0.8.7
 git+https://github.com/BinaryCrate/behave-django.git@2defe087958c772e63c452da21f452bdcafcd237
+djangorestframework==3.7.7
 
 # General requirements for testing
 selenium==3.5.0
