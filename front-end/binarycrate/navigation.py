@@ -1,10 +1,11 @@
 from __future__ import absolute_import, print_function
-from cavorite import c, t, Router, callbacks, timeouts
+from cavorite import c, t, Router, callbacks, timeouts, get_current_hash
 from cavorite.HTML import *
 import js
 import copy
 from .controls import CodeMirrorHandlerVNode
 import uuid
+from cavorite.bootstrap.modals import ModalTrigger, Modal
 
 
 def navitem(title, icon_class, href):
@@ -29,44 +30,6 @@ def navsubmenu(title, parent_id, sublist_id, subitems):
 def navsubmenuitem(title, url):
     return li([a({'href': url}, title)])
 
-
-class ModalTrigger(a):
-    def __init__(self, attribs, children, target):
-        attribs = copy.copy(attribs)
-        attribs.update({'data-toggle': "modal", 'data-target': target, 'href': get_current_hash()})
-        super(ModalTrigger, self).__init__(attribs, children)
-
-
-class Modal(div):
-    def __init__(self, id, title, body):
-        self.id = id
-        self.title = title
-        self.body = body
-        super(Modal, self).__init__({'class': "modal fade", "id":id, "tabindex": "-1", "role": "dialog", "aria-labeledby": "{}Label".format(id), "aria-hidden": "true"})
-
-    def get_children(self):
-        return  [
-                  div({'class': "modal-dialog", "role": "document"}, [
-                    div({'class': 'modal-content'}, [
-                      div({'class': 'modal-header'}, [
-                        h5({'class': 'modal-title', 'id':  "{}Label".format(self.id)}, self.title),
-                        html_button({'type': 'button', 'class': 'close', 'data-dismiss': 'modal', 'aria-label': 'Close'}, [
-                          span({'aria-hidden': 'true'}, 'X'),
-                        ]),
-                      ]),
-                      div({'class': 'modal-body'}, [
-                        form(self.body)
-                      ]),
-                      div({'class': 'modal-footer'}, [
-                        html_button({'type': "button", 'class':"btn btn-secondary", 'data-dismiss':"modal"}, 'Cancel'),
-                        html_button({'type': "button", 'class':"btn btn-primary"}, 'OK'),
-                      ]),
-                    ]),
-                  ]),
-                ]
-
-def get_current_hash():
-    return str(js.globals.window.location.hash)
 
 class BCChrome(div):
     def collapse_menu(self, e):
