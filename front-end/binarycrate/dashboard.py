@@ -136,6 +136,22 @@ dashboard_view = BCChrome([
                           ]),
                         ]),
                       ]),
+                      Modal("createNew", "Create New", [
+                        div({'class': 'form-group'}, [
+                          label({'class': 'col-form-label', 'for': 'formGroupExampleInput'}, 'Title'),
+                          html_input({'type': 'text', 'class': 'form-control', 'id': 'formGroupExampleInput', 'placeholder': "Title of project"}),
+                        ]),
+                        div({'class': 'form-group'}, [
+                          label({'for': 'exampleFormControlTextarea1'}, 'Description'),
+                          textarea({'class': 'form-control', 'id':"exampleFormControlTextarea1", 'placeholder':"Description of project", 'rows':"3"}),
+                        ]),
+                        div({'class': 'form-group'}, [
+                          label({'for': 'exampleFormControlSelect1'}, 'Example Select'),
+                          select({'class': 'form-control', 'id': 'exampleFormControlSelect1'}, [
+                            option('Python'),
+                          ]),
+                        ]),
+                      ]),
                     ])
                     
 
