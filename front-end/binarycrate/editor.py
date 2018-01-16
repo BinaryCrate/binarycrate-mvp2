@@ -64,74 +64,46 @@ def sub_menu_handler(e):
     e.stopPropagation()
     e.preventDefault()
 
+def drop_down_menu(title, members):
+    return div({'class':"dropdown nav-item shapes__dropdown dropdown-menu-header"}, [
+      html_button({'class':"btn dropdown-toggle crt-btn", 'type':"button", 'id':"dropdownMenuButton", 'data-toggle':"dropdown", 'aria-haspopup':"true", 'aria-expanded':"false"}, title),
+      div({'class': "dropdown-menu", 'aria-labelledby':"dropdownMenuButton"}, members)
+    ])
+
+def drop_down_item(title, icon_class):
+    return a({'class':"dropdown-item",'href':"#"}, [
+      i({'class': "fa fa-1x " + icon_class, 'aria-hidden':"true"}),
+      t(title),
+    ])
+
+def drop_down_submenu(title, icon_class, members):
+    return div({'class': "dropdown-submenu"}, [
+      a({'class':"dropdown-item",'href':"#", 'onclick': sub_menu_handler}, [
+        i({'class': "fa fa-1x " + icon_class, 'aria-hidden':"true"}),
+        t(title),
+      ]),
+      div({'class': "dropdown-menu"}, members)
+    ])
     
 editor_view = BCChrome([
-                      div({'class':"dropdown nav-item shapes__dropdown dropdown-menu-header"}, [
-                        html_button({'class':"btn dropdown-toggle crt-btn", 'type':"button", 'id':"dropdownMenuButton", 'data-toggle':"dropdown", 'aria-haspopup':"true", 'aria-expanded':"false"}, 'File'),
-                        div({'class': "dropdown-menu", 'aria-labelledby':"dropdownMenuButton"}, [
-                          a({'class':"dropdown-item",'href':"#"}, [
-                            i({'class': "fa fa-1x fa-caret-up", 'aria-hidden':"true"}),
-                            t('Triangle'),
-                          ]),
-                          a({'class':"dropdown-item",'href':"#"}, [
-                            i({'class': "fa fa-1x fa-square", 'aria-hidden':"true"}),
-                            t('Square'),
-                          ]),
-                          a({'class':"dropdown-item",'href':"#"}, [
-                            i({'class': "fa fa-1x fa-btc", 'aria-hidden':"true"}),
-                            t('Something else here'),
-                          ]),
-                          div({'class': "dropdown-submenu"}, [
-                            a({'class':"dropdown-item test",'href':"#", 'onclick': sub_menu_handler}, [
-                              i({'class': "fa fa-1x fa-btc", 'aria-hidden':"true"}),
-                              t('Recent documents'),
-                            ]),
-                            div({'class': "dropdown-menu"}, [
-                              a({'class':"dropdown-item",'href':"#"}, [
-                                i({'class': "fa fa-1x fa-btc", 'aria-hidden':"true"}),
-                                t('Hello.py'),
-                              ]),
-                              a({'class':"dropdown-item",'href':"#"}, [
-                                i({'class': "fa fa-1x fa-btc", 'aria-hidden':"true"}),
-                                t('World.py'),
-                              ]),
-                            ]),
-                          ]),
-                        ]),
+                      drop_down_menu('File', [
+                        drop_down_item('Triangle', 'fa-caret-up'),
+                        drop_down_item('Square', 'fa-square'),
+                        drop_down_item('Something else here', 'fa-btc'),
+                        drop_down_submenu('Recent documents', 'fa-caret-right', [
+                          drop_down_item('Hello.py', ''),
+                          drop_down_item('World.py', ''),
+                        ])
                       ]),
-                      div({'class':"dropdown nav-item shapes__dropdown dropdown-menu-header"}, [
-                        html_button({'class':"btn dropdown-toggle crt-btn", 'type':"button", 'id':"dropdownMenuButton", 'data-toggle':"dropdown", 'aria-haspopup':"true", 'aria-expanded':"false"}, 'Edit'),
-                        div({'class': "dropdown-menu", 'aria-labelledby':"dropdownMenuButton"}, [
-                          a({'class':"dropdown-item",'href':"#"}, [
-                            i({'class': "fa fa-1x fa-caret-up", 'aria-hidden':"true"}),
-                            t('Triangle'),
-                          ]),
-                          a({'class':"dropdown-item",'href':"#"}, [
-                            i({'class': "fa fa-1x fa-square", 'aria-hidden':"true"}),
-                            t('Square'),
-                          ]),
-                          a({'class':"dropdown-item",'href':"#"}, [
-                            i({'class': "fa fa-1x fa-btc", 'aria-hidden':"true"}),
-                            t('Something else here'),
-                          ]),
-                        ]),
+                      drop_down_menu('Edit', [
+                        drop_down_item('Triangle', 'fa-caret-up'),
+                        drop_down_item('Square', 'fa-square'),
+                        drop_down_item('Something else here', 'fa-btc'),
                       ]),
-                      div({'class':"dropdown nav-item shapes__dropdown dropdown-menu-header"}, [
-                        html_button({'class':"btn dropdown-toggle crt-btn", 'type':"button", 'id':"dropdownMenuButton", 'data-toggle':"dropdown", 'aria-haspopup':"true", 'aria-expanded':"false"}, 'Options'),
-                        div({'class': "dropdown-menu", 'aria-labelledby':"dropdownMenuButton"}, [
-                          a({'class':"dropdown-item",'href':"#"}, [
-                            i({'class': "fa fa-1x fa-caret-up", 'aria-hidden':"true"}),
-                            t('Triangle'),
-                          ]),
-                          a({'class':"dropdown-item",'href':"#"}, [
-                            i({'class': "fa fa-1x fa-square", 'aria-hidden':"true"}),
-                            t('Square'),
-                          ]),
-                          a({'class':"dropdown-item",'href':"#"}, [
-                            i({'class': "fa fa-1x fa-btc", 'aria-hidden':"true"}),
-                            t('Something else here'),
-                          ]),
-                        ]),
+                      drop_down_menu('Options', [
+                        drop_down_item('Triangle', 'fa-caret-up'),
+                        drop_down_item('Square', 'fa-square'),
+                        drop_down_item('Something else here', 'fa-btc'),
                       ]),
                       li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
                         form({'action': '#'}, [
