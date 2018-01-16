@@ -57,6 +57,13 @@ class BCPFile(li):
     def __init__(self, title):
         super(BCPFile,self).__init__({'class': 'file'}, [a({'href': ''}, title)])
 
+
+def sub_menu_handler(e):
+    jquery = js.globals['$']
+    jquery(e.target).next('div').toggle();
+    e.stopPropagation()
+    e.preventDefault()
+
     
 editor_view = BCChrome([
                       div({'class':"dropdown nav-item shapes__dropdown dropdown-menu-header"}, [
@@ -73,6 +80,22 @@ editor_view = BCChrome([
                           a({'class':"dropdown-item",'href':"#"}, [
                             i({'class': "fa fa-1x fa-btc", 'aria-hidden':"true"}),
                             t('Something else here'),
+                          ]),
+                          div({'class': "dropdown-submenu"}, [
+                            a({'class':"dropdown-item test",'href':"#", 'onclick': sub_menu_handler}, [
+                              i({'class': "fa fa-1x fa-btc", 'aria-hidden':"true"}),
+                              t('Recent documents'),
+                            ]),
+                            div({'class': "dropdown-menu"}, [
+                              a({'class':"dropdown-item",'href':"#"}, [
+                                i({'class': "fa fa-1x fa-btc", 'aria-hidden':"true"}),
+                                t('Hello.py'),
+                              ]),
+                              a({'class':"dropdown-item",'href':"#"}, [
+                                i({'class': "fa fa-1x fa-btc", 'aria-hidden':"true"}),
+                                t('World.py'),
+                              ]),
+                            ]),
                           ]),
                         ]),
                       ]),
