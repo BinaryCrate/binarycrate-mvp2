@@ -27,6 +27,10 @@ urlpatterns = [
 
     # Site
     url(r'^', include('landingpage.urls')),
+
+    # Projects
+    url(r'^projects/', include('project.urls')),
+
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

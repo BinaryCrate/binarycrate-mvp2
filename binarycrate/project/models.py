@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, unicode_literals, print_function
 
 from django.db import models
 import uuid
 from mptt.models import MPTTModel, TreeForeignKey
-
-# Create your models here.
 
 class DirectoryEntry(MPTTModel):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
