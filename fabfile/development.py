@@ -27,6 +27,10 @@ def behave():
     run(command='behave --verbosity=3')
 
 @task
+def shell():
+    run(command='shell')
+
+@task
 def run(**kwargs):
     command = kwargs.get('command', 'check')
     print(yellow('Running docker process...'))
