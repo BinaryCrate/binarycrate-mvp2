@@ -70,8 +70,16 @@ def drop_down_menu(title, members):
       div({'class': "dropdown-menu", 'aria-labelledby':"dropdownMenuButton"}, members)
     ])
 
-def drop_down_item(title, icon_class):
-    return a({'class':"dropdown-item",'href':"#"}, [
+def drop_down_item(title, icon_class, click_handler):
+    attribs = {'class':"dropdown-item",'href':"#"}
+    if click_handler is not None:
+        attribs['onclick'] = click_handler
+    else:
+        def dummy_click_handler(e):
+            e.stopPropagation()
+            e.preventDefault()
+        attribs['onclick'] = dummy_click_handler
+    return a(attribs, [
       i({'class': "fa fa-1x " + icon_class, 'aria-hidden':"true"}),
       t(title),
     ])
@@ -84,26 +92,31 @@ def drop_down_submenu(title, icon_class, members):
       ]),
       div({'class': "dropdown-menu"}, members)
     ])
+
+def test_click_handler(e):
+    js.globals.window.alert('Hello click handler')
+    e.stopPropagation()
+    e.preventDefault()
     
 editor_view = BCChrome([
                       drop_down_menu('File', [
-                        drop_down_item('Triangle', 'fa-caret-up'),
-                        drop_down_item('Square', 'fa-square'),
-                        drop_down_item('Something else here', 'fa-btc'),
+                        drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
+                        drop_down_item('Square', 'fa-square', None),
+                        drop_down_item('Something else here', 'fa-btc', None),
                         drop_down_submenu('Recent documents', 'fa-caret-right', [
-                          drop_down_item('Hello.py', ''),
-                          drop_down_item('World.py', ''),
+                          drop_down_item('Hello.py', '', None),
+                          drop_down_item('World.py', '', None),
                         ])
                       ]),
                       drop_down_menu('Edit', [
-                        drop_down_item('Triangle', 'fa-caret-up'),
-                        drop_down_item('Square', 'fa-square'),
-                        drop_down_item('Something else here', 'fa-btc'),
+                        drop_down_item('Triangle', 'fa-caret-up', None),
+                        drop_down_item('Square', 'fa-square', None),
+                        drop_down_item('Something else here', 'fa-btc', None),
                       ]),
                       drop_down_menu('Options', [
-                        drop_down_item('Triangle', 'fa-caret-up'),
-                        drop_down_item('Square', 'fa-square'),
-                        drop_down_item('Something else here', 'fa-btc'),
+                        drop_down_item('Triangle', 'fa-caret-up', None),
+                        drop_down_item('Square', 'fa-square', None),
+                        drop_down_item('Something else here', 'fa-btc', None),
                       ]),
                       li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
                         form({'action': '#'}, [
