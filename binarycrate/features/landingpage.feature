@@ -3,8 +3,16 @@ Feature: Cannot use the site if not logged in
   As a web user
   If I browse to the home page I must be redirected to the login page
 
-  Scenario: Browse to root page
+  #Scenario: Browse to root page
+  #  Given I browse to "http://webserver:8000/"
+  #  When I wait for the browser to render the page
+  #  Then I the browsers URL is "http://webserver:8000/accounts/login/?next=/"
+
+  Scenario: Login to binary crate
+    Given I set up default credentials
     Given I browse to "http://webserver:8000/"
     When I wait for the browser to render the page
     Then I the browsers URL is "http://webserver:8000/accounts/login/?next=/"
+    When I login in with the default credentials
+    Then I the browsers URL is "http://webserver:8000/"
 
