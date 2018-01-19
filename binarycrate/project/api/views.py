@@ -2,7 +2,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from ..models import Project
-from ..serializers import ProjectSerializer
+from .serializers import ProjectSerializer
 from rest_framework import mixins
 from rest_framework import generics
 
