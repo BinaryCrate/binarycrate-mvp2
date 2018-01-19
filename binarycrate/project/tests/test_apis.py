@@ -3,7 +3,6 @@ from __future__ import absolute_import, unicode_literals, print_function
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-#from myproject.apps.core.models import Account
 from project.models import Project, DirectoryEntry
 import uuid
 
@@ -30,7 +29,7 @@ class ProjectListTestCase(APITestCase):
 
     def test_project_detail(self):
         """
-        Ensure we can list the projects
+        Ensure we can view individual projects
         """
         self.assertEqual(Project.objects.count(), 1)
         url = reverse('api:project-detail', kwargs={'pk':str(self.project_id)})
