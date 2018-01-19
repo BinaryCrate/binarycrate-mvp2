@@ -28,8 +28,8 @@ urlpatterns = [
     # Site
     url(r'^', include('landingpage.urls')),
 
-    # Projects
-    url(r'^projects/', include('project.urls')),
+    # API
+    url(r'^api/', include('api.urls')),
 
 ]
 
