@@ -1,6 +1,6 @@
 #! /bin/bash
 cd /opt
-ln -s /opt/project/front-end/tests
+cp /opt/project/front-end/tests tests -r
 cd tests
 ln -s /opt/project/front-end/binarycrate
 ln -s /opt/project/cavorite/cavorite
