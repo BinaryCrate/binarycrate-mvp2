@@ -8,7 +8,6 @@ from selenium.webdriver.remote.webdriver import WebDriver
 def before_all(context):
     d = DesiredCapabilities.CHROME
     d['loggingPrefs'] = {'browser': 'ALL'}
-    #global browser
     context.browser = WebDriver('http://chrome:4444/wd/hub', d)
 
 

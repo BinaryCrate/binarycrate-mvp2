@@ -9,6 +9,9 @@ except ImportError:
 import copy
 from .navigation import BCChrome
 from cavorite.bootstrap.modals import ModalTrigger, Modal
+from cavorite.ajaxget import ajaxget
+from cavorite import timeouts
+import json
 
 
 def projectdropdownitem(title, data_target, projectname, redraw_function):
@@ -24,10 +27,6 @@ def projectdropdownitem(title, data_target, projectname, redraw_function):
 
 
 projects = []
-
-def projects_api_result_fn(new_projects):
-    global projects
-    projects = new_projects
 
 class Project(div):
     def __init__(self, title):
@@ -64,8 +63,25 @@ project_name = 'No Project'
 def get_project_name():
     return project_name
 
+class DashboardView(BCChrome):
+    def projects_api_ajax_result_handler(self, xmlhttp, response):
+        if xmlhttp.status == 200:
+            global projects
+            new_projects = json.loads(str(xmlhttp.responseText))
+            if projects != new_projects:
+                projects = new_projects
+                self.mount_redraw()
+
+    def query_projects(self):
+        ajaxget('/api/projects/', self.projects_api_ajax_result_handler)
+
+    def was_mounted(self):
+        super(DashboardView, self).was_mounted()
+        self.timeout_val = timeouts.set_timeout(lambda: self.query_projects(), 1)
+    
+
 def dashboard_view():
-    return BCChrome([
+    return DashboardView([
                       li({'class': 'nav-item li-create-new'}, [
                         form({'action': '#'}, [
                           ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Create New", "#createNew"),

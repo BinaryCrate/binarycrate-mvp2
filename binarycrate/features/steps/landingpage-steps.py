@@ -9,30 +9,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-#import psutil
+from bddutils import (find_element_by_id, find_element_by_css_selector,
+                      find_element_by_xpath, set_element_text)
 
-
-def find_element_by_id(context, id):
-    WebDriverWait(context.browser, 20).until(
-        EC.presence_of_element_located((By.ID, id)))
-    return WebDriverWait(context.browser, 20).until(
-        EC.visibility_of_element_located((By.ID, id)))
-
-def find_element_by_css_selector(context, selector):
-    WebDriverWait(context.browser, 20).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
-    return WebDriverWait(context.browser, 20).until(
-        EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
-
-def find_element_by_xpath(context, xpath):
-    WebDriverWait(context.browser, 20).until(
-        EC.presence_of_element_located((By.XPATH, xpath)))
-    return WebDriverWait(context.browser, 20).until(
-        EC.visibility_of_element_located((By.XPATH, xpath)))
-
-def set_element_text(element, text):
-    element.clear()
-    element.send_keys(text)
 
 @given(u'I browse to "{url}"')
 def step_impl(context, url):
@@ -51,7 +30,10 @@ def given_i_setup_default_credentials(context):
     u = User.objects.create(username='mark@hackerpals.com', email='mark@hackerpals.com')
     u.set_password('temp1234')
     u.save()
-    assert User.objects.count() == 1
+    u = User.objects.create(username='hasib@hackerpals.com', email='hasib@hackerpals.com')
+    u.set_password('temp1234')
+    u.save()
+    assert User.objects.count() == 2
 
 @when(u'I login in with the default credentials')
 def when_i_login_with_the_default_credentials(context):
