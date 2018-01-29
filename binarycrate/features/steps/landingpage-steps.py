@@ -9,6 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+#import psutil
 
 
 def find_element_by_id(context, id):
@@ -35,7 +36,7 @@ def set_element_text(element, text):
 
 @given(u'I browse to "{url}"')
 def step_impl(context, url):
-    context.browser.get(url)
+    context.browser.get(context.base_url + url)
 
 @when(u'I wait for the browser to render the page')
 def b_when_i_wait_for_the_browser_to_render_the_page(context):
@@ -43,14 +44,10 @@ def b_when_i_wait_for_the_browser_to_render_the_page(context):
 
 @then(u'I the browsers URL is "{url}"')
 def b_then_i_the_browsers_url_is_url(context, url):
-    assert context.browser.current_url == url, 'Browser url = {0}, test url = {1}'.format(context.browser.current_url, url)
+    assert context.browser.current_url == context.base_url + url, 'Browser url = {0}, test url = {1}'.format(context.browser.current_url, context.base_url + url)
 
 @given(u'I set up default credentials')
 def given_i_setup_default_credentials(context):
-    #print('dir(context)=', dir(context))
-    #print('context.base_url=', context.base_url)
-    #print('context._runner=', context._runner)
-    #assert False
     u = User.objects.create(username='mark@hackerpals.com', email='mark@hackerpals.com')
     u.set_password('temp1234')
     u.save()

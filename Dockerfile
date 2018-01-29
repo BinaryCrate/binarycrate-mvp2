@@ -46,7 +46,7 @@ ENV PYTHONWARNINGS d
 
 # Entrypoint
 # Also need
-EXPOSE 8000
+EXPOSE 8000-8100
 WORKDIR /opt/project/binarycrate
 ENTRYPOINT ["/opt/project/run-django"]
 CMD ["check"]
