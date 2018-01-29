@@ -5,6 +5,7 @@ django-mptt==0.8.7
 git+https://github.com/BinaryCrate/behave-django.git@50450684840d66d34c3bd121aa5b75b46f6c22e1
 djangorestframework==3.7.7
 psutil==5.4.3
+mock==2.0.0
 
 # General requirements for testing
 selenium==3.5.0

@@ -1,4 +1,5 @@
 from __future__ import absolute_import, print_function
+import cavorite
 from cavorite import c, t, Router, get_current_hash
 from cavorite.HTML import *
 try:
@@ -8,6 +9,7 @@ except ImportError:
 import copy
 from .navigation import BCChrome
 from cavorite.bootstrap.modals import ModalTrigger, Modal
+
 
 def projectdropdownitem(title, data_target, projectname, redraw_function):
     source = None
@@ -21,7 +23,11 @@ def projectdropdownitem(title, data_target, projectname, redraw_function):
     return source
 
 
-projects = ['Pong Game', 'Resume Website', 'Twitter Clone', 'Website', 'Python Functions', 'Space Invaders']
+projects = []
+
+def projects_api_result_fn(new_projects):
+    global projects
+    projects = new_projects
 
 class Project(div):
     def __init__(self, title):
@@ -51,7 +57,7 @@ class Project(div):
         return ret
 
 def projectsfn():
-    return [Project(projname) for projname in projects]
+    return [Project(proj['name']) for proj in projects]
 
 project_name = 'No Project'
 

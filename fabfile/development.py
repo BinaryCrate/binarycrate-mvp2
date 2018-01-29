@@ -75,7 +75,11 @@ def frontend_test(testname=None):
     else:
         testcommand = ""
     with lcd('.'):
-        local('docker run --tty --interactive --volume "${PWD}":/opt/project --entrypoint="/opt/project/run-frontend-tests" "${PWD##*/}"' + testcommand)
+        local('docker run --tty '
+              '--interactive --volume "${PWD}":/opt/project '
+              #'--volume "/home/mark/cavorite":/opt/project/cavorite '
+              '--entrypoint="/opt/project/run-frontend-tests" '
+              '"${PWD##*/}"' + testcommand)
 
 @task
 def makemigrations():
