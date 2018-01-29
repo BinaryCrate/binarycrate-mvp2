@@ -1,7 +1,10 @@
 from __future__ import absolute_import, print_function
 from cavorite import c, t, Router, get_current_hash
 from cavorite.HTML import *
-import js
+try:
+    import js
+except ImportError:
+    js = None
 import copy
 from .navigation import BCChrome
 from cavorite.bootstrap.modals import ModalTrigger, Modal
@@ -55,7 +58,8 @@ project_name = 'No Project'
 def get_project_name():
     return project_name
 
-dashboard_view = BCChrome([
+def dashboard_view():
+    return BCChrome([
                       li({'class': 'nav-item li-create-new'}, [
                         form({'action': '#'}, [
                           ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Create New", "#createNew"),

@@ -1,7 +1,10 @@
 from __future__ import absolute_import, print_function
 from cavorite import c, t, Router, callbacks, timeouts
 from cavorite.HTML import *
-import js
+try:
+    import js
+except ImportError:
+    js = None
 import copy
 
 class CodeMirrorHandlerVNode(textarea):

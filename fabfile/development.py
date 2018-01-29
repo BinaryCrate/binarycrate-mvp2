@@ -68,6 +68,16 @@ def test(testname=None):
         local('docker run --tty --interactive --volume "${PWD}":/opt/project --entrypoint="pytest" "${PWD##*/}"' + testcommand)
 
 @task
+def frontend_test(testname=None):
+    print(yellow('Running docker process...'))
+    if testname:
+        testcommand = " -k '{0}'".format(testname)
+    else:
+        testcommand = ""
+    with lcd('.'):
+        local('docker run --tty --interactive --volume "${PWD}":/opt/project --entrypoint="/opt/project/run-frontend-tests" "${PWD##*/}"' + testcommand)
+
+@task
 def makemigrations():
     print(yellow('Running docker process...'))
     with lcd('.'):

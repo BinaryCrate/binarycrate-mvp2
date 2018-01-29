@@ -1,7 +1,10 @@
 from __future__ import absolute_import, print_function
 from cavorite import c, t, Router, callbacks, timeouts, get_current_hash
 from cavorite.HTML import *
-import js
+try:
+    import js
+except ImportError:
+    js = None
 import copy
 from .controls import CodeMirrorHandlerVNode
 import uuid

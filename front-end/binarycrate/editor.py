@@ -1,7 +1,10 @@
 from __future__ import absolute_import, print_function
 from cavorite import c, t, Router, callbacks, timeouts, get_current_hash
 from cavorite.HTML import *
-import js
+try:
+    import js
+except ImportError:
+    js = None
 import copy
 from .controls import CodeMirrorHandlerVNode
 import uuid
@@ -98,7 +101,8 @@ def test_click_handler(e):
     e.stopPropagation()
     e.preventDefault()
     
-editor_view = BCChrome([
+def editor_view():
+    return BCChrome([
                       drop_down_menu('File', [
                         drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
                         drop_down_item('Square', 'fa-square', None),
