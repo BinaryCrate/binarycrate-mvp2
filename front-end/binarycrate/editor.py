@@ -171,7 +171,7 @@ def editor_view():
                             i({'class': 'fa fa-envelope-o', 'aria-hidden': 'true'}),
                           ]),
                         ]),
-                      ]),
+                      ], None),
                     ])
 
 

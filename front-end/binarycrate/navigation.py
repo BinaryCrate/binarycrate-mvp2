@@ -95,6 +95,6 @@ class BCChrome(div):
                 ]),
                 Modal("logoutModal", "Logout", [
                   div("Select \"Logout\" below if you are ready to end your current session."),
-                ]),
+                ], None),
               ] + modals)
 

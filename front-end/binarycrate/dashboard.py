@@ -96,7 +96,7 @@ def dashboard_view():
                           strong([t(get_project_name)]),
                           t(", this will also delete all projects and data."),
                         ]),
-                      ]),
+                      ], None),
                       Modal("renameProj", "Rename Project", [
                         form([
                           div({'class': 'form-group'}, [
@@ -108,7 +108,7 @@ def dashboard_view():
                             textarea({'class': "form-control", 'id': "exampleFormControlTextarea1", 'rows':"3"}),
                           ]),
                         ]),
-                      ]),
+                      ], None),
                       Modal("shareProj", "Share Project", [
                         form([
                           div({'class': 'form-group'}, [
@@ -122,7 +122,7 @@ def dashboard_view():
                             i({'class': 'fa fa-envelope-o', 'aria-hidden': 'true'}),
                           ]),
                         ]),
-                      ]),
+                      ], None),
                       Modal("createNew", "Create New", [
                         div({'class': 'form-group'}, [
                           label({'class': 'col-form-label', 'for': 'formGroupExampleInput'}, 'Title'),
@@ -138,7 +138,7 @@ def dashboard_view():
                             option('Python'),
                           ]),
                         ]),
-                      ]),
+                      ], lambda e: js.globals['window'].alert('Create New')),
                     ])
                     
 
