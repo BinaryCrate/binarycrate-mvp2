@@ -6,6 +6,7 @@ from rest_framework.test import APITestCase
 from project.models import Project, DirectoryEntry
 import uuid
 from accounts.factories import UserFactory
+from rest_framework.test import APIClient
 
 
 class ProjectListTestCase(APITestCase):
@@ -42,6 +43,16 @@ class ProjectListTestCase(APITestCase):
         self.assertEqual(response.data, {'id': str(self.project_id), 'name': 'Test 1', 'type': 0,
                                          'public': True})
 
+    def test_project_post_must_login(self):
+        self.assertEqual(Project.objects.count(), 1)
+        url = reverse('api:project-list')
+        project_id = str(uuid.uuid4())
+        data = { 'id': project_id, 'name':'Test 2', 'type':0, 'public':True }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Project.objects.count(), 2)
+
+
 
 class ProjectMustLogin(APITestCase):
     # If the user is not logged in they get 403 errors
@@ -75,6 +86,13 @@ class ProjectMustLogin(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(str(self.project_id) in response.content)
 
+    def test_project_post_must_login(self):
+        url = reverse('api:project-list')
+        project_id = str(uuid.uuid4())
+        data = { 'id': project_id, 'name':'Test 2', 'type':0, 'public':True }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertFalse(str(self.project_id) in response.content)
     
 class ProjectCannotAccessOtherUserTestCase(APITestCase):
     def setUp(self):
