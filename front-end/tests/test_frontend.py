@@ -7,6 +7,7 @@ from collections import defaultdict
 import uuid
 from mock import Mock
 import json
+import cavorite.bootstrap.modals
 
 
 class TestDashboard(object):
@@ -29,11 +30,11 @@ class TestDashboard(object):
 
         def mock_element_iterator_callback(node):
             if isinstance(node, js.MockElement)  and node.tagName == 'div' and node.getAttribute('class') == 'wrimagecard-topimage_title':
-                p_children = [c for c in node.children if c.tagName == 'p']
+                p_children = [c for c in node.children.l if c.tagName == 'p']
                 assert len(p_children) == 1
                 p = p_children[0]
-                assert len(p.children) == 1
-                text_node = p.children[0]
+                assert len(p.children.l) == 1
+                text_node = p.children.item(0)
                 assert isinstance(text_node, js.MockTextNode)
                 if str(text_node) == 'Mark\'s Project':
                     result['marks_project'] += 1
@@ -54,4 +55,69 @@ class TestDashboard(object):
         js.IterateElements(rendered_node, mock_element_iterator_callback)
 
         assert result['marks_project'] == 1
+
+    def test_calls_ajax_post_correctly(self, monkeypatch):
+        def dummy_uuid():
+            return uuid.UUID('531cb169-91f4-4102-9a0a-2cd5e9659071')
+
+        monkeypatch.setattr(dashboard.cavorite, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(ajaxget, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(dashboard, 'js', js)
+        monkeypatch.setattr(dashboard.modals, 'js', js)
+        callbacks.initialise_global_callbacks()
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        js.globals.cavorite_ajaxGet = Mock()
+        js.globals.cavorite_ajaxPost = Mock()
+
+        result = dict()
+
+        def IterateVirtualDOM(vnode, callback):
+            callback(vnode)
+            if hasattr(vnode, 'get_children'):
+                for child in vnode.get_children():
+                    IterateVirtualDOM(child, callback)
+
+        def mock_element_iterator_callback(vnode):
+            if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'createNew':
+
+                def mock_element_iterator_callback2(vnode):
+                    if hasattr(vnode, 'tag'):
+                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                            result['createNew_OK_handler'] = vnode.get_attribs()['onclick']
+                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtProjectName":
+                            node.value = 'Porject2'
+                        if vnode.tag == 'select' and vnode.get_attribs().get('id') == "selectProjectType":
+                            node.value = 'Porject2'
+                IterateVirtualDOM(vnode, mock_element_iterator_callback2)
+
+        node = dashboard.dashboard_view()
+        node.mount_redraw = Mock()
+
+        virtual_node = node._build_virtual_dom()
+        IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
+
+        # Call the modal handler
+        rendered_modal = node._render(None)
+        cavorite.bootstrap.modals.js.return_get_element_by_id = {'createNew': rendered_modal}
+
+        def setup_mock_modal_callback(node):
+            if isinstance(node, js.MockElement) and node.getAttribute('id') == 'txtProjectName':
+                node.value = 'Test 2'
+            if isinstance(node, js.MockElement) and node.getAttribute('id') == 'selectProjectType':
+                node.value = 0
+
+        js.IterateElements(rendered_modal, setup_mock_modal_callback)
+
+        result['createNew_OK_handler'](Mock())
+
+        js.globals.cavorite_ajaxPost.assert_called_with('/api/projects/', str(dummy_uuid()), {'name':'Test 2', 'type':0, 'public':True })
+
+        node.projects_api_ajax_post_result_handler(Mock(status=200, responseText=json.dumps('OK')), 'OK')
+
+        js.globals.cavorite_ajaxGet.assert_called_with('/api/projects/', str(dummy_uuid()))
 

@@ -8,10 +8,17 @@ from rest_framework import generics
 from rest_framework import permissions
 from .permissions import IsOwner
 from project.models import DirectoryEntry
+from django.views.decorators.csrf import csrf_exempt
 
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication 
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+
+    def enforce_csrf(self, request):
+        return  # To not perform the csrf check previously happening
 
 class ProjectList(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticated, )
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
 
     def get_queryset(self):
         user = self.request.user

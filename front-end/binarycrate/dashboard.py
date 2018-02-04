@@ -8,8 +8,9 @@ except ImportError:
     js = None
 import copy
 from .navigation import BCChrome
+import cavorite.bootstrap.modals as modals
 from cavorite.bootstrap.modals import ModalTrigger, Modal
-from cavorite.ajaxget import ajaxget
+from cavorite.ajaxget import ajaxget, ajaxpost
 from cavorite import timeouts
 import json
 
@@ -65,7 +66,7 @@ def get_project_name():
 
 class DashboardView(BCChrome):
     def projects_api_ajax_result_handler(self, xmlhttp, response):
-        if xmlhttp.status == 200:
+        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             global projects
             new_projects = json.loads(str(xmlhttp.responseText))
             if projects != new_projects:
@@ -77,11 +78,28 @@ class DashboardView(BCChrome):
 
     def was_mounted(self):
         super(DashboardView, self).was_mounted()
-        self.timeout_val = timeouts.set_timeout(lambda: self.query_projects(), 1)
-    
+        #def test_timeout():
+        #    self.query_projects()
+        self.timeout_val = timeouts.set_timeout(lambda : self.query_projects(), 1)
+
 
 def dashboard_view():
-    return DashboardView([
+    dv = None
+
+    def projects_api_ajax_post_result_handler(xmlhttp, response):
+        print("projects_api_ajax_post_result_handler called")
+        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+            #dv.mount_redraw()
+            dv.query_projects()
+
+    def createNew_ok(e, form_values):
+        data = {'name': form_values['txtProjectName'],
+                'type': form_values['selectProjectType'],
+                'public': True}
+        ajaxpost('/api/projects/', data, projects_api_ajax_post_result_handler)
+        pass
+
+    dv = DashboardView([
                       li({'class': 'nav-item li-create-new'}, [
                         form({'action': '#'}, [
                           ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Create New", "#createNew"),
@@ -125,21 +143,23 @@ def dashboard_view():
                       ], None),
                       Modal("createNew", "Create New", [
                         div({'class': 'form-group'}, [
-                          label({'class': 'col-form-label', 'for': 'formGroupExampleInput'}, 'Title'),
-                          html_input({'type': 'text', 'class': 'form-control', 'id': 'formGroupExampleInput', 'placeholder': "Title of project"}),
+                          label({'class': 'col-form-label', 'for': 'txtProjectName'}, 'Title'),
+                          html_input({'type': 'text', 'class': 'form-control', 'id': 'txtProjectName', 'placeholder': "Title of project"}),
                         ]),
+                        #div({'class': 'form-group'}, [
+                        #  label({'for': 'exampleFormControlTextarea1'}, 'Description'),
+                        #  textarea({'class': 'form-control', 'id':"exampleFormControlTextarea1", 'placeholder':"Description of project", 'rows':"3"}),
+                        #]),
                         div({'class': 'form-group'}, [
-                          label({'for': 'exampleFormControlTextarea1'}, 'Description'),
-                          textarea({'class': 'form-control', 'id':"exampleFormControlTextarea1", 'placeholder':"Description of project", 'rows':"3"}),
-                        ]),
-                        div({'class': 'form-group'}, [
-                          label({'for': 'exampleFormControlSelect1'}, 'Example Select'),
-                          select({'class': 'form-control', 'id': 'exampleFormControlSelect1'}, [
-                            option('Python'),
+                          label({'for': 'selectProjectType'}, 'Project Type'),
+                          select({'class': 'form-control', 'id': 'selectProjectType'}, [
+                            option({'value': 0}, 'Python'),
                           ]),
                         ]),
-                      ], lambda e: js.globals['window'].alert('Create New')),
+                      ], createNew_ok),
                     ])
-                    
 
+    dv.projects_api_ajax_post_result_handler = projects_api_ajax_post_result_handler
+
+    return dv
 
