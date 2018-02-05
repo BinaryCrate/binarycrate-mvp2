@@ -6,11 +6,15 @@ from .serializers import ProjectSerializer
 from rest_framework import mixins
 from rest_framework import generics
 from rest_framework import permissions
-from .permissions import IsOwner
+#from .permissions import IsOwner
 from project.models import DirectoryEntry
 from django.views.decorators.csrf import csrf_exempt
-
+from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication 
+from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
+
+
 class CsrfExemptSessionAuthentication(SessionAuthentication):
 
     def enforce_csrf(self, request):
@@ -31,10 +35,22 @@ class ProjectList(generics.ListCreateAPIView):
     serializer_class = ProjectSerializer
 
 
-#class ProjectDetail(generics.RetrieveUpdateDestroyAPIView):
-class ProjectDetail(generics.RetrieveAPIView):
-    permission_classes = (permissions.IsAuthenticated, IsOwner)
-    queryset = Project.objects.all()
-    serializer_class = ProjectSerializer
+class ProjectDetail(APIView):
+    """
+    Retrieve, update or delete a snippet instance.
+    """
+
+    def get_object(self, pk):
+        try:
+            return Project.objects.get(pk=pk)
+        except Snippet.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        project = self.get_object(pk)
+        if project.owner != request.user:
+            raise PermissionDenied()
+        serializer = ProjectSerializer(project)
+        return Response(serializer.data)
 
 

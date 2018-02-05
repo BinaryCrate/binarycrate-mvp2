@@ -132,7 +132,7 @@ class ProjectCannotAccessOtherUserTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(str(self.project_id2) in response.content)
 
-    def test_project_detail_can_accesys_m_projects(self):
+    def test_project_detail_can_access_my_projects(self):
         """
         Ensure we can view individual projects
         """
