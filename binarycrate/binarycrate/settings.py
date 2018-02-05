@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
+import sys
+import tempfile
 
 """
 Django settings for binarycrate project.
@@ -165,4 +167,11 @@ AUTHENTICATION_BACKENDS = (
 SITE_ID = 1
 
 ACCOUNT_USER_MODEL_USERNAME_FIELD = 'email'
+
+# Project files
+
+if 'pytest' in sys.modules:
+    PROJECT_FILES_ROOT = tempfile.mkdtemp()
+else:
+    PROJECT_FILES_ROOT = os.path.join(BASE_DIR, 'private/projects')
 

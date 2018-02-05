@@ -14,6 +14,10 @@ class DirectoryEntry(MPTTModel):
     class MPTTMeta:
         order_insertion_by = ['name']
 
+    def __init__(self, *args, **kwargs):
+        self.content = ''
+        super(DirectoryEntry, self).__init__(*args, **kwargs)
+
 
 class Project(models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
