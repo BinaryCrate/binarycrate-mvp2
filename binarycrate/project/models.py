@@ -27,4 +27,7 @@ class Project(models.Model):
     public = models.BooleanField()
     owner = models.ForeignKey('accounts.User')
 
+    def get_directory_entries(self):
+        return self.root_folder.get_descendants(include_self=True)
+
     
