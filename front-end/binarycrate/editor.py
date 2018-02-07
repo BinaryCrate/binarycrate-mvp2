@@ -1,4 +1,5 @@
 from __future__ import absolute_import, print_function
+import cavorite
 from cavorite import c, t, Router, callbacks, timeouts, get_current_hash
 from cavorite.HTML import *
 try:
@@ -10,7 +11,11 @@ from .controls import CodeMirrorHandlerVNode
 import uuid
 from .navigation import BCChrome
 from cavorite.bootstrap.modals import ModalTrigger, Modal
+from cavorite.ajaxget import ajaxget
+import json
+from operator import itemgetter
 
+project = { }
 
 example_html = """<!doctype html>
 <html>
@@ -101,8 +106,81 @@ def test_click_handler(e):
     e.stopPropagation()
     e.preventDefault()
     
-def editor_view():
-    return BCChrome([
+
+class EditorView(BCChrome):
+    def projects_api_ajax_result_handler(self, xmlhttp, response):
+        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+            global project
+            #print('projects_api_ajax_result_handler str(xmlhttp.responseText)=', str(xmlhttp.responseText))
+            new_project = json.loads(str(xmlhttp.responseText))
+            if project != new_project:
+                project = new_project
+                print('projects_api_ajax_result_handler call mount_redraw')
+                self.mount_redraw()
+
+    def query_project(self):
+        ajaxget('/api/projects/' + self.get_root().url_kwargs['project_id'], self.projects_api_ajax_result_handler)
+
+    def was_mounted(self):
+        super(EditorView, self).was_mounted()
+        self.timeout_val = timeouts.set_timeout(lambda : self.query_project(), 1)
+
+    def get_project_tree(self):
+        def get_as_tree(parent_id):
+            directory_entries = sorted([de for de in de_source if de['parent_id'] == parent_id], key=itemgetter('name'))
+            ret = [BCPFile(de['name']) if de['is_file'] else BCPFolder(de['name'], False, get_as_tree(de['id']))  for de in directory_entries if de['parent_id'] == parent_id]
+            #print('get_as_tree ret=', ret)
+            return ret
+        
+        global project
+        print('get_project_tree project=', project)
+        if project == { }:
+            # If project not loaded yet
+            return BCProjectTree([])
+        else:
+            de_source = project['directory_entry']
+            root_element = [de for de in de_source if de['parent_id'] is None]
+            assert len(root_element) == 1
+            root_element = root_element[0]       
+
+            return  BCProjectTree(get_as_tree(root_element['id']))
+        #return \
+        #BCProjectTree([
+        #  BCPFolder('Animals', True, [
+        #    BCPFile('Birds'),
+        #    BCPFolder('Mammals', True, [
+        #      BCPFile('Elephants'),
+        #      BCPFile('Mouse'),
+        #    ]),
+        #    BCPFile('Reptiles'),
+        #  ]),
+        #  BCPFolder('Plants', True, [
+        #    BCPFolder('Flowers', False, [
+        #      BCPFile('Rose'),
+        #      BCPFile('Tulip'),
+        #    ]),
+        #    BCPFile('Trees'),
+        #  ]),
+        #])
+
+    def get_central_content(self):
+             return [
+                      div({'class': "project-fnf"}, [
+                        div({'class': 'top-tree'}, [
+                          span({'class': 'fa fa-1x fa-file-code-o'}),
+                          span({'class': 'fa fa-1x fa-folder-o'}),
+                        ]),
+                        self.get_project_tree(),
+                      ]),
+                      article([
+                        CodeMirrorHandlerVNode({'id': 'code', 'name': 'code'}, example_html),
+                        iframe({'id': 'preview'}),
+                      ]),
+                    ]
+
+    def __init__(self, *args, **kwargs):
+        super(EditorView, self).__init__(
+                    [
                       drop_down_menu('File', [
                         drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
                         drop_down_item('Square', 'fa-square', None),
@@ -128,35 +206,7 @@ def editor_view():
                         ]),
                       ]),
                     ],
-                    [
-                      div({'class': "project-fnf"}, [
-                        div({'class': 'top-tree'}, [
-                          span({'class': 'fa fa-1x fa-file-code-o'}),
-                          span({'class': 'fa fa-1x fa-folder-o'}),
-                        ]),
-                        BCProjectTree([
-                          BCPFolder('Animals', True, [
-                            BCPFile('Birds'),
-                            BCPFolder('Mammals', True, [
-                              BCPFile('Elephants'),
-                              BCPFile('Mouse'),
-                            ]),
-                            BCPFile('Reptiles'),
-                          ]),
-                          BCPFolder('Plants', True, [
-                            BCPFolder('Flowers', False, [
-                              BCPFile('Rose'),
-                              BCPFile('Tulip'),
-                            ]),
-                            BCPFile('Trees'),
-                          ]),
-                        ]),
-                      ]),
-                      article([
-                        CodeMirrorHandlerVNode({'id': 'code', 'name': 'code'}, example_html),
-                        iframe({'id': 'preview'}),
-                      ]),
-                    ],
+                    None,
                     [
                       Modal("shareProj", "Share Project", [
                         form([
@@ -172,6 +222,7 @@ def editor_view():
                           ]),
                         ]),
                       ], None),
-                    ])
+                    ], *args, **kwargs)
 
-
+def editor_view():
+    return EditorView()

@@ -27,6 +27,7 @@ class ProjectList(APIView):
 
     def get_queryset(self):
         user = self.request.user
+        #return Project.objects.none()
         return Project.objects.filter(owner=user)
 
     def get(self, request, format=None):
@@ -55,6 +56,8 @@ class ProjectDetail(APIView):
 
     def get(self, request, pk, format=None):
         project = self.get_object(pk)
+        #print('ProjectDetail project.owner=',project.owner)
+        #print('ProjectDetail request.user=',request.user)
         if project.owner != request.user:
             raise PermissionDenied()
         serializer = ProjectGetSerializer(project)

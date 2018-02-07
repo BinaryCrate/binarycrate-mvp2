@@ -21,11 +21,11 @@ def find_element_by_css_selector(context, selector):
     return WebDriverWait(context.browser, 20).until(
         EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
 
-def find_element_by_xpath(context, xpath):
-    WebDriverWait(context.browser, 20).until(
+def find_element_by_xpath(context, xpath, timeout=20):
+    return WebDriverWait(context.browser, timeout).until(
         EC.presence_of_element_located((By.XPATH, xpath)))
-    return WebDriverWait(context.browser, 20).until(
-        EC.visibility_of_element_located((By.XPATH, xpath)))
+    #return WebDriverWait(context.browser, timeout).until(
+    #    EC.visibility_of_element_located((By.XPATH, xpath)))
 
 def set_element_text(element, text):
     element.clear()

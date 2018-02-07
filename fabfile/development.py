@@ -19,8 +19,9 @@ def runserver():
     run(command='runserver 0.0.0.0:8000')
 
 @task
-def behave():
-    run(command='behave --verbosity=3')
+def behave(scenario_regex=None):
+    command = 'behave --verbosity=3 {}'.format('' if scenario_regex is None else '--name="{}"'.format(scenario_regex))
+    run(command=command)
 
 @task
 def shell():

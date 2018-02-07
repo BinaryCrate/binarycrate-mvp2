@@ -50,7 +50,22 @@ class BCChrome(div):
 
     def __init__(self, top_navbar_items, central_content, modals):
         self.menu_collapsed = False
-        super(BCChrome, self).__init__([ 
+        self.top_navbar_items = top_navbar_items
+        self.central_content = central_content
+        self.modals = modals
+        super(BCChrome, self).__init__()
+
+    def get_top_navbar_items(self):
+        return self.top_navbar_items
+
+    def get_central_content(self):
+        return self.central_content
+
+    def get_modals(self):
+        return self.modals
+
+    def get_children(self):
+        return [ 
                 nav({'class': "navbar navbar-expand-lg navbar-dark bg-dark fixed-top", 'id': 'mainNav'}, [
                   a({'class': "nav-link", 'id':"sidenavToggler", 'style':"padding: 0px 10px 0px 0px; color:white;"}, [
                     i({'class': "fa fa-fw fa-bars", "onclick": self.collapse_menu})
@@ -72,7 +87,7 @@ class BCChrome(div):
                         navsubmenuitem('Cards', '#!cards'),
                       ])
                     ]),
-                    ul({'class': 'navbar-nav mr-auto'}, top_navbar_items),
+                    ul({'class': 'navbar-nav mr-auto'}, self.get_top_navbar_items()),
                     ul({'class': 'navbar-nav ml-auto'}, [
                       li({'class': 'nav-item'}, [
                         ModalTrigger({'class':"nav-link"}, [
@@ -84,7 +99,7 @@ class BCChrome(div):
                   ]),
                 ]),
                 div({'class': "content-wrapper", 'style': {'padding-top': '1px'}}, [c("div", {'class': "container-fluid", 'style': {'padding-left': '1px'}}, [
-                  div({'class': 'row'}, central_content),
+                  div({'class': 'row first-row'}, self.get_central_content()),
                 ])]),
                 footer({'class': "sticky-footer"}, [
                   div({'class':"container"}, [
@@ -96,5 +111,5 @@ class BCChrome(div):
                 Modal("logoutModal", "Logout", [
                   div("Select \"Logout\" below if you are ready to end your current session."),
                 ], None),
-              ] + modals)
+              ] + self.get_modals()
 

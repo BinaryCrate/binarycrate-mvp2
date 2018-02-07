@@ -2,7 +2,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 from binarycrate import dashboard
 import cavorite_tests.fakejs as js
-from cavorite import callbacks, ajaxget, timeouts
+from cavorite import callbacks, ajaxget, timeouts, Router
 from collections import defaultdict
 import uuid
 from mock import Mock
@@ -20,6 +20,7 @@ class TestDashboard(object):
         monkeypatch.setattr(ajaxget, 'js', js)
         monkeypatch.setattr(ajaxget, 'get_uuid', dummy_uuid)
         monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(Router, 'router', Mock())
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()

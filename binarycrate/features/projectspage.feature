@@ -28,9 +28,19 @@ Feature: When logged on I can only see my projects
     Then "div" with id "createNew" is visible
     Given I enter "Marks Second Project" in to the element with id "txtProjectName"
     When I click the "button" labelled "OK" inside the "div" with id "createNew"
-    #When I wait for the browser to render the page
-    #Then the database has a project named "Marks Second Project"
     Then the browser window contains a project named "Marks Second Project"
     
+  Scenario: Login and edit the default project
+    Given I set up default credentials
+    Given I set up default projects
+    Given I browse to "/"
+    When I wait for the browser to render the page
+    When I login in with the default credentials
+    Then I the browsers URL is "/"
+    Given I browse to the default projects editor page
+    When I wait for the browser to render the page
+    Then the browser window contains a BCPFile named "hello_world.py" in the root folder
+    Then the browser window contains a BCPFolder named "folder" in the root folder
+    Then the browser window contains a BCPFile named "hello_folder.py" in the BCPFolder named "folder"
 
 

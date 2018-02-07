@@ -174,8 +174,8 @@ class ProjectCannotAccessOtherUserTestCase(APITestCase):
         self.assertEqual(response.data['name'], 'Test 2')
         self.assertEqual(response.data['type'], 0)
         self.assertEqual(response.data['public'], True)
-        print("test_project_detail_can_access_my_projects sponse.data['directory_entry']=", response.data['directory_entry'])
-        print("test_project_detail_can_access_my_projects type(response.data['directory_entry'])=", type(response.data['directory_entry']))
+        #print("test_project_detail_can_access_my_projects sponse.data['directory_entry']=", response.data['directory_entry'])
+        #print("test_project_detail_can_access_my_projects type(response.data['directory_entry'])=", type(response.data['directory_entry']))
         processed_directory_entries = {convert(d) for d in response.data['directory_entry']}
         #GenericDict = namedtuple('GenericDict', ['id', 'name', 'is_file', 'parent_id', 'content'])
         #assert GenericDict(id='6c69c816-fd05-48a7-be08-3a4702213c76', name=u'hello_world.py', is_file=True, parent_id='88943ac3-64c7-497f-b249-095f8442a4ab', content="print('Hello world')") == GenericDict(content=u"print('Hello world')", parent_id='88943ac3-64c7-497f-b249-095f8442a4ab', id='6c69c816-fd05-48a7-be08-3a4702213c76', is_file=True, name=u'hello_world.py')

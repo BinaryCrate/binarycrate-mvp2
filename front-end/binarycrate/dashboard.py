@@ -30,26 +30,28 @@ def projectdropdownitem(title, data_target, projectname, redraw_function):
 projects = []
 
 class Project(div):
-    def __init__(self, title):
-        self.title = title
+    def __init__(self, proj):
+        self.proj = proj
         super(Project, self).__init__(cssClass="col-md-3 col-sm-4")
 
     def get_children(self):
         ret = [
           div(cssClass="wrimagecard wrimagecard-topimage", children=[
             div(cssClass="wrimagecard-topimage_header", style="background-color: rgba(51, 105, 232, 0.1)", children=[
-              center([i(cssClass="fa fa-code fa-5x", style="color:#3369e8")]),
+              a({'href': '#!editor/' + self.proj['id']}, [
+                center([i(cssClass="fa fa-code fa-5x", style="color:#3369e8")]),
+              ]),
             ]),
             div(cssClass="wrimagecard-topimage_title", children=[
               div(cssClass='dropdown', children=[
               li({'class': "fa fa-pencil fa-lg edit", 'id': "menu1", 'data-toggle': "dropdown"}),
                 ul({'class': "dropdown-menu", 'role': "menu", 'aria-labelledby':"menu1"}, [
-                  projectdropdownitem('Rename', "#renameProj", self.title, self.get_root().mount_redraw),
-                  projectdropdownitem('Share', "#shareProj", self.title, self.get_root().mount_redraw),
-                  projectdropdownitem('Delete', "#deleteProj", self.title, self.get_root().mount_redraw),
+                  projectdropdownitem('Rename', "#renameProj", self.proj['name'], self.get_root().mount_redraw),
+                  projectdropdownitem('Share', "#shareProj", self.proj['name'], self.get_root().mount_redraw),
+                  projectdropdownitem('Delete', "#deleteProj", self.proj['name'], self.get_root().mount_redraw),
                 ]),
               ]),
-              p(self.title),
+              p(self.proj['name']),
             ]),
           ]),
         ]
@@ -57,7 +59,7 @@ class Project(div):
         return ret
 
 def projectsfn():
-    return [Project(proj['name']) for proj in projects]
+    return [Project(proj) for proj in projects]
 
 project_name = 'No Project'
 
@@ -72,14 +74,13 @@ class DashboardView(BCChrome):
             if projects != new_projects:
                 projects = new_projects
                 self.mount_redraw()
+                Router.router.ResetHashChange()
 
     def query_projects(self):
         ajaxget('/api/projects/', self.projects_api_ajax_result_handler)
 
     def was_mounted(self):
         super(DashboardView, self).was_mounted()
-        #def test_timeout():
-        #    self.query_projects()
         self.timeout_val = timeouts.set_timeout(lambda : self.query_projects(), 1)
 
 
