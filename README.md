@@ -20,6 +20,10 @@ fab development.setup
 
 This will create the development docker container
 
+fab development.run:command=createsuperuser
+
+This will create a superuser. Enter a user name and password
+
 fab development.runserver
 
 This will run the application. 
@@ -35,5 +39,7 @@ Ie check is ther default command
 
 
 To run unit tests fab development.test
+
+To run frontend unit tests fab development.frontend_test
 
 To run BDD tests fab development.behave
