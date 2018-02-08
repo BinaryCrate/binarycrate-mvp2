@@ -17,6 +17,7 @@ class TestEditor(object):
         project_id = 'e1e37287-9127-46cb-bddb-4a1a825a5d8e'
 
         monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
         monkeypatch.setattr(callbacks, 'js', js)
         monkeypatch.setattr(ajaxget, 'js', js)
         monkeypatch.setattr(ajaxget, 'get_uuid', dummy_uuid)
@@ -29,19 +30,6 @@ class TestEditor(object):
         js.globals.cavorite_ajaxGet = Mock()
 
         result = defaultdict(int)
-
-        def mock_element_iterator_callback(node):
-            pass
-            #if isinstance(node, js.MockElement)  and node.tagName == 'div' and node.getAttribute('class') == 'wrimagecard-topimage_title':
-            #    p_children = [c for c in node.children.l if c.tagName == 'p']
-            #    assert len(p_children) == 1
-            #    p = p_children[0]
-            #    assert len(p.children.l) == 1
-            #    text_node = p.children.item(0)
-            #    assert isinstance(text_node, js.MockTextNode)
-            #    if str(text_node) == 'Mark\'s Project':
-            #        result['marks_project'] += 1
-                
 
         node = editor.editor_view()
         node.url_kwargs = { 'project_id': project_id }
@@ -70,19 +58,44 @@ class TestEditor(object):
     print('Hello folder i={}'.format(i))
 """
 
-        response = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0', 'name': 'Mark\'s Project', 'type': 0, 'public': True, 'directory_entry':
+        response = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
                      [
                        # Root directory
-                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054', 'name': '', 'is_file': False, 'content': '', 'parent_id': None},
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'parent_id': None
+                       },
                        # A file in the root directory
-                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea', 'name': 'hello_world.py', 'is_file': True, 'content': hello_world_content, 'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'},
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                       },
                        # A folder in the root directory
-                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01', 'name': 'folder', 'is_file': False, 'content': '', 'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'},
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False, 
+                        'content': '', 
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                       },
                        # A file in the 'folder' folder
-                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a', 'name': 'hello_folder.py', 'is_file': True, 'content': hello_folder_content, 'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'},
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+                       },
                      ]
                     }
-        node.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)), response)
+        node.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)),
+                                              response)
 
         tree = node.get_project_tree()
 
@@ -101,10 +114,19 @@ class TestEditor(object):
         assert len(root_folder) == 2
         assert type(root_folder[0]) == BCPFolder
         assert root_folder[0].title == 'folder'
-        assert type(root_folder[1]) == BCPFile
-        assert get_BCPFile_title(root_folder[1]) == 'hello_world.py'
+        hello_world = root_folder[1]
+        assert type(hello_world) == BCPFile
+        assert get_BCPFile_title(hello_world) == 'hello_world.py'
         folder = root_folder[0]
-        assert type(folder.get_children()[2].get_children()[0]) == BCPFile
-        assert get_BCPFile_title(folder.get_children()[2].get_children()[0]) == 'hello_folder.py'
+        hello_folder = folder.get_children()[2].get_children()[0]
+        assert type(hello_folder) == BCPFile
+        assert get_BCPFile_title(hello_folder) == 'hello_folder.py'
 
+        node.code_mirror.editor = Mock(setValue=Mock())
+        hello_world.update_content(None)
+        node.code_mirror.editor.setValue.assert_called_with(hello_world_content)
 
+        node.code_mirror.editor = Mock(setValue=Mock())
+        hello_folder.update_content(None)
+        node.code_mirror.editor.setValue.assert_called_with(hello_folder_content)
+   

@@ -9,6 +9,7 @@ import copy
 
 class CodeMirrorHandlerVNode(textarea):
     def __init__(self, attribs=None, children=None, cssClass=None, **kwargs):
+        #print('CodeMirrorHandlerVNode __init__ self=', self)
         attribs = copy.copy(attribs)
         attribs.update({'onchange': self.onchange_codemirror})
         super(CodeMirrorHandlerVNode, self).__init__(attribs, children, cssClass=cssClass, **kwargs)
@@ -18,6 +19,7 @@ class CodeMirrorHandlerVNode(textarea):
         timeouts.set_timeout(self.codemirror_init, 1)
 
     def codemirror_init(self):
+        #print('CodeMirrorHandlerVNode codemirror_init self=', self)
         textarea = js.globals.document.getElementById("code")
         self.editor = js.globals.CodeMirror.fromTextArea(textarea, {
             'lineNumbers': True,

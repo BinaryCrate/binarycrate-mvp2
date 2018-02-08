@@ -62,8 +62,13 @@ class BCPFolder(li):
                 ol(self.folder_children)]
 
 class BCPFile(li):
-    def __init__(self, title):
-        super(BCPFile,self).__init__({'class': 'file'}, [a({'href': ''}, title)])
+    def __init__(self, de, code_mirror):
+        self.de = de
+        self.code_mirror = code_mirror
+        super(BCPFile,self).__init__({'class': 'file'}, [a({'href': js.globals.window.location.href, 'onclick': lambda e: self.update_content(e)}, de['name'])])
+
+    def update_content(self, e):
+        self.code_mirror.editor.setValue(self.de['content'])
 
 
 def sub_menu_handler(e):
@@ -111,11 +116,9 @@ class EditorView(BCChrome):
     def projects_api_ajax_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             global project
-            #print('projects_api_ajax_result_handler str(xmlhttp.responseText)=', str(xmlhttp.responseText))
             new_project = json.loads(str(xmlhttp.responseText))
             if project != new_project:
                 project = new_project
-                print('projects_api_ajax_result_handler call mount_redraw')
                 self.mount_redraw()
 
     def query_project(self):
@@ -128,12 +131,10 @@ class EditorView(BCChrome):
     def get_project_tree(self):
         def get_as_tree(parent_id):
             directory_entries = sorted([de for de in de_source if de['parent_id'] == parent_id], key=itemgetter('name'))
-            ret = [BCPFile(de['name']) if de['is_file'] else BCPFolder(de['name'], False, get_as_tree(de['id']))  for de in directory_entries if de['parent_id'] == parent_id]
-            #print('get_as_tree ret=', ret)
+            ret = [BCPFile(de, self.code_mirror) if de['is_file'] else BCPFolder(de['name'], False, get_as_tree(de['id']))  for de in directory_entries if de['parent_id'] == parent_id]
             return ret
         
         global project
-        print('get_project_tree project=', project)
         if project == { }:
             # If project not loaded yet
             return BCProjectTree([])
@@ -144,27 +145,9 @@ class EditorView(BCChrome):
             root_element = root_element[0]       
 
             return  BCProjectTree(get_as_tree(root_element['id']))
-        #return \
-        #BCProjectTree([
-        #  BCPFolder('Animals', True, [
-        #    BCPFile('Birds'),
-        #    BCPFolder('Mammals', True, [
-        #      BCPFile('Elephants'),
-        #      BCPFile('Mouse'),
-        #    ]),
-        #    BCPFile('Reptiles'),
-        #  ]),
-        #  BCPFolder('Plants', True, [
-        #    BCPFolder('Flowers', False, [
-        #      BCPFile('Rose'),
-        #      BCPFile('Tulip'),
-        #    ]),
-        #    BCPFile('Trees'),
-        #  ]),
-        #])
 
     def get_central_content(self):
-             return [
+        return      [
                       div({'class': "project-fnf"}, [
                         div({'class': 'top-tree'}, [
                           span({'class': 'fa fa-1x fa-file-code-o'}),
@@ -173,12 +156,13 @@ class EditorView(BCChrome):
                         self.get_project_tree(),
                       ]),
                       article([
-                        CodeMirrorHandlerVNode({'id': 'code', 'name': 'code'}, example_html),
+                        self.code_mirror,
                         iframe({'id': 'preview'}),
                       ]),
                     ]
 
     def __init__(self, *args, **kwargs):
+        self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code'}, '')
         super(EditorView, self).__init__(
                     [
                       drop_down_menu('File', [
