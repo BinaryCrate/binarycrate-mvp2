@@ -130,13 +130,36 @@ class TestEditor(object):
         assert type(hello_folder) == BCPFile
         assert get_BCPFile_title(hello_folder) == 'hello_folder.py'
 
+        # Test no content set
+        assert len(node.code_mirror.get_children()) == 1
+        assert type(node.code_mirror.get_children()[0]) == t
+        assert node.code_mirror.get_children()[0].text() == ''
+
         node.code_mirror.editor = Mock(setValue=Mock())
         hello_world.on_click(None)
         node.code_mirror.editor.setValue.assert_called_with(hello_world_content)
 
+        # Test content set from clicked file
+        assert len(node.code_mirror.get_children()) == 1
+        assert type(node.code_mirror.get_children()[0]) == t
+        assert node.code_mirror.get_children()[0].text() == hello_world_content
+
+        # Click folder doesn't update the text
+        node.code_mirror.editor = Mock(setValue=Mock())
+        folder.on_click(None)
+        assert node.code_mirror.editor.setValue.call_count == 0
+        assert len(node.code_mirror.get_children()) == 1
+        assert type(node.code_mirror.get_children()[0]) == t
+        assert node.code_mirror.get_children()[0].text() == hello_world_content
+        folder.on_click(None)
+
         node.code_mirror.editor = Mock(setValue=Mock())
         hello_folder.on_click(None)
         node.code_mirror.editor.setValue.assert_called_with(hello_folder_content)
+
+        assert len(node.code_mirror.get_children()) == 1
+        assert type(node.code_mirror.get_children()[0]) == t
+        assert node.code_mirror.get_children()[0].text() == hello_folder_content
 
         hello_world.on_click(None)
         # Click on hello_world and check that the UI updates correctly

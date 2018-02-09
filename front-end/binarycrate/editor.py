@@ -104,6 +104,7 @@ class BCPFile(li):
     def on_click(self, e):
         self.code_mirror.editor.setValue(self.de['content'])
         self.editor_view.selected_de = self.de
+        self.editor_view.selected_file_de = self.de
         self.editor_view.mount_redraw()
 
 
@@ -197,10 +198,17 @@ class EditorView(BCChrome):
                       ]),
                     ]
 
+    def get_selected_de_content(self):
+        if self.selected_file_de is None:
+            return ''
+        else:
+            return self.selected_file_de['content']
+
     def __init__(self, *args, **kwargs):
         self.selected_de = None
+        self.selected_file_de = None
         self.folder_state = defaultdict(bool)
-        self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code'}, '')
+        self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code'}, [t(self.get_selected_de_content)])
         super(EditorView, self).__init__(
                     [
                       drop_down_menu('File', [
