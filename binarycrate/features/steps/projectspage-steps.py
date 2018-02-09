@@ -7,6 +7,7 @@ import uuid
 from bddutils import (find_element_by_id, find_element_by_css_selector,
                       find_element_by_xpath, set_element_text)
 import time
+from selenium.webdriver.common.action_chains import ActionChains
 
 
 @given(u'I set up default projects')
@@ -76,7 +77,7 @@ def step_impl(context):
 
 @then(u'the browser window contains a BCPFile named "{file_name}" in the root folder')
 def step_impl(context, file_name):
-    time.sleep(15)
+    time.sleep(25)
     context.browser.save_screenshot('screenshot.png')
     #element = find_element_by_xpath(context, '//ol[@class="tree"]/li[@class="file"]/a[text()="' + file_name + '"]')
     elements = context.browser.find_elements_by_xpath('//ol[@class="tree"]/li[@class="file"]/a[text()="' + file_name + '"]')
@@ -104,4 +105,70 @@ def step_impl(context, file_name, folder_name):
     print('folder - file elements = ', elements)
     #print('log data = ', context.browser.get_log('browser'))
     assert len(elements) == 1
+
+def get_BCPFile_by_name(context, file_name):
+    return context.browser.find_element_by_xpath('//ol[@class="tree"]//li[contains(@class,"file")]/a[text()="' + file_name + '"]')
+
+@given(u'I click on the BCPFile named "{file_name}"')
+def step_impl(context, file_name):
+    element = get_BCPFile_by_name(context, file_name)
+    element.click()
+    time.sleep(5)
+
+@then(u'the element id "{element_id}" contains "{element_content}"')
+def step_impl(context, element_id, element_content):
+    element = context.browser.find_element_by_id(element_id)
+    #print('element.text=', element.text)
+    #print('element_content=', element_content)
+    assert element.text == element_content
+
+@then(u'the BCPFile named "{file_name}" is highlighted')
+def step_impl(context, file_name):
+    #context.browser.save_screenshot('screenshot.png')
+    element = get_BCPFile_by_name(context, file_name)
+    assert 'file-active' in element.get_attribute('class')
+
+@then(u'the BCPFolder named "{folder_name}" is not highlighted')
+def step_impl(context, folder_name):
+    label_element = context.browser.find_element_by_xpath('//ol[@class="tree"]/li//label[text()="' + folder_name + '"]')
+    assert 'file-active' not in label_element.get_attribute('class')
+
+@then(u'the BCPFolder named "{folder_name}" is not checked')
+def step_impl(context, folder_name):
+    label_element = context.browser.find_element_by_xpath('//ol[@class="tree"]/li//label[text()="' + folder_name + '"]')
+    input_element = label_element.find_element_by_xpath('following-sibling::*')
+    #print('input_element.get_attribute(\'checked\')=', input_element.get_attribute('checked'))
+    context.browser.save_screenshot('screenshot.png')
+    print('input_element.is_selected()=', input_element.is_selected())
+    assert input_element.is_selected() == False
+
+@then(u'the BCPFile named "{file_name}" is not highlighted')
+def step_impl(context, file_name):
+    #context.browser.save_screenshot('screenshot.png')
+    element = get_BCPFile_by_name(context, file_name)
+    assert 'file-active' not in element.get_attribute('class')
+
+@given(u'I click on the BCPFolder named "{folder_name}"')
+def step_impl(context, folder_name):
+    #context.browser.save_screenshot('screenshot.png')
+    label_element = context.browser.find_element_by_xpath('//ol[@class="tree"]/li//label[text()="' + folder_name + '"]')
+    input_element = label_element.find_element_by_xpath('following-sibling::*')
+    # Hack needed to click element from https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/2766#issuecomment-191962655
+    #input_element.click()
+    ActionChains(context.browser).move_to_element_with_offset(input_element, 20, 0).click().perform()
+
+@then(u'the BCPFolder named "{folder_name}" is highlighted')
+def step_impl(context, folder_name):
+    label_element = context.browser.find_element_by_xpath('//ol[@class="tree"]/li//label[text()="' + folder_name + '"]')
+    assert 'file-active' in label_element.get_attribute('class')
+
+@then(u'the BCPFolder named "{folder_name}" is checked')
+def step_impl(context, folder_name):
+    label_element = context.browser.find_element_by_xpath('//ol[@class="tree"]/li//label[text()="' + folder_name + '"]')
+    input_element = label_element.find_element_by_xpath('following-sibling::*')
+    print('input_element.get_attribute(\'checked\')=', input_element.get_attribute('checked'))
+    print('input_element.is_selected()=', input_element.is_selected())
+    assert input_element.is_selected()
+    #assert False
+
 

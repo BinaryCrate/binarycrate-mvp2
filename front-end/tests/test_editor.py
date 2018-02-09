@@ -109,24 +109,79 @@ class TestEditor(object):
             assert type(text_node) == t
             return text_node.text
 
+        def get_tree_important_nodes(tree):
+            # This function exists because we want to get the versions of nodes after a mount_redraw
+            root_folder = tree.get_children()
+            folder = root_folder[0]
+            return root_folder, root_folder[1], folder, folder.get_children()[2].get_children()[0]
+
+        root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
+
         assert type(tree) == BCProjectTree
-        root_folder = tree.get_children()
+        #root_folder = tree.get_children()
         assert len(root_folder) == 2
         assert type(root_folder[0]) == BCPFolder
-        assert root_folder[0].title == 'folder'
-        hello_world = root_folder[1]
+        assert root_folder[0].de['name'] == 'folder'
+        #hello_world = root_folder[1]
         assert type(hello_world) == BCPFile
         assert get_BCPFile_title(hello_world) == 'hello_world.py'
-        folder = root_folder[0]
-        hello_folder = folder.get_children()[2].get_children()[0]
+        #folder = root_folder[0]
+        #hello_folder = folder.get_children()[2].get_children()[0]
         assert type(hello_folder) == BCPFile
         assert get_BCPFile_title(hello_folder) == 'hello_folder.py'
 
         node.code_mirror.editor = Mock(setValue=Mock())
-        hello_world.update_content(None)
+        hello_world.on_click(None)
         node.code_mirror.editor.setValue.assert_called_with(hello_world_content)
 
         node.code_mirror.editor = Mock(setValue=Mock())
-        hello_folder.update_content(None)
+        hello_folder.on_click(None)
         node.code_mirror.editor.setValue.assert_called_with(hello_folder_content)
+
+        hello_world.on_click(None)
+        # Click on hello_world and check that the UI updates correctly
+        root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
+        assert node.selected_de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'
+        assert 'file-active' in hello_world.get_attribs().get('class', '')
+        a_hello_world = hello_world.get_children()[0]
+        assert a_hello_world.tag == 'a'
+        assert 'file-active' in a_hello_world.get_attribs().get('class', '')
+        label_folder = folder.get_children()[0]
+        assert label_folder.tag == 'label'
+        assert 'file-active' not in label_folder.get_attribs().get('class', '')
+        checkbox_folder = folder.get_children()[1]
+        assert checkbox_folder.tag == 'input'
+        assert 'checked' not in checkbox_folder.get_attribs()
+
+        folder.on_click(None)
+        # Click on folder and check that the UI updates correctly
+        tree = node.get_project_tree()
+        root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
+        assert node.selected_de['id'] == 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+        assert 'file-active' not in hello_world.get_attribs().get('class', '')
+        a_hello_world = hello_world.get_children()[0]
+        assert a_hello_world.tag == 'a'
+        assert 'file-active' not in a_hello_world.get_attribs().get('class', '')
+        label_folder = folder.get_children()[0]
+        assert label_folder.tag == 'label'
+        assert 'file-active' in label_folder.get_attribs().get('class', '')
+        checkbox_folder = folder.get_children()[1]
+        assert checkbox_folder.tag == 'input'
+        assert 'checked' in checkbox_folder.get_attribs()
+        
+        hello_world.on_click(None)
+        # Click on hello_world and check that the UI updates correctly That is the selected changes but not the fact that folder is checked (ie folded out)
+        root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
+        assert node.selected_de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'
+        assert 'file-active' in hello_world.get_attribs().get('class', '')
+        a_hello_world = hello_world.get_children()[0]
+        assert a_hello_world.tag == 'a'
+        assert 'file-active' in a_hello_world.get_attribs().get('class', '')
+        label_folder = folder.get_children()[0]
+        assert label_folder.tag == 'label'
+        assert 'file-active' not in label_folder.get_attribs().get('class', '')
+        checkbox_folder = folder.get_children()[1]
+        assert checkbox_folder.tag == 'input'
+        assert 'checked' in checkbox_folder.get_attribs()
+
    

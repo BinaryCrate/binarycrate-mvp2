@@ -14,6 +14,7 @@ from cavorite.bootstrap.modals import ModalTrigger, Modal
 from cavorite.ajaxget import ajaxget
 import json
 from operator import itemgetter
+from collections import defaultdict
 
 project = { }
 
@@ -46,29 +47,64 @@ class BCProjectTree(ol):
 
 
 class BCPFolder(li):
-    def __init__(self, title, checked, folder_children):
-        self.title = title
+    def __init__(self, de, folder_children, editor_view):
+        self.editor_view = editor_view
+        self.de = de
         self.folder_children = folder_children
-        self.checked = checked
         self.id = str(uuid.uuid4())
+        ##super(BCPFolder, self).__init__({'class': 'file-active'})
         super(BCPFolder, self).__init__()
 
+    def get_is_checked(self):
+        return self.editor_view.folder_state[self.de['id']]
+
     def get_children(self):
-        input_styles = {'type': 'checkbox', 'id':self.id}
-        if self.checked:
-            input_styles.update({'checked': 'checked'})
-        return [label({'for': self.id}, self.title),
-                html_input(input_styles),
+        input_attribs = {'type': 'checkbox', 'id':self.id, 'onclick': self.on_click}
+        label_attribs = {'for': self.id}
+        if self.get_is_checked():
+            input_attribs.update({'checked': 'checked'})
+        if self.get_is_active():
+            label_attribs.update({'class': 'file-active'})
+        return [label(label_attribs, self.de['name']),
+                html_input(input_attribs),
                 ol(self.folder_children)]
 
+    def get_is_active(self):
+        return self.editor_view.selected_de == self.de
+
+    def on_click(self, e):
+        self.editor_view.folder_state[self.de['id']] = not self.editor_view.folder_state[self.de['id']]
+        self.editor_view.selected_de = self.de
+        self.editor_view.mount_redraw()
+
 class BCPFile(li):
-    def __init__(self, de, code_mirror):
+    def __init__(self, de, code_mirror, editor_view):
         self.de = de
         self.code_mirror = code_mirror
-        super(BCPFile,self).__init__({'class': 'file'}, [a({'href': js.globals.window.location.href, 'onclick': lambda e: self.update_content(e)}, de['name'])])
+        self.editor_view = editor_view
+        super(BCPFile,self).__init__({'class': 'file'})
 
-    def update_content(self, e):
+    def get_children(self):
+        a_attribs = {'href': js.globals.window.location.href, 'onclick': self.on_click}
+        if self.get_is_active():
+            a_attribs.update({'class': 'file-active'})
+        return [
+          a(a_attribs, self.de['name'])
+        ]
+
+    def get_attribs(self):
+        ret = super(BCPFile, self).get_attribs()
+        if self.get_is_active():
+            ret.update({'class': 'file file-active'})
+        return ret
+
+    def get_is_active(self):
+        return self.editor_view.selected_de == self.de
+
+    def on_click(self, e):
         self.code_mirror.editor.setValue(self.de['content'])
+        self.editor_view.selected_de = self.de
+        self.editor_view.mount_redraw()
 
 
 def sub_menu_handler(e):
@@ -131,7 +167,7 @@ class EditorView(BCChrome):
     def get_project_tree(self):
         def get_as_tree(parent_id):
             directory_entries = sorted([de for de in de_source if de['parent_id'] == parent_id], key=itemgetter('name'))
-            ret = [BCPFile(de, self.code_mirror) if de['is_file'] else BCPFolder(de['name'], False, get_as_tree(de['id']))  for de in directory_entries if de['parent_id'] == parent_id]
+            ret = [BCPFile(de, self.code_mirror, self) if de['is_file'] else BCPFolder(de, get_as_tree(de['id']), self)  for de in directory_entries if de['parent_id'] == parent_id]
             return ret
         
         global project
@@ -162,6 +198,8 @@ class EditorView(BCChrome):
                     ]
 
     def __init__(self, *args, **kwargs):
+        self.selected_de = None
+        self.folder_state = defaultdict(bool)
         self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code'}, '')
         super(EditorView, self).__init__(
                     [
@@ -209,4 +247,6 @@ class EditorView(BCChrome):
                     ], *args, **kwargs)
 
 def editor_view():
-    return EditorView()
+    ret = EditorView()
+    print("editor_view called ret=", ret)
+    return ret

@@ -19,7 +19,7 @@ def start():
 
     r = Router({r'^$': dashboard_view(),
                 r'^editor/(?P<project_id>[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})$': editor_view(),
-                r'^editor$': editor_view(),
+                #r'^editor$': editor_view(),
                 },
                 error_404_page, body)
     r.route()

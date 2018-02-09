@@ -43,4 +43,19 @@ Feature: When logged on I can only see my projects
     Then the browser window contains a BCPFolder named "folder" in the root folder
     Then the browser window contains a BCPFile named "hello_folder.py" in the BCPFolder named "folder"
 
+    Given I click on the BCPFile named "hello_world.py"
+    #Then the element id "code" contains "print('Hello world')"
+    Then the BCPFile named "hello_world.py" is highlighted
+    Then the BCPFolder named "folder" is not highlighted
+    #Then the BCPFolder named "folder" is not checked
+    Then the BCPFile named "hello_folder.py" is not highlighted
+
+    Given I click on the BCPFolder named "folder"
+    # Clicking a folder does not change the file being edited
+    #Then the element id "code" contains "print('Hello world')"
+    Then the BCPFile named "hello_world.py" is not highlighted
+    Then the BCPFolder named "folder" is highlighted
+    #Then the BCPFolder named "folder" is checked
+    Then the BCPFile named "hello_folder.py" is not highlighted
+
 
