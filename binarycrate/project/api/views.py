@@ -2,7 +2,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from ..models import Project
-from .serializers import ProjectGetSerializer, ProjectPostSerializer
+from .serializers import ProjectGetSerializer, ProjectPostSerializer, DirectoryEntrySerializer
 from rest_framework import mixins
 from rest_framework import generics
 from rest_framework import permissions
@@ -14,6 +14,8 @@ from rest_framework.authentication import SessionAuthentication, BasicAuthentica
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import status
+from rest_framework.mixins import UpdateModelMixin
+import copy
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -51,16 +53,42 @@ class ProjectDetail(APIView):
     def get_object(self, pk):
         try:
             return Project.objects.get(pk=pk)
-        except Snippet.DoesNotExist:
+        except Project.DoesNotExist:
             raise Http404
 
     def get(self, request, pk, format=None):
         project = self.get_object(pk)
-        #print('ProjectDetail project.owner=',project.owner)
-        #print('ProjectDetail request.user=',request.user)
         if project.owner != request.user:
             raise PermissionDenied()
         serializer = ProjectGetSerializer(project)
         return Response(serializer.data)
+
+class DirectoryEntryDetail(APIView):
+    #permission_classes = (permissions.IsAuthenticated, )
+    #authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+
+    def get_object(self, pk):
+        try:
+            return DirectoryEntry.objects.get(pk=pk)
+        except DirectoryEntry.DoesNotExist:
+            raise Http404
+
+    def put(self, request, pk, format=None):
+        #print('DirectoryEntryDetail request.data=', request.data)
+        de = self.get_object(pk)
+        serializer = DirectoryEntrySerializer(de, data=request.data)
+        if serializer.is_valid():
+            de = serializer.save()
+            de.content = request.data['content'] # TODO: Add some validation here
+            de.save()
+            #print('DirectoryEntryDetail de=', de)
+            response_data = copy.copy(serializer.data)
+            response_data['content'] = de.content
+            return Response(response_data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        #print('perform_update instance._content=', instance._content)
 
 

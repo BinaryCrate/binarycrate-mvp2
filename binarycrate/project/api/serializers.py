@@ -10,15 +10,11 @@ class DirectoryEntrySerializer(serializers.ModelSerializer):
         ret = super(DirectoryEntrySerializer, self).to_representation(instance)
         if ret['parent_id'] is not None:
             ret['parent_id'] = str(ret['parent_id'])
-        if instance.is_file:
-            ret['content'] = str(instance.content)
-        else:
-            ret['content'] = ''
         return ret
 
     class Meta:
         model = DirectoryEntry
-        fields = ('id', 'name', 'is_file', 'parent_id')
+        fields = ('id', 'name', 'is_file', 'parent_id', 'content')
 
 class ProjectGetSerializer(serializers.ModelSerializer):
     directory_entry = DirectoryEntrySerializer(many=True, source='get_directory_entries')

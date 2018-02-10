@@ -5,13 +5,15 @@ from cStringIO import StringIO
 
 
 def save_de_content(sender, instance, created, raw, **kwargs):
+    #print ('save_de_content called instance._content=',instance._content)
     if raw is False:
         project_media_storage.delete(str(instance.id))
-        project_media_storage.save(str(instance.id), StringIO(instance.content))
+        project_media_storage.save(str(instance.id), StringIO(instance._content))
 
 
 def load_de_content(sender, instance, **kwargs):
     if project_media_storage.exists(str(instance.id)):
         with project_media_storage.open(str(instance.id), 'r') as project_file:
-            instance.content = project_file.read()
+            instance._content = project_file.read()
+            #print('load_de_content instance._content=', instance._content)
         

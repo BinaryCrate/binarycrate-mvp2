@@ -168,17 +168,11 @@ class ProjectCannotAccessOtherUserTestCase(APITestCase):
         data = { }
         response = self.client.get(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        #self.assertEqual(response.data, {'id': str(self.project_id2), 'name': 'Test 2', 'type': 0,
-        #                                 'public': True})
         self.assertEqual(response.data['id'], str(self.project_id2))
         self.assertEqual(response.data['name'], 'Test 2')
         self.assertEqual(response.data['type'], 0)
         self.assertEqual(response.data['public'], True)
-        #print("test_project_detail_can_access_my_projects sponse.data['directory_entry']=", response.data['directory_entry'])
-        #print("test_project_detail_can_access_my_projects type(response.data['directory_entry'])=", type(response.data['directory_entry']))
         processed_directory_entries = {convert(d) for d in response.data['directory_entry']}
-        #GenericDict = namedtuple('GenericDict', ['id', 'name', 'is_file', 'parent_id', 'content'])
-        #assert GenericDict(id='6c69c816-fd05-48a7-be08-3a4702213c76', name=u'hello_world.py', is_file=True, parent_id='88943ac3-64c7-497f-b249-095f8442a4ab', content="print('Hello world')") == GenericDict(content=u"print('Hello world')", parent_id='88943ac3-64c7-497f-b249-095f8442a4ab', id='6c69c816-fd05-48a7-be08-3a4702213c76', is_file=True, name=u'hello_world.py')
         self.assertEqual(processed_directory_entries, {
                          convert({'id': str(self.de_rootfolder.id),
                           'name': self.de_rootfolder.name,
@@ -205,6 +199,44 @@ class ProjectCannotAccessOtherUserTestCase(APITestCase):
                           'parent_id': str(self.de_folder.id), 
                          }),
                          })
+
+class ProjectCanSaveTestCase(APITestCase):
+    def setUp(self):
+        self.project_id1 = uuid.uuid4()
+        self.project_id2 = uuid.uuid4()
+        self.user1 = UserFactory(username='user1@binarycrate.com',email='user1@binarycrate.com')
+        self.user2 = UserFactory(username='user2@binarycrate.com',email='user2@binarycrate.com')
+        de1 = DirectoryEntry.objects.create(name='', is_file=False)
+        Project.objects.create(id=self.project_id1, name='Test 1', type=0, public=True,
+                               root_folder=de1, owner=self.user1)
+        self.de_rootfolder = DirectoryEntry.objects.create(name='', is_file=False)
+        Project.objects.create(id=self.project_id2, name='Test 2', type=0, public=True,
+                               root_folder=self.de_rootfolder, owner=self.user2)
+        self.de_hello_world = DirectoryEntry.objects.create(parent=self.de_rootfolder, name='hello_world.py', is_file=True)
+        self.de_hello_world.content = "print('Hello world')"
+        self.de_hello_world.save()
+        self.de_folder = DirectoryEntry.objects.create(parent=self.de_rootfolder, name='folder', is_file=False)
+        self.de_hello_folder = DirectoryEntry.objects.create(parent=self.de_folder, name='hello_folder.py', is_file=True)
+        self.de_hello_folder.content = \
+"""for i in range(3):
+    print('Hello folder i={}'.format(i))
+"""
+        self.de_hello_folder.save()
+
+        self.client.force_authenticate(user=self.user2)
+
+    def test_put_updates_a_directory_entry(self):
+        url = reverse('api:directoryentry-detail', kwargs={'pk':str(self.de_hello_world.id)})
+        data = {'id': str(self.de_hello_world.id),
+                          'name': self.de_hello_world.name,
+                          'is_file': self.de_hello_world.is_file,
+                          'content': "print('Hello world2')",
+                          'parent_id': str(self.de_rootfolder.id), 
+                         }
+        response = self.client.put(url, data, format='json')
+        #print('response.content=', response.content)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(DirectoryEntry.objects.get(id=self.de_hello_world.id).content, "print('Hello world2')")
 
 
 

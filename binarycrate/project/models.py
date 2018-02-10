@@ -11,11 +11,20 @@ class DirectoryEntry(MPTTModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
     is_file = models.BooleanField()
 
+    @property
+    def content(self):
+        return self._content
+
+    @content.setter
+    def content(self, value):
+        #print('DirectoryEntry content.setter value=', value)
+        self._content = value
+
     class MPTTMeta:
         order_insertion_by = ['name']
 
     def __init__(self, *args, **kwargs):
-        self.content = ''
+        self._content = ''
         super(DirectoryEntry, self).__init__(*args, **kwargs)
 
 
