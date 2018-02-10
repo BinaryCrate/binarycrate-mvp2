@@ -171,4 +171,26 @@ def step_impl(context, folder_name):
     assert input_element.is_selected()
     #assert False
 
+@then(u'I send keys "{keys}" to element with text "{content}"')
+def step_impl(context, keys, content):
+    #element = context.browser.find_element_by_xpath('//*[contains(text(), "print") and contains(text(), "Hello world")]')
+    element = context.browser.find_element_by_xpath('//pre[contains(class, "CodeMirror-Line")]/span')
+    print('CodeMirror-Line element.text=', element.text)
+    element.send_keys(keys)
+    print('CodeMirror-Line element.text=', element.text)
+
+@given(u'I click on the Drop Down Toggle named "{name}"')
+def step_impl(context, name):
+    element = context.browser.find_element_by_xpath('//button[contains(class, \'dropdown-toggle\') and text()="' + folder_name + '"]')
+    element.click()
+
+@given(u'I click on the Drop Down Item named "{name}"')
+def step_impl(context, name):
+    element = context.browser.find_element_by_xpath('//a[@class=\'dropdown-item\') and text()="' + name + '"]')
+    element.click()
+
+@then(u'the DirectoryEntry with name "{name}" has content "{content}"')
+def step_impl(context, name, content):
+    assert DirectoryEntry.objects.get(name=name).content == content
+
 

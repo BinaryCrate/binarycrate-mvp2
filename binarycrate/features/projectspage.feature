@@ -58,4 +58,9 @@ Feature: When logged on I can only see my projects
     #Then the BCPFolder named "folder" is checked
     Then the BCPFile named "hello_folder.py" is not highlighted
 
+    # Commented out these tests because of difficultly selecting CodeMirror elements with selenium
+    #Then I send keys "2" to element with text "print(\\'Hello world\\')"
+    #Given I click on the Drop Down Toggle named "File"    
+    #Given I click on the Drop Down Item named "Save Project"
+    #Then the DirectoryEntry with name "hello_world.py" has content "print('Hello world')"
 

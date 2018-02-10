@@ -11,7 +11,7 @@ from .controls import CodeMirrorHandlerVNode
 import uuid
 from .navigation import BCChrome
 from cavorite.bootstrap.modals import ModalTrigger, Modal
-from cavorite.ajaxget import ajaxget
+from cavorite.ajaxget import ajaxget, ajaxput
 import json
 from operator import itemgetter
 from collections import defaultdict
@@ -120,7 +120,7 @@ def drop_down_menu(title, members):
     ])
 
 def drop_down_item(title, icon_class, click_handler):
-    attribs = {'class':"dropdown-item",'href':"#"}
+    attribs = {'class':"dropdown-item",'href':get_current_hash()}
     if click_handler is not None:
         attribs['onclick'] = click_handler
     else:
@@ -147,6 +147,13 @@ def test_click_handler(e):
     e.stopPropagation()
     e.preventDefault()
     
+def save_project(e):
+    def dummy_put_result_handler(xmlhttp, response):
+        pass
+
+    for de in project['directory_entry']:
+        if de['name'] != '': # Don't try to save the root folder                
+            ajaxput('/api/projects/directoryentry/' + de['id'] + '/', de, dummy_put_result_handler)
 
 class EditorView(BCChrome):
     def projects_api_ajax_result_handler(self, xmlhttp, response):
@@ -218,6 +225,7 @@ class EditorView(BCChrome):
         super(EditorView, self).__init__(
                     [
                       drop_down_menu('File', [
+                        drop_down_item('Save Project', '', save_project),
                         drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
                         drop_down_item('Square', 'fa-square', None),
                         drop_down_item('Something else here', 'fa-btc', None),

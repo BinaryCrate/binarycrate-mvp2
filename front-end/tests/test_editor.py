@@ -220,5 +220,22 @@ class TestEditor(object):
         #editor.code_mirror_changed.assert_called_with(hello_world2_content)
         assert node.selected_file_de['content'] == hello_world2_content
 
-     
+        editor.save_project(None)
+        calls = [(a[0][0], a[0][2]) for a in js.globals.cavorite_ajaxPut.call_args_list]
+
+        assert len(calls) == len(editor.project['directory_entry']) - 1 # We don't send the root folder
+        was_found = False
+        for url, data in calls:
+            if url == '/api/projects/directoryentry/ae935c72-cf56-48ed-ab35-575cb9a983ea/':
+                assert data == {'id': node.selected_de['id'],
+                                 'name': node.selected_de['name'],
+                                 'is_file': node.selected_de['is_file'],
+                                 'content': node.selected_de['content'],
+                                 'parent_id': node.selected_de['parent_id'],
+                                }
+                was_found = True
+
+        assert was_found
+
+
         

@@ -64,8 +64,8 @@ class ProjectDetail(APIView):
         return Response(serializer.data)
 
 class DirectoryEntryDetail(APIView):
-    #permission_classes = (permissions.IsAuthenticated, )
-    #authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated, )
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
 
     def get_object(self, pk):
         try:
