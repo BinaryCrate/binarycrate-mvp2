@@ -102,7 +102,6 @@ class BCPFile(li):
         return self.editor_view.selected_de == self.de
 
     def on_click(self, e):
-        self.code_mirror.editor.setValue(self.de['content'])
         self.editor_view.selected_de = self.de
         self.editor_view.selected_file_de = self.de
         self.editor_view.mount_redraw()
@@ -159,7 +158,10 @@ class EditorView(BCChrome):
                 self.mount_redraw()
 
     def query_project(self):
-        ajaxget('/api/projects/' + self.get_root().url_kwargs['project_id'], self.projects_api_ajax_result_handler)
+        global project
+        if len(project) == 0:
+            # Only load the project if we don't alreayd have it
+            ajaxget('/api/projects/' + self.get_root().url_kwargs['project_id'], self.projects_api_ajax_result_handler)
 
     def was_mounted(self):
         super(EditorView, self).was_mounted()
@@ -204,11 +206,15 @@ class EditorView(BCChrome):
         else:
             return self.selected_file_de['content']
 
+    def code_mirror_change(self, content):
+        if self.selected_file_de is not None:
+            self.selected_file_de['content'] = content
+
     def __init__(self, *args, **kwargs):
         self.selected_de = None
         self.selected_file_de = None
         self.folder_state = defaultdict(bool)
-        self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code'}, [t(self.get_selected_de_content)])
+        self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code'}, [t(self.get_selected_de_content)], change_handler=self.code_mirror_change)
         super(EditorView, self).__init__(
                     [
                       drop_down_menu('File', [
@@ -256,5 +262,5 @@ class EditorView(BCChrome):
 
 def editor_view():
     ret = EditorView()
-    print("editor_view called ret=", ret)
+    #print("editor_view called ret=", ret)
     return ret

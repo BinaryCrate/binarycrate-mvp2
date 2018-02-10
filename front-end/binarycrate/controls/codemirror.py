@@ -8,11 +8,12 @@ except ImportError:
 import copy
 
 class CodeMirrorHandlerVNode(textarea):
-    def __init__(self, attribs=None, children=None, cssClass=None, **kwargs):
+    def __init__(self, attribs=None, children=None, change_handler=None, **kwargs):
         #print('CodeMirrorHandlerVNode __init__ self=', self)
         attribs = copy.copy(attribs)
         attribs.update({'onchange': self.onchange_codemirror})
-        super(CodeMirrorHandlerVNode, self).__init__(attribs, children, cssClass=cssClass, **kwargs)
+        self.change_handler = change_handler
+        super(CodeMirrorHandlerVNode, self).__init__(attribs, children, **kwargs)
 
     def was_mounted(self):
         super(CodeMirrorHandlerVNode, self).was_mounted()
@@ -37,11 +38,16 @@ class CodeMirrorHandlerVNode(textarea):
         self.onchange_codemirror(None)
 
     def onchange_codemirror(self, e):
+        #print ('onchange_codemirror self.change_handler=', self.change_handler)
         previewFrame = js.globals.document.getElementById('preview');
         preview =  previewFrame.contentDocument or  previewFrame.contentWindow.document;
         preview.open();
-        preview.write(self.editor.getValue());
+        content = self.editor.getValue()
+        preview.write(content);
         preview.close();
+        #print ('onchange_codemirror content=', content)
+        if self.change_handler is not None:
+            self.change_handler(content)
 
 
 

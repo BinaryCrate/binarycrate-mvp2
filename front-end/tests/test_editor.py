@@ -8,7 +8,7 @@ import uuid
 from mock import Mock
 import json
 from binarycrate.editor import BCProjectTree, BCPFolder, BCPFile
-
+from binarycrate.controls import codemirror
 
 class TestEditor(object):
     def test_editor_displays_folder_structure(self, monkeypatch):
@@ -23,6 +23,7 @@ class TestEditor(object):
         monkeypatch.setattr(ajaxget, 'get_uuid', dummy_uuid)
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(Router, 'router', Mock())
+        monkeypatch.setattr(codemirror, 'js', js)
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
@@ -137,7 +138,7 @@ class TestEditor(object):
 
         node.code_mirror.editor = Mock(setValue=Mock())
         hello_world.on_click(None)
-        node.code_mirror.editor.setValue.assert_called_with(hello_world_content)
+        #node.code_mirror.editor.setValue.assert_called_with(hello_world_content)
 
         # Test content set from clicked file
         assert len(node.code_mirror.get_children()) == 1
@@ -155,7 +156,7 @@ class TestEditor(object):
 
         node.code_mirror.editor = Mock(setValue=Mock())
         hello_folder.on_click(None)
-        node.code_mirror.editor.setValue.assert_called_with(hello_folder_content)
+        #node.code_mirror.editor.setValue.assert_called_with(hello_folder_content)
 
         assert len(node.code_mirror.get_children()) == 1
         assert type(node.code_mirror.get_children()[0]) == t
@@ -207,4 +208,17 @@ class TestEditor(object):
         assert checkbox_folder.tag == 'input'
         assert 'checked' in checkbox_folder.get_attribs()
 
-   
+        js.return_get_element_by_id = {'preview': Mock()}
+
+        hello_world2_content = "print('Hello world2')"
+        mock_code_mirrow_get_value = Mock(side_effect=lambda: hello_world2_content)
+        node.code_mirror.editor = Mock(getValue=mock_code_mirrow_get_value)
+
+        #editor.code_mirror_changed = Mock()
+
+        node.code_mirror.onchange_codemirror(None)
+        #editor.code_mirror_changed.assert_called_with(hello_world2_content)
+        assert node.selected_file_de['content'] == hello_world2_content
+
+     
+        
