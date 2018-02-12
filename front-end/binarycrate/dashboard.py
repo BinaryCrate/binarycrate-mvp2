@@ -15,29 +15,27 @@ from cavorite import timeouts
 import json
 
 
-dv = None
-
-def projectdropdownitem(title, data_target, projectname, redraw_function):
-    source = None
-    def modaltrigger(e):
-        global project_name
-        project_name = projectname
-        #source.get_root().mount_redraw()
-        #dv.mount_redraw()
-        redraw_function()
-        jquery = js.globals['$']
-        jquery(data_target).modal()
-    source = li([a({'data-toggle': "modal", 'data-target': data_target, 'href': get_current_hash(), 'onclick': modaltrigger}, [t(title), ]), ])
-    return source
+#dv = None
 
 
 projects = []
 
 class Project(div):
-    def __init__(self, proj, redraw_function):
+    def __init__(self, dv, proj, redraw_function):
         self.proj = proj
         self.redraw_function = redraw_function
+        self.dv = dv
         super(Project, self).__init__(cssClass="col-md-3 col-sm-4")
+
+    def projectdropdownitem(self, title, data_target, projectname):
+        source = None
+        def modaltrigger(e):
+            self.dv.project_name = projectname
+            self.redraw_function()
+            jquery = js.globals['$']
+            jquery(data_target).modal()
+        source = li([a({'data-toggle': "modal", 'data-target': data_target, 'href': get_current_hash(), 'onclick': modaltrigger}, [t(title), ]), ])
+        return source
 
     def get_children(self):
         ret = [
@@ -51,9 +49,9 @@ class Project(div):
               div(cssClass='dropdown', children=[
               li({'class': "fa fa-pencil fa-lg edit", 'id': "menu1", 'data-toggle': "dropdown"}),
                 ul({'class': "dropdown-menu", 'role': "menu", 'aria-labelledby':"menu1"}, [
-                  projectdropdownitem('Rename', "#renameProj", self.proj['name'], self.redraw_function),
-                  projectdropdownitem('Share', "#shareProj", self.proj['name'], self.redraw_function),
-                  projectdropdownitem('Delete', "#deleteProj", self.proj['name'], self.redraw_function),
+                  self.projectdropdownitem('Rename', "#renameProj", self.proj['name']),
+                  self.projectdropdownitem('Share', "#shareProj", self.proj['name']),
+                  self.projectdropdownitem('Delete', "#deleteProj", self.proj['name']),
                 ]),
               ]),
               p(self.proj['name']),
@@ -63,12 +61,11 @@ class Project(div):
         ret[0].parent = self
         return ret
 
-project_name = 'No Project'
-
-def get_project_name():
-    return project_name
-
 class DashboardView(BCChrome):
+    def __init__(self, *args, **kwargs):
+        self.project_name = 'No Project'
+        super(DashboardView, self).__init__(*args, **kwargs)
+
     def projects_api_ajax_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             global projects
@@ -85,40 +82,12 @@ class DashboardView(BCChrome):
         super(DashboardView, self).was_mounted()
         self.timeout_val = timeouts.set_timeout(lambda : self.query_projects(), 1)
 
-
-def dashboard_view():
-    global dv
-    dv = None
-
-    def projects_api_ajax_post_result_handler(xmlhttp, response):
-        print("projects_api_ajax_post_result_handler called")
-        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
-            #dv.mount_redraw()
-            dv.query_projects()
-
-    def createNew_ok(e, form_values):
-        data = {'name': form_values['txtProjectName'],
-                'type': form_values['selectProjectType'],
-                'public': True}
-        ajaxpost('/api/projects/', data, projects_api_ajax_post_result_handler)
-        pass
-
-    def projectsfn():
-        return [Project(proj, dv.mount_redraw) for proj in projects]
-
-    dv = DashboardView([
-                      li({'class': 'nav-item li-create-new'}, [
-                        form({'action': '#'}, [
-                          ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Create New", "#createNew"),
-                        ]),
-                      ]),
-                    ],
-                    projectsfn,
-                    [
+    def get_modals(self):
+        return      [
                       Modal("deleteProj", "Delete Project", [
                         p({'class': 'text-center'}, [
                           t("Are you sure you want to delete "),
-                          strong([t(get_project_name)]),
+                          strong([t(lambda: self.project_name)]),
                           t(", this will also delete all projects and data."),
                         ]),
                       ], None),
@@ -126,7 +95,7 @@ def dashboard_view():
                         form([
                           div({'class': 'form-group'}, [
                             label({'class':"col-form-label", 'for':"formGroupExampleInput"}, 'Title'),
-                            html_input({'type': "text", 'class':"form-control", 'id':"formGroupExampleInput", 'value':get_project_name}),
+                            html_input({'type': "text", 'class':"form-control", 'id':"formGroupExampleInput", 'value':lambda: self.project_name}),
                           ]),
                           #div({'class': 'form-group'}, [
                           #  label({'for':"exampleFormControlTextarea1"}, 'Description'),
@@ -163,10 +132,49 @@ def dashboard_view():
                             option({'value': 0}, 'Python'),
                           ]),
                         ]),
-                      ], createNew_ok),
-                    ])
+                      ], self.createNew_ok),
+                    ]
 
-    dv.projects_api_ajax_post_result_handler = projects_api_ajax_post_result_handler
+    def projects_api_ajax_post_result_handler(self, xmlhttp, response):
+        print("projects_api_ajax_post_result_handler called")
+        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+            #dv.mount_redraw()
+            self.query_projects()
+
+    def createNew_ok(self, e, form_values):
+        data = {'name': form_values['txtProjectName'],
+                'type': form_values['selectProjectType'],
+                'public': True}
+        ajaxpost('/api/projects/', data, self.projects_api_ajax_post_result_handler)
+
+    def get_central_content(self):
+        return [Project(self, proj, self.mount_redraw) for proj in projects]
+
+
+def dashboard_view():
+    #global dv
+    #dv = None
+
+   # def projectsfn():
+   #     return [Project(proj, dv.mount_redraw) for proj in projects]
+
+    dv = DashboardView([
+                      li({'class': 'nav-item li-create-new'}, [
+                        form({'action': '#'}, [
+                          ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Create New", "#createNew"),
+                        ]),
+                      ]),
+                    ],
+                    None,
+                    None)
+
+    #def projects_api_ajax_post_result_handler(xmlhttp, response):
+    #    print("projects_api_ajax_post_result_handler called")
+    #    if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+    #        #dv.mount_redraw()
+    #        dv.query_projects()
+
+    #dv.projects_api_ajax_post_result_handler = projects_api_ajax_post_result_handler
 
     return dv
 
