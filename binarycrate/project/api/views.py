@@ -49,6 +49,8 @@ class ProjectDetail(APIView):
     """
     Retrieve, update or delete a snippet instance.
     """
+    permission_classes = (permissions.IsAuthenticated, )
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
 
     def get_object(self, pk):
         try:

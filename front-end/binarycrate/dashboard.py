@@ -10,12 +10,9 @@ import copy
 from .navigation import BCChrome
 import cavorite.bootstrap.modals as modals
 from cavorite.bootstrap.modals import ModalTrigger, Modal
-from cavorite.ajaxget import ajaxget, ajaxpost
+from cavorite.ajaxget import ajaxget, ajaxpost, ajaxput
 from cavorite import timeouts
 import json
-
-
-#dv = None
 
 
 projects = []
@@ -27,10 +24,11 @@ class Project(div):
         self.dv = dv
         super(Project, self).__init__(cssClass="col-md-3 col-sm-4")
 
-    def projectdropdownitem(self, title, data_target, projectname):
+    def projectdropdownitem(self, title, data_target, project):
         source = None
         def modaltrigger(e):
-            self.dv.project_name = projectname
+            print('projectdropdownitem modaltrigger called')
+            self.dv.selected_project = project
             self.redraw_function()
             jquery = js.globals['$']
             jquery(data_target).modal()
@@ -49,9 +47,9 @@ class Project(div):
               div(cssClass='dropdown', children=[
               li({'class': "fa fa-pencil fa-lg edit", 'id': "menu1", 'data-toggle': "dropdown"}),
                 ul({'class': "dropdown-menu", 'role': "menu", 'aria-labelledby':"menu1"}, [
-                  self.projectdropdownitem('Rename', "#renameProj", self.proj['name']),
-                  self.projectdropdownitem('Share', "#shareProj", self.proj['name']),
-                  self.projectdropdownitem('Delete', "#deleteProj", self.proj['name']),
+                  self.projectdropdownitem('Rename', "#renameProj", self.proj),
+                  self.projectdropdownitem('Share', "#shareProj", self.proj),
+                  self.projectdropdownitem('Delete', "#deleteProj", self.proj),
                 ]),
               ]),
               p(self.proj['name']),
@@ -63,8 +61,11 @@ class Project(div):
 
 class DashboardView(BCChrome):
     def __init__(self, *args, **kwargs):
-        self.project_name = 'No Project'
+        self.selected_project = None
         super(DashboardView, self).__init__(*args, **kwargs)
+
+    def get_project_name(self):
+        return self.selected_project['name'] if self.selected_project is not None else 'No project'
 
     def projects_api_ajax_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
@@ -87,22 +88,22 @@ class DashboardView(BCChrome):
                       Modal("deleteProj", "Delete Project", [
                         p({'class': 'text-center'}, [
                           t("Are you sure you want to delete "),
-                          strong([t(lambda: self.project_name)]),
+                          strong([t(lambda: self.get_project_name())]),
                           t(", this will also delete all projects and data."),
                         ]),
                       ], None),
                       Modal("renameProj", "Rename Project", [
                         form([
                           div({'class': 'form-group'}, [
-                            label({'class':"col-form-label", 'for':"formGroupExampleInput"}, 'Title'),
-                            html_input({'type': "text", 'class':"form-control", 'id':"formGroupExampleInput", 'value':lambda: self.project_name}),
+                            label({'class':"col-form-label", 'for':"txtProjectName"}, 'Title'),
+                            html_input({'type': "text", 'class':"form-control", 'id':"txtProjectName", 'value':lambda: self.get_project_name()}),
                           ]),
                           #div({'class': 'form-group'}, [
                           #  label({'for':"exampleFormControlTextarea1"}, 'Description'),
                           #  textarea({'class': "form-control", 'id': "exampleFormControlTextarea1", 'rows':"3"}),
                           #]),
                         ]),
-                      ], None),
+                      ], self.renameProj_ok),
                       Modal("shareProj", "Share Project", [
                         form([
                           div({'class': 'form-group'}, [
@@ -136,9 +137,11 @@ class DashboardView(BCChrome):
                     ]
 
     def projects_api_ajax_post_result_handler(self, xmlhttp, response):
-        print("projects_api_ajax_post_result_handler called")
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
-            #dv.mount_redraw()
+            self.query_projects()
+
+    def projects_api_ajax_put_result_handler(self, xmlhttp, response):
+        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             self.query_projects()
 
     def createNew_ok(self, e, form_values):
@@ -147,17 +150,18 @@ class DashboardView(BCChrome):
                 'public': True}
         ajaxpost('/api/projects/', data, self.projects_api_ajax_post_result_handler)
 
+    def renameProj_ok(self, e, form_values):
+        data = {'id': self.selected_project['id'],
+                'name': form_values['txtProjectName'],
+                'type': self.selected_project['type'],
+                'public': True}
+        ajaxput('/api/projects/' + self.selected_project['id'] + '/', data, self.projects_api_ajax_put_result_handler)
+
     def get_central_content(self):
         return [Project(self, proj, self.mount_redraw) for proj in projects]
 
 
 def dashboard_view():
-    #global dv
-    #dv = None
-
-   # def projectsfn():
-   #     return [Project(proj, dv.mount_redraw) for proj in projects]
-
     dv = DashboardView([
                       li({'class': 'nav-item li-create-new'}, [
                         form({'action': '#'}, [
@@ -167,14 +171,6 @@ def dashboard_view():
                     ],
                     None,
                     None)
-
-    #def projects_api_ajax_post_result_handler(xmlhttp, response):
-    #    print("projects_api_ajax_post_result_handler called")
-    #    if xmlhttp.status >= 200 and xmlhttp.status <= 299:
-    #        #dv.mount_redraw()
-    #        dv.query_projects()
-
-    #dv.projects_api_ajax_post_result_handler = projects_api_ajax_post_result_handler
 
     return dv
 
