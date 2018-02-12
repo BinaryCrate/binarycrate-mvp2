@@ -65,6 +65,18 @@ class ProjectListTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Project.objects.count(), 2)
 
+    def test_put_project_detail(self):
+        """
+        Ensure we can view individual projects
+        """
+        self.assertEqual(Project.objects.count(), 1)
+        url = reverse('api:project-detail', kwargs={'pk':str(self.project_id)})
+        data = { 'id': str(self.project_id), 'name': 'Test 1a', 'type': 0,
+                 'public': True} 
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Project.objects.count(), 1)
+        self.assertEqual(Project.objects.first().name, 'Test 1a')
 
 
 class ProjectMustLogin(APITestCase):

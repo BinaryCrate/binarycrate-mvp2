@@ -63,6 +63,14 @@ class ProjectDetail(APIView):
         serializer = ProjectGetSerializer(project)
         return Response(serializer.data)
 
+    def put(self, request, pk, format=None):
+        project = self.get_object(pk)
+        serializer = ProjectPostSerializer(project, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class DirectoryEntryDetail(APIView):
     permission_classes = (permissions.IsAuthenticated, )
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
