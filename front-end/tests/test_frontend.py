@@ -8,12 +8,7 @@ import uuid
 from mock import Mock
 import json
 import cavorite.bootstrap.modals
-
-def IterateVirtualDOM(vnode, callback):
-    callback(vnode)
-    if hasattr(vnode, 'get_children'):
-        for child in vnode.get_children():
-            IterateVirtualDOM(child, callback)
+from utils import IterateVirtualDOM
 
 
 class TestDashboard(object):

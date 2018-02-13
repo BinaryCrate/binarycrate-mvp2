@@ -16,6 +16,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework import status
 from rest_framework.mixins import UpdateModelMixin
 import copy
+from django.http import Http404 
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -83,13 +84,23 @@ class DirectoryEntryDetail(APIView):
         except DirectoryEntry.DoesNotExist:
             raise Http404
 
+    def get_or_create_object(self, pk):
+        try:
+            return DirectoryEntry.objects.get(pk=pk)
+        except DirectoryEntry.DoesNotExist:
+            return DirectoryEntry(id=pk, is_file=True)
+
     def put(self, request, pk, format=None):
-        #print('DirectoryEntryDetail request.data=', request.data)
-        de = self.get_object(pk)
+        de = self.get_or_create_object(pk) 
+        print('DirectoryEntryDetail de=', de)
         serializer = DirectoryEntrySerializer(de, data=request.data)
         if serializer.is_valid():
             de = serializer.save()
             de.content = request.data['content'] # TODO: Add some validation here
+            if request.data['parent_id'] is None:
+                de.parent = None
+            else:
+                de.parent = DirectoryEntry.objects.get(id=request.data['parent_id'])
             de.save()
             #print('DirectoryEntryDetail de=', de)
             response_data = copy.copy(serializer.data)

@@ -10,6 +10,7 @@ import copy
 from .controls import CodeMirrorHandlerVNode
 import uuid
 from .navigation import BCChrome
+import cavorite.bootstrap.modals as modals
 from cavorite.bootstrap.modals import ModalTrigger, Modal
 from cavorite.ajaxget import ajaxget, ajaxput
 import json
@@ -56,7 +57,13 @@ class BCPFolder(li):
         super(BCPFolder, self).__init__()
 
     def get_is_checked(self):
-        return self.editor_view.folder_state[self.de['id']]
+        if self.de['parent_id'] is None:
+            return True
+        else:
+            return self.editor_view.folder_state[self.de['id']]
+
+    def get_display_title(self):
+        return self.de['name'] if self.de['parent_id'] is not None else '/'
 
     def get_children(self):
         input_attribs = {'type': 'checkbox', 'id':self.id, 'onclick': self.on_click}
@@ -65,7 +72,7 @@ class BCPFolder(li):
             input_attribs.update({'checked': 'checked'})
         if self.get_is_active():
             label_attribs.update({'class': 'file-active'})
-        return [label(label_attribs, self.de['name']),
+        return [label(label_attribs, self.get_display_title()),
                 html_input(input_attribs),
                 ol(self.folder_children)]
 
@@ -156,6 +163,9 @@ def save_project(e):
             ajaxput('/api/projects/directoryentry/' + de['id'] + '/', de, dummy_put_result_handler)
 
 class EditorView(BCChrome):
+    #def add_new_folder_handler(self, e):
+    #    pass
+
     def projects_api_ajax_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             global project
@@ -185,18 +195,22 @@ class EditorView(BCChrome):
             # If project not loaded yet
             return BCProjectTree([])
         else:
+            #print ('get_project_tree called project[directory_entry]=', project['directory_entry'])
             de_source = project['directory_entry']
-            root_element = [de for de in de_source if de['parent_id'] is None]
-            assert len(root_element) == 1
-            root_element = root_element[0]       
+            #root_element = [de for de in de_source if de['parent_id'] is None]
+            #assert len(root_element) == 1
+            #root_element = root_element[0]       
 
-            return  BCProjectTree(get_as_tree(root_element['id']))
+            #return  BCProjectTree(get_as_tree(root_element['id']))
+            return  BCProjectTree(get_as_tree(None))
 
     def get_central_content(self):
         return      [
                       div({'class': "project-fnf"}, [
                         div({'class': 'top-tree'}, [
-                          span({'class': 'fa fa-1x fa-file-code-o'}),
+                          a({'data-toggle': "modal", 'data-target': '#newFile', 'href': get_current_hash(), 'onclick': self.newFile_ok}, [
+                            span({'class': 'fa fa-1x fa-file-code-o'}),
+                          ]),
                           span({'class': 'fa fa-1x fa-folder-o'}),
                         ]),
                         self.get_project_tree(),
@@ -216,6 +230,24 @@ class EditorView(BCChrome):
     def code_mirror_change(self, content):
         if self.selected_file_de is not None:
             self.selected_file_de['content'] = content
+
+    def newFile_ok(self, e, form_values):
+        #print('newFile_ok form_values=', form_values)
+        root_folder = [de for de in project['directory_entry'] if de['parent_id'] is None][0]
+        parent_de = root_folder if self.selected_de is None else self.selected_de
+        new_de = {'id': str(uuid.uuid4()), 
+                   'name': str(form_values['txtFileName']),
+                   'content': '',
+                   'is_file': True, 
+                   'parent_id': parent_de['id'],
+                  }
+        project['directory_entry'].append(new_de)
+        #print('newFile_ok project[directory_entry]s=', project['directory_entry'])
+        self.mount_redraw()
+        #data = {'name': form_values['txtProjectName'],
+        #        'type': form_values['selectProjectType'],
+        #        'public': True}
+        #ajaxpost('/api/projects/', data, self.projects_api_ajax_post_result_handler)
 
     def __init__(self, *args, **kwargs):
         self.selected_de = None
@@ -266,6 +298,14 @@ class EditorView(BCChrome):
                           ]),
                         ]),
                       ], None),
+                      Modal("newFile", "New File", [
+                        form([
+                          div({'class': 'form-group'}, [
+                            label({'class':"col-form-label", 'for':"txtFileName"}, 'File name'),
+                            html_input({'type': "text", 'class':"form-control", 'id':"txtFileName", 'placeholder':"New File"}),
+                          ]),
+                        ]),
+                      ], self.newFile_ok),
                     ], *args, **kwargs)
 
 def editor_view():

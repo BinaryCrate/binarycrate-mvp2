@@ -250,6 +250,19 @@ class ProjectCanSaveTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(DirectoryEntry.objects.get(id=self.de_hello_world.id).content, "print('Hello world2')")
 
+    def test_put_can_create_a_new_directory_entry(self):
+        data = {'id': str(uuid.uuid4()),
+                          'name': 'Hello world2',
+                          'is_file': True,
+                          'content': "print('Hello world4')",
+                          'parent_id': str(self.de_rootfolder.id), 
+                         }
+        url = reverse('api:directoryentry-detail', kwargs={'pk':data['id']})
+        response = self.client.put(url, data, format='json')
+        #print('response.content=', response.content)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(DirectoryEntry.objects.get(id=data['id']).content, "print('Hello world4')")
+        self.assertEqual(str(DirectoryEntry.objects.get(id=data['id']).parent_id), data['parent_id'])
 
 
         
