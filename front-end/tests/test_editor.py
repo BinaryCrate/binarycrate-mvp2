@@ -252,7 +252,7 @@ class TestEditor(object):
         assert was_found
 
 
-    def test_editor_can_add_new_files_and_folders(self, monkeypatch):
+    def test_editor_can_add_new_files(self, monkeypatch):
         def dummy_uuid():
             return uuid.UUID('d7114859-3a2f-4701-967a-fb66fd60b963')
         project_id = 'e1e37287-9127-46cb-bddb-4a1a825a5d8e'
@@ -422,5 +422,177 @@ class TestEditor(object):
         assert result['new_file_found']
 
         assert folder_de['id'] == hello_subfile_de['parent_id']
+
+    def test_editor_can_add_new_folders(self, monkeypatch):
+        def dummy_uuid():
+            return uuid.UUID('d7114859-3a2f-4701-967a-fb66fd60b963')
+        project_id = 'e1e37287-9127-46cb-bddb-4a1a825a5d8e'
+
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(ajaxget, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(Router, 'router', Mock())
+        monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        callbacks.initialise_global_callbacks()
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        result = defaultdict(int)
+
+        node = editor.editor_view()
+        node.url_kwargs = { 'project_id': project_id }
+
+        tree = node.get_project_tree()
+
+        monkeypatch.setattr(node, 'mount_redraw', Mock())
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+    print('Hello folder i={}'.format(i))
+"""
+
+        response = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'parent_id': None
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False, 
+                        'content': '', 
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+                       },
+                     ]
+                    }
+        node.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)),
+                                              response)
+
+        tree = node.get_project_tree()
+
+        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        #root_folder = tree.get_children()[0]
+        #folder = root_folder.get_children()[0]
+        #return root_folder, root_folder.get_children()[1], folder, folder.get_children()[2].get_children()[0]
+
+        assert type(tree) == BCProjectTree
+        #root_folder = tree.get_children()[0]
+        assert type(root_folder) == BCPFolder
+        assert root_folder.get_is_checked()
+        assert len(root_folder.folder_children) == 2
+        assert type(root_folder.folder_children[0]) == BCPFolder
+        assert root_folder.folder_children[0].de['name'] == 'folder'
+        #hello_world = root_folder.folder_children[1]
+        assert type(hello_world) == BCPFile
+        assert self.get_BCPFile_title(hello_world) == 'hello_world.py'
+        #folder = root_folder.folder_children[0]
+        #hello_folder = folder.folder_children[0]
+        assert type(hello_folder) == BCPFile
+        assert self.get_BCPFile_title(hello_folder) == 'hello_folder.py'
+
+        assert root_folder.get_display_title() == '/'
+        assert folder.get_display_title() == 'folder'
+        
+
+        #node.add_new_folder_handler(Mock())
+
+        def mock_element_iterator_callback(vnode):
+            if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'newFolder':
+
+                def mock_element_iterator_callback2(vnode):
+                    if hasattr(vnode, 'tag'):
+                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                            result['newFolder_OK_handler'] = vnode.get_attribs()['onclick']
+                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtFolderName":
+                            node.value = ''
+                IterateVirtualDOM(vnode, mock_element_iterator_callback2)
+
+        node.mount_redraw = Mock()
+
+        virtual_node = node._build_virtual_dom()
+        IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
+
+        # Call the modal handler
+        rendered_modal = node._render(None)
+        cavorite.bootstrap.modals.js.return_get_element_by_id = {'newFolder': rendered_modal}
+
+        def setup_mock_modal_callback(node, file_name):
+            if isinstance(node, js.MockElement) and node.getAttribute('id') == 'txtFolderName':
+                node.value = file_name
+
+        js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, 'folder2'))
+
+        #print('test_editor result[newFile_OK_handler]=', result['newFile_OK_handler'])
+        result['newFolder_OK_handler'](Mock())
+
+        rendered = node._render(None)
+
+        def setup_mock_modal_callback_was_added(node, folder_name):
+            if isinstance(node, js.MockElement) and node.tagName == 'label' and node.children.length == 1:
+                #print('setup_mock_modal_callback_was_added node=', node)
+                child = node.children.item(0)
+                if isinstance(child, js.MockTextNode):
+                    #print('setup_mock_modal_callback_was_added child=', str(child))
+                    if  str(child) == folder_name:
+                        result['new_folder_found'] = True
+
+        js.IterateElements(rendered, lambda node: setup_mock_modal_callback_was_added(node, 'folder2'))
+        
+        assert result['new_folder_found']
+
+        root_de = [de for de in editor.project['directory_entry'] if de['parent_id'] is None][0]
+        folder2_de = [de for de in editor.project['directory_entry'] if de['name'] == 'folder2'][0]
+
+        folder.on_click(None)
+
+        # Call the modal handler
+        rendered_modal = node._render(None)
+        cavorite.bootstrap.modals.js.return_get_element_by_id = {'newFolder': rendered_modal}
+
+        js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, 'folder3'))
+
+        #print('test_editor result[newFile_OK_handler]=', result['newFile_OK_handler'])
+        result['newFolder_OK_handler'](Mock())
+
+        folder3_de = [de for de in editor.project['directory_entry'] if de['name'] == 'folder3'][0]
+        #hello_subfile_de = [de for de in editor.project['directory_entry'] if de['name'] == 'hello_subfile.py'][0]
+
+        rendered = node._render(None)
+
+        result['new_folder_found'] = False
+
+        js.IterateElements(rendered, lambda node: setup_mock_modal_callback_was_added(node, 'folder3'))
+        
+        assert result['new_folder_found']
+
+        folder_de = [de for de in editor.project['directory_entry'] if de['name'] == 'folder'][0]
+        assert folder3_de['parent_id'] == folder_de['id']
 
 

@@ -127,7 +127,7 @@ def drop_down_menu(title, members):
     ])
 
 def drop_down_item(title, icon_class, click_handler):
-    attribs = {'class':"dropdown-item",'href':get_current_hash()}
+    attribs = {'class':"dropdown-item", 'href':get_current_hash()}
     if click_handler is not None:
         attribs['onclick'] = click_handler
     else:
@@ -211,7 +211,9 @@ class EditorView(BCChrome):
                           a({'data-toggle': "modal", 'data-target': '#newFile', 'href': get_current_hash(), 'onclick': self.newFile_ok}, [
                             span({'class': 'fa fa-1x fa-file-code-o'}),
                           ]),
-                          span({'class': 'fa fa-1x fa-folder-o'}),
+                          a({'data-toggle': "modal", 'data-target': '#newFolder', 'href': get_current_hash(), 'onclick': self.newFolder_ok}, [
+                            span({'class': 'fa fa-1x fa-folder-o'}),
+                          ]),
                         ]),
                         self.get_project_tree(),
                       ]),
@@ -232,7 +234,6 @@ class EditorView(BCChrome):
             self.selected_file_de['content'] = content
 
     def newFile_ok(self, e, form_values):
-        #print('newFile_ok form_values=', form_values)
         root_folder = [de for de in project['directory_entry'] if de['parent_id'] is None][0]
         parent_de = root_folder if self.selected_de is None else self.selected_de
         new_de = {'id': str(uuid.uuid4()), 
@@ -242,12 +243,19 @@ class EditorView(BCChrome):
                    'parent_id': parent_de['id'],
                   }
         project['directory_entry'].append(new_de)
-        #print('newFile_ok project[directory_entry]s=', project['directory_entry'])
         self.mount_redraw()
-        #data = {'name': form_values['txtProjectName'],
-        #        'type': form_values['selectProjectType'],
-        #        'public': True}
-        #ajaxpost('/api/projects/', data, self.projects_api_ajax_post_result_handler)
+
+    def newFolder_ok(self, e, form_values):
+        root_folder = [de for de in project['directory_entry'] if de['parent_id'] is None][0]
+        parent_de = root_folder if self.selected_de is None else self.selected_de
+        new_de = {'id': str(uuid.uuid4()), 
+                   'name': str(form_values['txtFolderName']),
+                   'content': '',
+                   'is_file': False, 
+                   'parent_id': parent_de['id'],
+                  }
+        project['directory_entry'].append(new_de)
+        self.mount_redraw()
 
     def __init__(self, *args, **kwargs):
         self.selected_de = None
@@ -306,6 +314,14 @@ class EditorView(BCChrome):
                           ]),
                         ]),
                       ], self.newFile_ok),
+                      Modal("newFolder", "New Folder", [
+                        form([
+                          div({'class': 'form-group'}, [
+                            label({'class':"col-form-label", 'for':"txtFolderName"}, 'Folder name'),
+                            html_input({'type': "text", 'class':"form-control", 'id':"txtFolderName", 'placeholder':"New Folder"}),
+                          ]),
+                        ]),
+                      ], self.newFolder_ok),
                     ], *args, **kwargs)
 
 def editor_view():
