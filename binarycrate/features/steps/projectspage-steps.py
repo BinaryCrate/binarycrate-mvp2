@@ -64,7 +64,9 @@ def step_impl(context, inner_tagname, inner_label, outer_tagname, outer_id):
 
 @given(u'I enter "{some_text}" in to the element with id "{element_id}"')
 def step_impl(context, some_text, element_id):
-    element = find_element_by_id(context, element_id)
+    time.sleep(15)
+    context.browser.save_screenshot('screenshot.png')
+    element = context.browser.find_element_by_id(element_id)
     element.send_keys(some_text)
 
 @given(u'I browse to the default projects editor page')
@@ -78,9 +80,9 @@ def step_impl(context):
 @then(u'the browser window contains a BCPFile named "{file_name}" in the root folder')
 def step_impl(context, file_name):
     time.sleep(25)
-    context.browser.save_screenshot('screenshot.png')
+    #context.browser.save_screenshot('screenshot.png')
     #element = find_element_by_xpath(context, '//ol[@class="tree"]/li[@class="file"]/a[text()="' + file_name + '"]')
-    elements = context.browser.find_elements_by_xpath('//ol[@class="tree"]/li[@class="file"]/a[text()="' + file_name + '"]')
+    elements = context.browser.find_elements_by_xpath('//ol[@class="tree"]//li[contains(@class,"file")]/a[text()="' + file_name + '"]')
     print('file elements = ', elements)
     #print('log data = ', context.browser.get_log('browser'))
     assert len(elements) == 1

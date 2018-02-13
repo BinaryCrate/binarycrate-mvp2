@@ -10,7 +10,7 @@
 
 FROM ubuntu:16.04
 
-ENV last_update 20170911
+ENV last_update 20180213
 
 
 # Install required packages
@@ -32,13 +32,13 @@ RUN pip install -r /root/requirements.txt
 
 # These are stored in https://chromedriver.storage.googleapis.com/index.html
 # from time to time they will need to be updated
-ENV CHROMEDRIVER_VERSION 2.32
-ENV CHROMEDRIVER_SHA256 1e053ebec954790bab426f1547faa6328abff607b246e4493a9d927b1e13d7e4
+ENV CHROMEDRIVER_VERSION 2.35
+ENV CHROMEDRIVER_SHA256 67fad24c4a85e3f33f51c97924a98b619722db15ce92dcd27484fb748af93e8e
 
-RUN curl -SLO "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip" \
-  && echo "$CHROMEDRIVER_SHA256  chromedriver_linux64.zip" | sha256sum -c - \
-  && unzip "chromedriver_linux64.zip" -d /usr/local/bin \
-  && rm "chromedriver_linux64.zip"
+#RUN curl -SLO "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip" \
+#  && echo "$CHROMEDRIVER_SHA256  chromedriver_linux64.zip" | sha256sum -c - \
+#  && unzip "chromedriver_linux64.zip" -d /usr/local/bin \
+#  && rm "chromedriver_linux64.zip"
 
 # Configure environment
 ENV PYTHONDONTWRITEBYTECODE 1
