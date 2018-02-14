@@ -32,6 +32,7 @@ class Project(div):
             self.redraw_function()
             jquery = js.globals['$']
             jquery(data_target).modal()
+            Router.router.ResetHashChange()
         source = li([a({'data-toggle': "modal", 'data-target': data_target, 'href': get_current_hash(), 'onclick': modaltrigger}, [t(title), ]), ])
         return source
 

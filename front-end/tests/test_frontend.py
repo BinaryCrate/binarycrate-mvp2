@@ -135,6 +135,8 @@ class TestDashboard(object):
         js.globals.cavorite_ajaxGet = Mock()
         js.globals.cavorite_ajaxPut = Mock()
 
+        Router.router = Mock()
+
         result = dict()
 
         def mock_element_iterator_callback(vnode):

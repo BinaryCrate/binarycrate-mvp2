@@ -83,6 +83,7 @@ class BCPFolder(li):
         self.editor_view.folder_state[self.de['id']] = not self.editor_view.folder_state[self.de['id']]
         self.editor_view.selected_de = self.de
         self.editor_view.mount_redraw()
+        Router.router.ResetHashChange()
 
 class BCPFile(li):
     def __init__(self, de, code_mirror, editor_view):
@@ -112,6 +113,7 @@ class BCPFile(li):
         self.editor_view.selected_de = self.de
         self.editor_view.selected_file_de = self.de
         self.editor_view.mount_redraw()
+        Router.router.ResetHashChange()
 
 
 def sub_menu_handler(e):
@@ -188,6 +190,7 @@ class EditorView(BCChrome):
         project['deleted_directory_entries'].extend(items_to_delete)
         self.selected_de = None
         self.mount_redraw()
+        Router.router.ResetHashChange()
 
     def projects_api_ajax_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
@@ -197,6 +200,7 @@ class EditorView(BCChrome):
                 project = new_project
                 project['deleted_directory_entries'] = list()
                 self.mount_redraw()
+                Router.router.ResetHashChange()
 
     def query_project(self):
         global project
@@ -268,6 +272,7 @@ class EditorView(BCChrome):
                   }
         project['directory_entry'].append(new_de)
         self.mount_redraw()
+        Router.router.ResetHashChange()
 
     def newFolder_ok(self, e, form_values):
         root_folder = [de for de in project['directory_entry'] if de['parent_id'] is None][0]
@@ -280,6 +285,7 @@ class EditorView(BCChrome):
                   }
         project['directory_entry'].append(new_de)
         self.mount_redraw()
+        Router.router.ResetHashChange()
 
     def get_top_navbar_items(self):
         return [
