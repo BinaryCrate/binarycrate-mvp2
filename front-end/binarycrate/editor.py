@@ -241,9 +241,11 @@ class EditorView(BCChrome):
             return  BCProjectTree(get_as_tree(None))
 
     def get_central_content(self):
-        return      [
-                      div({'class': "project-fnf"}, [
+        return    c("div", {'class': "container-fluid code-area", 'style': 'padding-left: 1px; padding-top:1px height:100%;'}, [
+                    div({'class': 'row row-wrapper'}, [
+                      div({'class': "project-fnf col-ms-2"}, [
                         div({'class': 'top-tree'}, [
+                          p({'style': 'display:inline'}, 'Files'),
                           a({'data-toggle': "modal", 'data-target': '#newFile', 'href': get_current_hash(), 'onclick': self.newFile_ok}, [
                             span({'class': 'fa fa-1x fa-file-code-o'}),
                           ]),
@@ -253,11 +255,20 @@ class EditorView(BCChrome):
                         ]),
                         self.get_project_tree(),
                       ]),
-                      article([
+                      article({'class': 'col-md-12 row', 'id': 'editor'}, [
                         self.code_mirror,
-                        iframe({'id': 'preview'}),
+                        div({'class': 'row col-md-5 output-col'}, [
+                          iframe({'id': 'preview', 'class': 'col-12 code-output'}),
+                          div({'id': 'console', 'class': 'console-editor col-12'}, [
+                            div({'class': 'logMessage'}, [
+                              span('//: '),
+                              t('request sent'),
+                            ]),
+                          ]),
+                        ]),
                       ]),
-                    ]
+                    ]),
+                  ])
 
     def get_selected_de_content(self):
         if self.selected_file_de is None:
@@ -329,7 +340,7 @@ class EditorView(BCChrome):
         self.selected_de = None
         self.selected_file_de = None
         self.folder_state = defaultdict(bool)
-        self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code'}, [t(self.get_selected_de_content)], change_handler=self.code_mirror_change)
+        self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code', 'class': 'col-md-5 CodeMirror'}, [t(self.get_selected_de_content)], change_handler=self.code_mirror_change)
         super(EditorView, self).__init__(
                     None,
                     None,

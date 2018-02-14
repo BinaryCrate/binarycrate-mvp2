@@ -140,7 +140,7 @@ ____________________________________________________________________________*/
 }
 
 iframe {
-    width:auto;
+    width: auto;
     float: left;
     min-height: 100%;
     width: 50%;
@@ -148,8 +148,49 @@ iframe {
     border-left: 0px;
 }
 
+.code-output{
+  flex:3;
+}
 .code-area{
   max-width: 1250px;
+}
+
+.output-col{
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+
+/* Console
+____________________________________________________________________________ */
+
+#console {
+    #height: 200px;
+    border: 1px black;
+    font-family: monospace;
+}
+
+.console-editor{
+  background: #000;
+  color: #fff;
+  width: 100%;
+  padding-left: 5px;
+  padding-right: 5px;
+  align-self: end;
+  flex:1;
+
+}
+
+/* Code Area
+____________________________________________________________________________ */
+
+.container{
+  padding: 0px;
+  margin: 0px;
+}
+
+.row-wrapper{
+  flex-wrap: nowrap;
 }
 
 
@@ -259,18 +300,6 @@ li input:checked + ol > li:first-child {
 
 .file-active{
   background-color: #f1f5fc;;
-}
-
-/* Code Area
-____________________________________________________________________________ */
-
-.container{
-  padding: 0px;
-  margin: 0px;
-}
-
-.row-wrapper{
-  flex-wrap: nowrap;
 }
 
 /* 404 Page
@@ -499,22 +528,7 @@ ____________________________________________________________________________*/
     margin-left: 15px;
 }
 
-/* Console
-____________________________________________________________________________ */
 
-#console {
-    height: 200px;
-    border: 1px black;
-    font-family: monospace;
-}
-
-.console-editor{
-  background: #000;
-  color: #fff;
-  width: 100%;
-  padding-left: 5px;
-  padding-right: 5px;
-}
 
 
 /* Share Page
@@ -561,7 +575,7 @@ ____________________________________________________________________________*/
 
 .student-list {
   list-style: none;
-  padding: 0px;
+  padding:0px;
   height: 100%;
   overflow: hidden;
 }
@@ -572,7 +586,34 @@ ____________________________________________________________________________*/
 
 .studentList{
   border-right: 1px solid #eee;
+  padding-left: 0px;
 }
+
+.studentHeader{
+  padding-left: 15px;
+  /* display: flex; */
+}
+
+.studentHeader > button{
+  width: 50%;
+}
+
+.studentSearch, .studentAdd{
+  flex: 1;
+}
+
+.studentSearch{
+  margin-right: 5px;
+}
+.studentAdd{
+  margin-right: 5px;
+}
+
+
+.studentHeader #SearchCollapse{
+  padding-top: 10px;
+}
+
 
 .student-list li {
   border-bottom: 1px solid #eee;
@@ -629,6 +670,10 @@ small, .small {
   font-size: 10px;
   padding: 3px 5px;
 }
+.studentName{
+  padding-left: 10px;
+  font-weight: bold;
+}
 
 
 
@@ -638,81 +683,13 @@ small, .small {
 }
 
 
-.chat li img {
-  width: 45px;
-  height: 45px;
-  border-radius: 50em;
-  -moz-border-radius: 50em;
-  -webkit-border-radius: 50em;
-}
-
 img {
   max-width: 100%;
 }
 
-.chat-body {
-  padding-bottom: 20px;
-}
 
-.chat li.left .chat-body {
-  margin-left: 70px;
-  background-color: #fff;
-}
 
-.chat li .chat-body {
-  position: relative;
-  font-size: 11px;
-  padding: 10px;
-  border: 1px solid #f1f5fc;
-  box-shadow: 0 1px 1px rgba(0,0,0,.05);
-  -moz-box-shadow: 0 1px 1px rgba(0,0,0,.05);
-  -webkit-box-shadow: 0 1px 1px rgba(0,0,0,.05);
-}
 
-.chat li .chat-body .header {
-  padding-bottom: 5px;
-  border-bottom: 1px solid #f1f5fc;
-}
-
-.chat li .chat-body p {
-  margin: 0;
-}
-
-.chat li.left .chat-body:before {
-  position: absolute;
-  top: 10px;
-  left: -8px;
-  display: inline-block;
-  background: #fff;
-  width: 16px;
-  height: 16px;
-  border-top: 1px solid #f1f5fc;
-  border-left: 1px solid #f1f5fc;
-  content: '';
-  transform: rotate(-45deg);
-  -webkit-transform: rotate(-45deg);
-  -moz-transform: rotate(-45deg);
-  -ms-transform: rotate(-45deg);
-  -o-transform: rotate(-45deg);
-}
-
-.chat li.right .chat-body:before {
-  position: absolute;
-  top: 10px;
-  right: -8px;
-  display: inline-block;
-  background: #fff;
-  width: 16px;
-  height: 16px;
-  border-top: 1px solid #f1f5fc;
-  border-right: 1px solid #f1f5fc;
-  content: '';
-  transform: rotate(45deg);
-  -webkit-transform: rotate(45deg);
-  -moz-transform: rotate(45deg);
-  -ms-transform: rotate(45deg);
-  -o-transform: rotate(45deg);
-}
 
 .chat li {
   margin: 15px 0;
@@ -723,19 +700,7 @@ img {
   background-color: #fff;
 }
 
-.chat-box {
-  position: fixed;
-  bottom: 0;
-  left: 444px;
-  right: 0;
-  padding: 15px;
-  border-top: 1px solid #eee;
-  transition: all .5s ease;
-  -webkit-transition: all .5s ease;
-  -moz-transition: all .5s ease;
-  -ms-transition: all .5s ease;
-  -o-transition: all .5s ease;
-}
+
 
 .primary-font {
   color: #3c8dbc;

@@ -160,7 +160,9 @@ class DashboardView(BCChrome):
         ajaxput('/api/projects/' + self.selected_project['id'] + '/', data, self.projects_api_ajax_put_result_handler)
 
     def get_central_content(self):
-        return [Project(self, proj, self.mount_redraw) for proj in projects]
+        return c("div", {'class': "container-fluid", 'style': {'padding-left': '1px'}}, [
+                 div({'class': 'row first-row'}, [Project(self, proj, self.mount_redraw) for proj in projects])
+                ])
 
 
 def dashboard_view():

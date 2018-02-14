@@ -98,9 +98,7 @@ class BCChrome(div):
                     ]),
                   ]),
                 ]),
-                div({'class': "content-wrapper", 'style': {'padding-top': '1px'}}, [c("div", {'class': "container-fluid", 'style': {'padding-left': '1px'}}, [
-                  div({'class': 'row first-row'}, self.get_central_content()),
-                ])]),
+                div({'class': "content-wrapper", 'style': {'padding-top': '1px'}}, [self.get_central_content()]),
                 footer({'class': "sticky-footer"}, [
                   div({'class':"container"}, [
                     div({'class':"text-center"}, [
