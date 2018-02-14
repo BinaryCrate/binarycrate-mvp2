@@ -264,6 +264,13 @@ class ProjectCanSaveTestCase(APITestCase):
         self.assertEqual(DirectoryEntry.objects.get(id=data['id']).content, "print('Hello world4')")
         self.assertEqual(str(DirectoryEntry.objects.get(id=data['id']).parent_id), data['parent_id'])
 
+    def test_delete_a_directory_entry(self):
+        url = reverse('api:directoryentry-detail', kwargs={'pk':str(self.de_hello_world.id)})
+        data = { }
+        response = self.client.delete(url, data, format='json')
+        #print('response.content=', response.content)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(DirectoryEntry.objects.filter(name='hello_world.py').count(), 0)
 
         
 

@@ -92,7 +92,7 @@ class DirectoryEntryDetail(APIView):
 
     def put(self, request, pk, format=None):
         de = self.get_or_create_object(pk) 
-        print('DirectoryEntryDetail de=', de)
+        #print('DirectoryEntryDetail de=', de)
         serializer = DirectoryEntrySerializer(de, data=request.data)
         if serializer.is_valid():
             de = serializer.save()
@@ -112,4 +112,7 @@ class DirectoryEntryDetail(APIView):
         instance = serializer.save()
         #print('perform_update instance._content=', instance._content)
 
-
+    def delete(self, request, pk, format=None):
+        de = self.get_object(pk)
+        de.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

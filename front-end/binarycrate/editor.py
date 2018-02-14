@@ -12,7 +12,7 @@ import uuid
 from .navigation import BCChrome
 import cavorite.bootstrap.modals as modals
 from cavorite.bootstrap.modals import ModalTrigger, Modal
-from cavorite.ajaxget import ajaxget, ajaxput
+from cavorite.ajaxget import ajaxget, ajaxput, ajaxdelete
 import json
 from operator import itemgetter
 from collections import defaultdict
@@ -158,13 +158,36 @@ def save_project(e):
     def dummy_put_result_handler(xmlhttp, response):
         pass
 
+    def dummy_delete_result_handler(xmlhttp, response):
+        pass
+
     for de in project['directory_entry']:
         if de['name'] != '': # Don't try to save the root folder                
             ajaxput('/api/projects/directoryentry/' + de['id'] + '/', de, dummy_put_result_handler)
+    for de_id in project['deleted_directory_entries']:
+        ajaxdelete('/api/projects/directoryentry/' + de_id + '/', dummy_delete_result_handler)
 
 class EditorView(BCChrome):
     #def add_new_folder_handler(self, e):
     #    pass
+
+    def delete_selected_de(self, e):
+        if self.selected_de == None:
+            return
+        global project
+        def get_items_to_delete(de, todelete):
+            todelete.insert(0, de['id'])
+            if de['is_file'] is False:
+                for de2 in project['directory_entry']:
+                    if de2['parent_id'] == de['id']:
+                        get_items_to_delete(de2, todelete)
+    
+        items_to_delete = list()
+        get_items_to_delete(self.selected_de, items_to_delete)
+        project['directory_entry'] = [de for de in project['directory_entry'] if de['id'] not in items_to_delete]
+        project['deleted_directory_entries'].extend(items_to_delete)
+        self.selected_de = None
+        self.mount_redraw()
 
     def projects_api_ajax_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
@@ -172,6 +195,7 @@ class EditorView(BCChrome):
             new_project = json.loads(str(xmlhttp.responseText))
             if project != new_project:
                 project = new_project
+                project['deleted_directory_entries'] = list()
                 self.mount_redraw()
 
     def query_project(self):
@@ -195,7 +219,7 @@ class EditorView(BCChrome):
             # If project not loaded yet
             return BCProjectTree([])
         else:
-            #print ('get_project_tree called project[directory_entry]=', project['directory_entry'])
+            print ('get_project_tree called project[directory_entry]=', project['directory_entry'])
             de_source = project['directory_entry']
             #root_element = [de for de in de_source if de['parent_id'] is None]
             #assert len(root_element) == 1
@@ -257,15 +281,11 @@ class EditorView(BCChrome):
         project['directory_entry'].append(new_de)
         self.mount_redraw()
 
-    def __init__(self, *args, **kwargs):
-        self.selected_de = None
-        self.selected_file_de = None
-        self.folder_state = defaultdict(bool)
-        self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code'}, [t(self.get_selected_de_content)], change_handler=self.code_mirror_change)
-        super(EditorView, self).__init__(
-                    [
+    def get_top_navbar_items(self):
+        return [
                       drop_down_menu('File', [
                         drop_down_item('Save Project', '', save_project),
+                        drop_down_item('Delete File/Folder', '', self.delete_selected_de),
                         drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
                         drop_down_item('Square', 'fa-square', None),
                         drop_down_item('Something else here', 'fa-btc', None),
@@ -289,7 +309,15 @@ class EditorView(BCChrome):
                           ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
                         ]),
                       ]),
-                    ],
+                    ]
+
+    def __init__(self, *args, **kwargs):
+        self.selected_de = None
+        self.selected_file_de = None
+        self.folder_state = defaultdict(bool)
+        self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code'}, [t(self.get_selected_de_content)], change_handler=self.code_mirror_change)
+        super(EditorView, self).__init__(
+                    None,
                     None,
                     [
                       Modal("shareProj", "Share Project", [

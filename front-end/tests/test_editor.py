@@ -595,4 +595,221 @@ class TestEditor(object):
         folder_de = [de for de in editor.project['directory_entry'] if de['name'] == 'folder'][0]
         assert folder3_de['parent_id'] == folder_de['id']
 
+    def test_editor_can_delete_files(self, monkeypatch):
+        def dummy_uuid():
+            return uuid.UUID('d7114859-3a2f-4701-967a-fb66fd60b963')
+        project_id = 'e1e37287-9127-46cb-bddb-4a1a825a5d8e'
 
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(ajaxget, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(Router, 'router', Mock())
+        monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        callbacks.initialise_global_callbacks()
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        result = defaultdict(int)
+
+        node = editor.editor_view()
+        node.url_kwargs = { 'project_id': project_id }
+
+        tree = node.get_project_tree()
+
+        monkeypatch.setattr(node, 'mount_redraw', Mock())
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+    print('Hello folder i={}'.format(i))
+"""
+
+        response = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'parent_id': None
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False, 
+                        'content': '', 
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+                       },
+                     ]
+                    }
+        node.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)),
+                                              response)
+
+        tree = node.get_project_tree()
+
+        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        #root_folder = tree.get_children()[0]
+        #folder = root_folder.get_children()[0]
+        #return root_folder, root_folder.get_children()[1], folder, folder.get_children()[2].get_children()[0]
+
+        assert type(tree) == BCProjectTree
+        #root_folder = tree.get_children()[0]
+        assert type(root_folder) == BCPFolder
+        assert root_folder.get_is_checked()
+        assert len(root_folder.folder_children) == 2
+        assert type(root_folder.folder_children[0]) == BCPFolder
+        assert root_folder.folder_children[0].de['name'] == 'folder'
+        #hello_world = root_folder.folder_children[1]
+        assert type(hello_world) == BCPFile
+        assert self.get_BCPFile_title(hello_world) == 'hello_world.py'
+        #folder = root_folder.folder_children[0]
+        #hello_folder = folder.folder_children[0]
+        assert type(hello_folder) == BCPFile
+        assert self.get_BCPFile_title(hello_folder) == 'hello_folder.py'
+
+        hello_world.on_click(Mock())
+
+        node.delete_selected_de(Mock())
+
+        assert editor.project['deleted_directory_entries'] == ['ae935c72-cf56-48ed-ab35-575cb9a983ea']
+        
+        tree = node.get_project_tree()
+        assert type(tree) == BCProjectTree
+        root_folder = tree.get_children()[0]
+        assert type(root_folder) == BCPFolder
+        assert root_folder.get_is_checked()
+        assert len(root_folder.folder_children) == 1
+        assert type(root_folder.folder_children[0]) == BCPFolder
+        assert root_folder.folder_children[0].de['name'] == 'folder'
+        
+    def test_editor_can_delete_folder(self, monkeypatch):
+        def dummy_uuid():
+            return uuid.UUID('d7114859-3a2f-4701-967a-fb66fd60b963')
+        project_id = 'e1e37287-9127-46cb-bddb-4a1a825a5d8e'
+
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(ajaxget, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(Router, 'router', Mock())
+        monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        callbacks.initialise_global_callbacks()
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        result = defaultdict(int)
+
+        node = editor.editor_view()
+        node.url_kwargs = { 'project_id': project_id }
+
+        tree = node.get_project_tree()
+
+        monkeypatch.setattr(node, 'mount_redraw', Mock())
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+    print('Hello folder i={}'.format(i))
+"""
+
+        response = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'parent_id': None
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False, 
+                        'content': '', 
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+                       },
+                     ]
+                    }
+        node.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)),
+                                              response)
+
+        tree = node.get_project_tree()
+
+        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        #root_folder = tree.get_children()[0]
+        #folder = root_folder.get_children()[0]
+        #return root_folder, root_folder.get_children()[1], folder, folder.get_children()[2].get_children()[0]
+
+        assert type(tree) == BCProjectTree
+        #root_folder = tree.get_children()[0]
+        assert type(root_folder) == BCPFolder
+        assert root_folder.get_is_checked()
+        assert len(root_folder.folder_children) == 2
+        assert type(root_folder.folder_children[0]) == BCPFolder
+        assert root_folder.folder_children[0].de['name'] == 'folder'
+        #hello_world = root_folder.folder_children[1]
+        assert type(hello_world) == BCPFile
+        assert self.get_BCPFile_title(hello_world) == 'hello_world.py'
+        #folder = root_folder.folder_children[0]
+        #hello_folder = folder.folder_children[0]
+        assert type(hello_folder) == BCPFile
+        assert self.get_BCPFile_title(hello_folder) == 'hello_folder.py'
+
+        folder.on_click(Mock())
+
+        node.delete_selected_de(Mock())
+
+        assert set(editor.project['deleted_directory_entries']) == {'c1a4bc81-1ade-4c55-b457-81e59b785b01', '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a'}
+        
+        tree = node.get_project_tree()
+        assert type(tree) == BCProjectTree
+        root_folder = tree.get_children()[0]
+        assert type(root_folder) == BCPFolder
+        assert root_folder.get_is_checked()
+        assert len(root_folder.folder_children) == 1
+        assert type(root_folder.folder_children[0]) == BCPFile
+        assert root_folder.folder_children[0].de['name'] == 'hello_world.py'
+        
