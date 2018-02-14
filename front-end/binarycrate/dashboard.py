@@ -13,6 +13,7 @@ from cavorite.bootstrap.modals import ModalTrigger, Modal
 from cavorite.ajaxget import ajaxget, ajaxpost, ajaxput
 from cavorite import timeouts
 import json
+from . import editor
 
 
 projects = []

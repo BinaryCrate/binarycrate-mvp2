@@ -196,11 +196,19 @@ class EditorView(BCChrome):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             global project
             new_project = json.loads(str(xmlhttp.responseText))
+            #print('projects_api_ajax_result_handler project=', project)
+            #print('projects_api_ajax_result_handler new_project=', new_project)
             if project != new_project:
                 project = new_project
                 project['deleted_directory_entries'] = list()
                 self.mount_redraw()
                 Router.router.ResetHashChange()
+
+    def mount(self, element):
+        #print('EditorView mount called')
+        global project
+        project = {}
+        super(EditorView, self).mount(element)
 
     def query_project(self):
         global project
@@ -223,7 +231,7 @@ class EditorView(BCChrome):
             # If project not loaded yet
             return BCProjectTree([])
         else:
-            print ('get_project_tree called project[directory_entry]=', project['directory_entry'])
+            #print ('get_project_tree called project[directory_entry]=', project['directory_entry'])
             de_source = project['directory_entry']
             #root_element = [de for de in de_source if de['parent_id'] is None]
             #assert len(root_element) == 1
