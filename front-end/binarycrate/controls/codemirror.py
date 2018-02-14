@@ -39,12 +39,12 @@ class CodeMirrorHandlerVNode(textarea):
 
     def onchange_codemirror(self, e):
         #print ('onchange_codemirror self.change_handler=', self.change_handler)
-        previewFrame = js.globals.document.getElementById('preview');
-        preview =  previewFrame.contentDocument or  previewFrame.contentWindow.document;
-        preview.open();
+        #previewFrame = js.globals.document.getElementById('preview');
+        #preview =  previewFrame.contentDocument or  previewFrame.contentWindow.document;
+        #preview.open();
         content = self.editor.getValue()
-        preview.write(content);
-        preview.close();
+        #preview.write(content);
+        #preview.close();
         #print ('onchange_codemirror content=', content)
         if self.change_handler is not None:
             self.change_handler(content)

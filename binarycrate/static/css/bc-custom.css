@@ -149,6 +149,8 @@ iframe {
 }
 
 .code-output{
+    border: 1px solid black;
+    border-left: 0px;
   flex:3;
 }
 .code-area{

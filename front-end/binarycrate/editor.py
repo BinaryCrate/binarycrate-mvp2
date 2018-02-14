@@ -258,7 +258,8 @@ class EditorView(BCChrome):
                       article({'class': 'col-md-12 row', 'id': 'editor'}, [
                         self.code_mirror,
                         div({'class': 'row col-md-5 output-col'}, [
-                          iframe({'id': 'preview', 'class': 'col-12 code-output'}),
+                          #iframe({'id': 'preview', 'class': 'col-12 code-output'}),
+                          div({'id': 'preview', 'class': 'col-12 code-output'}),
                           div({'id': 'console', 'class': 'console-editor col-12'}, [
                             div({'class': 'logMessage'}, [
                               span('//: '),
