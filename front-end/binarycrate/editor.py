@@ -169,6 +169,25 @@ def save_project(e):
     for de_id in project['deleted_directory_entries']:
         ajaxdelete('/api/projects/directoryentry/' + de_id + '/', dummy_delete_result_handler)
 
+class ContextMenu(nav):
+    def __init__(self, posx, posy, menu_items, *args, **kwargs):
+        self.menu_items = menu_items
+        super(ContextMenu, self).__init__({'class': "context-menu", 'style': 'left: {}px; top:{}px'.format(posx, posy)}, *args, **kwargs)
+
+    def get_children(self):
+        menu_items = [
+                                li({'class': "context-menu__item"}, [
+                                  a({'href': get_current_hash(), 'class': "context-menu__link", 'onclick': mi[1]}, [
+                                    #i({'class': 'fa fa-eye'}),
+                                    t(mi[0]),
+                                  ]),
+                                ]) for mi in self.menu_items]
+
+        return              [
+                              ul({'class': 'context-menu__items'}, menu_items),
+                            ]
+
+
 class EditorView(BCChrome):
     #def add_new_folder_handler(self, e):
     #    pass
@@ -196,8 +215,6 @@ class EditorView(BCChrome):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             global project
             new_project = json.loads(str(xmlhttp.responseText))
-            #print('projects_api_ajax_result_handler project=', project)
-            #print('projects_api_ajax_result_handler new_project=', new_project)
             if project != new_project:
                 project = new_project
                 project['deleted_directory_entries'] = list()
@@ -205,9 +222,9 @@ class EditorView(BCChrome):
                 Router.router.ResetHashChange()
 
     def mount(self, element):
-        #print('EditorView mount called')
         global project
         project = {}
+        self.context_menu = None
         super(EditorView, self).mount(element)
 
     def query_project(self):
@@ -231,13 +248,8 @@ class EditorView(BCChrome):
             # If project not loaded yet
             return BCProjectTree([])
         else:
-            #print ('get_project_tree called project[directory_entry]=', project['directory_entry'])
             de_source = project['directory_entry']
-            #root_element = [de for de in de_source if de['parent_id'] is None]
-            #assert len(root_element) == 1
-            #root_element = root_element[0]       
 
-            #return  BCProjectTree(get_as_tree(root_element['id']))
             return  BCProjectTree(get_as_tree(None))
 
     def get_central_content(self):
@@ -259,7 +271,7 @@ class EditorView(BCChrome):
                         self.code_mirror,
                         div({'class': 'row col-md-5 output-col'}, [
                           #iframe({'id': 'preview', 'class': 'col-12 code-output'}),
-                          div({'id': 'preview', 'class': 'col-12 code-output'}),
+                          div({'id': 'preview', 'class': 'col-12 code-output', 'oncontextmenu': self.contextmenu_preview}),
                           div({'id': 'console', 'class': 'console-editor col-12'}, [
                             div({'class': 'logMessage'}, [
                               span('//: '),
@@ -270,6 +282,42 @@ class EditorView(BCChrome):
                       ]),
                     ]),
                   ])
+
+    def on_body_click(self, e):
+        if self.context_menu is not None:
+            self.context_menu = None
+            self.mount_redraw()
+            Router.router.ResetHashChange()
+
+
+    def get_context_menu(self):
+        return self.context_menu
+
+    def contextmenu_preview(self, e):
+        if e.pageX or e.pageY:
+            posx = e.pageX
+            posy = e.pageY
+        elif e.clientX or e.clientY:
+            posx = e.clientX + js.globals.document.body.scrollLeft + \
+                               js.globals.document.documentElement.scrollLeft
+            posy = e.clientY + js.globals.document.body.scrollTop + \
+                               js.globals.document.documentElement.scrollTop
+        self.context_menu = ContextMenu(posx, posy,
+                                        (('New Button', self.new_button), )
+                                        )
+
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+        e.stopPropagation()
+        e.preventDefault()
+
+    def new_button(self, e):
+        print('EditorView new_button called')
+        self.context_menu = None
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+        e.stopPropagation()
+        e.preventDefault()
 
     def get_selected_de_content(self):
         if self.selected_file_de is None:
@@ -341,6 +389,7 @@ class EditorView(BCChrome):
         self.selected_de = None
         self.selected_file_de = None
         self.folder_state = defaultdict(bool)
+        self.context_menu = None
         self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code', 'class': 'col-md-5 CodeMirror'}, [t(self.get_selected_de_content)], change_handler=self.code_mirror_change)
         super(EditorView, self).__init__(
                     None,
@@ -379,6 +428,5 @@ class EditorView(BCChrome):
                     ], *args, **kwargs)
 
 def editor_view():
-    ret = EditorView()
-    #print("editor_view called ret=", ret)
-    return ret
+    return EditorView()
+

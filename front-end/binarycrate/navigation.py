@@ -53,6 +53,7 @@ class BCChrome(div):
         self.top_navbar_items = top_navbar_items
         self.central_content = central_content
         self.modals = modals
+        self.context_menu = None
         super(BCChrome, self).__init__()
 
     def get_top_navbar_items(self):
@@ -63,6 +64,16 @@ class BCChrome(div):
 
     def get_modals(self):
         return self.modals
+
+    def get_context_menu(self):
+        return None
+
+    def get_context_menu_list(self):
+        context_menu = self.get_context_menu()
+        if context_menu is None:
+            return []
+        else:
+            return [context_menu]
 
     def get_children(self):
         return [ 
@@ -109,5 +120,5 @@ class BCChrome(div):
                 Modal("logoutModal", "Logout", [
                   div("Select \"Logout\" below if you are ready to end your current session."),
                 ], None),
-              ] + self.get_modals()
+              ] + self.get_modals() + self.get_context_menu_list()
 

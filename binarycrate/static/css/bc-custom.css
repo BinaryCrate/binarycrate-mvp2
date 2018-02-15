@@ -751,3 +751,9 @@ ____________________________________________________________________________ */
     margin-top: -1px;
 }
 
+.context-menu {
+  display: block;
+  position: absolute;
+  z-index: 10;
+}
+
