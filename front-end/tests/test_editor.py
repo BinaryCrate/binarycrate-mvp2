@@ -2,12 +2,12 @@
 from __future__ import absolute_import, unicode_literals, print_function
 from binarycrate import editor
 import cavorite_tests.fakejs as js
-from cavorite import callbacks, ajaxget, timeouts, Router, t
+from cavorite import callbacks, ajaxget, timeouts, Router, t, c
 from collections import defaultdict
 import uuid
 from mock import Mock
 import json
-from binarycrate.editor import BCProjectTree, BCPFolder, BCPFile
+from binarycrate.editor import BCProjectTree, BCPFolder, BCPFile, ContextMenu
 from binarycrate.controls import codemirror
 from utils import IterateVirtualDOM
 import cavorite.bootstrap.modals
@@ -813,3 +813,41 @@ class TestEditor(object):
         assert type(root_folder.folder_children[0]) == BCPFile
         assert root_folder.folder_children[0].de['name'] == 'hello_world.py'
         
+
+class TestContextMenu(object):
+    def test_context_menu_appears(self, monkeypatch):
+        monkeypatch.setattr(Router, 'ResetHashChange', Mock())
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+
+        body = js.globals.document.body
+        welcome_page = c("div", [c("p", "Welcome to cavorite"),
+                                 ])
+        error_404_page = c("div", [c("p", "No match 404 error"),
+                                   c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
+        r = Router({r'^$': welcome_page},
+                    error_404_page, body)
+        r.route()
+
+        view = editor.EditorView()
+        view.mount_redraw = Mock()
+        assert view.context_menu is None
+        Router.router.ResetHashChange.reset_mock()
+        view.contextmenu_preview(Mock(pageX=10, pageY=10))
+        assert type(view.context_menu) == ContextMenu
+        assert len(view.context_menu.menu_items) == 1
+        assert view.context_menu.menu_items[0][0] == 'New Button'
+        assert callable(view.context_menu.menu_items[0][1])
+        view.mount_redraw.assert_called()
+        Router.router.ResetHashChange.assert_called()
+
+        Router.router.ResetHashChange.reset_mock()
+        view.mount_redraw.reset_mock()
+        view.new_button(Mock())
+        assert view.context_menu is None
+        view.mount_redraw.assert_called()
+        Router.router.ResetHashChange.assert_called()
+
+
+        
+
+

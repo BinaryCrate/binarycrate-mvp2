@@ -305,14 +305,12 @@ class EditorView(BCChrome):
         self.context_menu = ContextMenu(posx, posy,
                                         (('New Button', self.new_button), )
                                         )
-
         self.mount_redraw()
         Router.router.ResetHashChange()
         e.stopPropagation()
         e.preventDefault()
 
     def new_button(self, e):
-        print('EditorView new_button called')
         self.context_menu = None
         self.mount_redraw()
         Router.router.ResetHashChange()
