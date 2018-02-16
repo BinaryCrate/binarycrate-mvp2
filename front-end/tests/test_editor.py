@@ -9,7 +9,7 @@ from mock import Mock
 import json
 from binarycrate.editor import BCProjectTree, BCPFolder, BCPFile, ContextMenu
 from binarycrate.controls import codemirror
-from utils import IterateVirtualDOM
+from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode
 import cavorite.bootstrap.modals
 
 
@@ -246,6 +246,7 @@ class TestEditor(object):
                                  'is_file': node.selected_de['is_file'],
                                  'content': node.selected_de['content'],
                                  'parent_id': node.selected_de['parent_id'],
+                                 'form_items': list(),
                                 }
                 was_found = True
 
@@ -818,6 +819,7 @@ class TestContextMenu(object):
     def test_context_menu_appears(self, monkeypatch):
         monkeypatch.setattr(Router, 'ResetHashChange', Mock())
         monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
 
         body = js.globals.document.body
         welcome_page = c("div", [c("p", "Welcome to cavorite"),
@@ -829,6 +831,56 @@ class TestContextMenu(object):
         r.route()
 
         view = editor.EditorView()
+        view.mount_redraw = Mock()
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+    print('Hello folder i={}'.format(i))
+"""
+
+        response = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'parent_id': None
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False, 
+                        'content': '', 
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+                       },
+                     ]
+                    }
+        view.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)),
+                                              response)
+        view.selected_de = [de for de in editor.project['directory_entry'] if de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'][0]
+
+        assert len(view.selected_de['form_items']) == 0
+
         view.mount_redraw = Mock()
         assert view.context_menu is None
         Router.router.ResetHashChange.reset_mock()
@@ -842,10 +894,54 @@ class TestContextMenu(object):
 
         Router.router.ResetHashChange.reset_mock()
         view.mount_redraw.reset_mock()
-        view.new_button(Mock())
+        js.return_get_element_by_id = {'preview': Mock(getBoundingClientRect=Mock(return_value=Mock(left=0, top=0)))}
+        assert view.selected_item == ''
+        view.new_button(Mock(clientX=10, clientY=20))
         assert view.context_menu is None
         view.mount_redraw.assert_called()
         Router.router.ResetHashChange.assert_called()
+
+        assert len(view.selected_de['form_items']) == 1
+        button = view.selected_de['form_items'][0]
+        assert button['type'] == 'button'
+        assert button['x'] == 10
+        assert button['y'] == 20
+        assert button['width'] == 100
+        assert button['height'] == 30
+        assert button['caption'] == 'Button'
+        assert button['name'] == 'button1'
+
+        def is_nvode_button(vnode):
+            if hasattr(vnode, 'tag') is False:
+                return None
+            if vnode.tag != 'button':
+                return None
+            l = vnode.get_children()
+            if len(l) != 1:
+                return None
+            child = l[0]
+            if type(child) == t and child.text == 'Button':
+                return vnode
+            else:
+                return None
+
+        vnode_button = get_matching_vnode(view, is_nvode_button)
+        assert vnode_button is not None
+        assert view.selected_item == button['id']
+
+        def find_preview(vnode):
+            if not hasattr(vnode, 'get_attribs'):
+                return False
+            return vnode.get_attribs().get('id', '') == 'preview-svg'
+
+        preview_node = get_matching_vnode(view, find_preview)
+        assert preview_node is not None
+        preview_node.get_attribs()['onclick'](Mock())
+        assert view.selected_item == ''
+        
+        vnode_button.get_attribs()['onclick'](Mock())
+        assert view.selected_item == button['id']
+
 
 
         

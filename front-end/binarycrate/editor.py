@@ -16,6 +16,8 @@ from cavorite.ajaxget import ajaxget, ajaxput, ajaxdelete
 import json
 from operator import itemgetter
 from collections import defaultdict
+from cavorite.svg import svg
+
 
 project = { }
 
@@ -82,6 +84,7 @@ class BCPFolder(li):
     def on_click(self, e):
         self.editor_view.folder_state[self.de['id']] = not self.editor_view.folder_state[self.de['id']]
         self.editor_view.selected_de = self.de
+        self.editor_view.selected_item = ''
         self.editor_view.mount_redraw()
         Router.router.ResetHashChange()
 
@@ -218,6 +221,8 @@ class EditorView(BCChrome):
             if project != new_project:
                 project = new_project
                 project['deleted_directory_entries'] = list()
+                for de in project['directory_entry']:
+                    de['form_items'] = list()
                 self.mount_redraw()
                 Router.router.ResetHashChange()
 
@@ -271,7 +276,7 @@ class EditorView(BCChrome):
                         self.code_mirror,
                         div({'class': 'row col-md-5 output-col'}, [
                           #iframe({'id': 'preview', 'class': 'col-12 code-output'}),
-                          div({'id': 'preview', 'class': 'col-12 code-output', 'oncontextmenu': self.contextmenu_preview}),
+                          div({'id': 'preview', 'class': 'col-12 code-output', 'oncontextmenu': self.contextmenu_preview, 'style': 'padding-left: 0px'}, self.get_selected_de_form_controls()),
                           div({'id': 'console', 'class': 'console-editor col-12'}, [
                             div({'class': 'logMessage'}, [
                               span('//: '),
@@ -293,7 +298,7 @@ class EditorView(BCChrome):
     def get_context_menu(self):
         return self.context_menu
 
-    def contextmenu_preview(self, e):
+    def xy_from_e(self, e):
         if e.pageX or e.pageY:
             posx = e.pageX
             posy = e.pageY
@@ -302,6 +307,10 @@ class EditorView(BCChrome):
                                js.globals.document.documentElement.scrollLeft
             posy = e.clientY + js.globals.document.body.scrollTop + \
                                js.globals.document.documentElement.scrollTop
+        return posx, posy
+
+    def contextmenu_preview(self, e):
+        posx, posy = self.xy_from_e(e)
         self.context_menu = ContextMenu(posx, posy,
                                         (('New Button', self.new_button), )
                                         )
@@ -310,7 +319,88 @@ class EditorView(BCChrome):
         e.stopPropagation()
         e.preventDefault()
 
+    def select_new_item(self, form_item_id, e):
+        #print('select_new_item form_item_id=', form_item_id)
+        self.selected_item = form_item_id
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+        e.stopPropagation()
+        e.preventDefault()
+
+    def get_selected_de_form_controls(self):
+        ret = list()
+        if self.selected_de:
+            for form_item in self.selected_de['form_items']:
+                style = ''.join(('position: absolute; ',
+                                'z-index: 1; ',
+                                'left: {};'.format(form_item['x']),
+                                'top: {};'.format(form_item['y']),
+                                'width: {};'.format(form_item['width']),
+                                'height: {};'.format(form_item['height'])
+                                ))
+                #print('get_selected_de_form_controls form_item[id]=',form_item['id'])
+                form_item_id = form_item['id']
+                ret.append(html_button({'style': style, 'onclick': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption']))
+            if self.selected_item != '':
+                selected_form_item = [form_item for form_item in self.selected_de['form_items'] if self.selected_item == form_item['id']][0]
+                ret.extend([svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%', 'oncontextmenu': self.contextmenu_preview, 'z-index':-5, 'onclick': self.clear_selected_item}, [
+                              svg('rect', {'x': selected_form_item['x'], 
+                                           'y':selected_form_item['y'],
+                                           'width': selected_form_item['width'],
+                                           'height': selected_form_item['height'],
+                                           'style':"fill:None;stroke-width:5;stroke:rgb(255,0,0)"}),
+                              svg('rect', {'x': selected_form_item['x'] - 5, 
+                                           'y':selected_form_item['y'] - 5,
+                                           'width': 10,
+                                           'height': 10,
+                                           'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)"}),
+                              svg('rect', {'x': selected_form_item['x'] + selected_form_item['width'] - 5, 
+                                           'y':selected_form_item['y'] - 5,
+                                           'width': 10,
+                                           'height': 10,
+                                           'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)"}),
+                              svg('rect', {'x': selected_form_item['x'] + selected_form_item['width'] - 5, 
+                                           'y':selected_form_item['y'] + selected_form_item['height'] - 5,
+                                           'width': 10,
+                                           'height': 10,
+                                           'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)"}),
+                              svg('rect', {'x': selected_form_item['x'] - 5, 
+                                           'y':selected_form_item['y'] + selected_form_item['height'] - 5,
+                                           'width': 10,
+                                           'height': 10,
+                                           'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)"}),
+                            ])])
+        return ret
+
+    def clear_selected_item(self, e):
+        self.selected_item = ''
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+        e.stopPropagation()
+        e.preventDefault()
+
     def new_button(self, e):
+        if not self.selected_de:
+            return
+        posx = e.clientX
+        posy = e.clientY
+        rect = js.globals.document.getElementById('preview').getBoundingClientRect()
+        posx = posx - rect.left
+        posy = posy - rect.top
+        new_id = str(uuid.uuid4())
+
+        self.selected_de['form_items'].append(
+            {'type': 'button',
+             'x': posx,
+             'y': posy,
+             'width': 100,
+             'height': 30,
+             'caption': 'Button',
+             'name': 'button1',
+             'id': new_id,
+            })
+        self.selected_item = new_id
+
         self.context_menu = None
         self.mount_redraw()
         Router.router.ResetHashChange()
@@ -388,6 +478,7 @@ class EditorView(BCChrome):
         self.selected_file_de = None
         self.folder_state = defaultdict(bool)
         self.context_menu = None
+        self.selected_item = ''
         self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code', 'class': 'col-md-5 CodeMirror'}, [t(self.get_selected_de_content)], change_handler=self.code_mirror_change)
         super(EditorView, self).__init__(
                     None,
