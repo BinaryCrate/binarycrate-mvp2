@@ -13,11 +13,21 @@ class CodeMirrorHandlerVNode(textarea):
         attribs = copy.copy(attribs)
         attribs.update({'onchange': self.onchange_codemirror})
         self.change_handler = change_handler
+        self.editor = None
         super(CodeMirrorHandlerVNode, self).__init__(attribs, children, **kwargs)
 
     def was_mounted(self):
         super(CodeMirrorHandlerVNode, self).was_mounted()
-        timeouts.set_timeout(self.codemirror_init, 1)
+        should_init = False
+        if self.editor is None:
+            should_init = True
+        else:
+            textarea = js.globals.document.getElementById("code")
+            should_init = textarea.textContent != self.editor.getValue()
+            
+        #print('CodeMirrorHandlerVNode was_mounted called should_init=',should_init)
+        if should_init:
+            timeouts.set_timeout(self.codemirror_init, 1)
 
     def codemirror_init(self):
         #print('CodeMirrorHandlerVNode codemirror_init self=', self)

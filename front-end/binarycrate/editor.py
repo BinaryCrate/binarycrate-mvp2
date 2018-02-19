@@ -115,6 +115,7 @@ class BCPFile(li):
     def on_click(self, e):
         self.editor_view.selected_de = self.de
         self.editor_view.selected_file_de = self.de
+        self.editor_view.selected_item = ''
         self.editor_view.mount_redraw()
         Router.router.ResetHashChange()
 
@@ -303,7 +304,7 @@ class EditorView(BCChrome):
             Router.router.ResetHashChange()
             e.stopPropagation()
             e.preventDefault()
-            print('Mouse is down mousemove e=', change_x, ',', change_y)
+            #print('Mouse is down mousemove e=', change_x, ',', change_y)
         #Router.router.ResetHashChange()
 
     def get_context_menu(self):
@@ -332,7 +333,7 @@ class EditorView(BCChrome):
 
     def select_new_item(self, form_item_id, e):
         self.mouse_is_down = True
-        print('select_new_item mouse is down')
+        #print('select_new_item mouse is down')
         self.selected_item = form_item_id
         self.mount_redraw()
         Router.router.ResetHashChange()
@@ -340,7 +341,7 @@ class EditorView(BCChrome):
         e.preventDefault()
 
     def on_mouse_up(self, e):
-        print('on_mouse_up mouse is up')
+        #print('on_mouse_up mouse is up')
         self.mouse_is_down = False
 
     def get_selected_de_form_controls(self):
@@ -390,9 +391,9 @@ class EditorView(BCChrome):
 
     def clear_selected_item(self, e):
         #self.mouse_is_down = True
-        print('clear_selected_item mouse is down')
+        #print('clear_selected_item mouse is down')
         if self.selected_item != '':
-            print('clearing item')
+            #print('clearing item')
             self.selected_item = ''
             self.mount_redraw()
             Router.router.ResetHashChange()
@@ -494,6 +495,7 @@ class EditorView(BCChrome):
                     ]
 
     def __init__(self, *args, **kwargs):
+        #print('EditorView __init__')
         self.selected_de = None
         self.selected_file_de = None
         self.folder_state = defaultdict(bool)
