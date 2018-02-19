@@ -9,7 +9,7 @@ from mock import Mock
 import json
 from binarycrate.editor import BCProjectTree, BCPFolder, BCPFile, ContextMenu
 from binarycrate.controls import codemirror
-from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode
+from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode, style_to_dict
 import cavorite.bootstrap.modals
 
 
@@ -820,17 +820,16 @@ class TestContextMenu(object):
         monkeypatch.setattr(Router, 'ResetHashChange', Mock())
         monkeypatch.setattr(editor.cavorite, 'js', js)
         monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
 
         body = js.globals.document.body
-        welcome_page = c("div", [c("p", "Welcome to cavorite"),
-                                 ])
         error_404_page = c("div", [c("p", "No match 404 error"),
                                    c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
-        r = Router({r'^$': welcome_page},
+        view = editor.EditorView()
+        r = Router({r'^$': view},
                     error_404_page, body)
         r.route()
 
-        view = editor.EditorView()
         view.mount_redraw = Mock()
 
         hello_world_content = "print('Hello world')"
@@ -928,6 +927,8 @@ class TestContextMenu(object):
         vnode_button = get_matching_vnode(view, is_nvode_button)
         assert vnode_button is not None
         assert view.selected_item == button['id']
+        assert style_to_dict(vnode_button.get_attribs()['style'])['left'] == str(button['x'])
+        assert style_to_dict(vnode_button.get_attribs()['style'])['top'] == str(button['y'])
 
         def find_preview(vnode):
             if not hasattr(vnode, 'get_attribs'):
@@ -936,14 +937,45 @@ class TestContextMenu(object):
 
         preview_node = get_matching_vnode(view, find_preview)
         assert preview_node is not None
-        preview_node.get_attribs()['onclick'](Mock())
+        preview_node.get_attribs()['onmousedown'](Mock())
         assert view.selected_item == ''
         
-        vnode_button.get_attribs()['onclick'](Mock())
+        vnode_button.get_attribs()['onmousedown'](Mock())
         assert view.selected_item == button['id']
+        assert view.mouse_is_down == True
+    
+        # Lift the mouse button up and check we are still selected
+        preview_node.get_attribs()['onmouseup'](Mock())
+        assert view.selected_item == button['id']
+        assert view.mouse_is_down == False
 
+        # Click again
+        vnode_button.get_attribs()['onmousedown'](Mock())
+        assert view.selected_item == button['id']
+        assert view.mouse_is_down == True
 
+        #Move the mouse and check the button moves
+        Router.router.global_mouse_x = 500
+        Router.router.global_mouse_y = 500
 
-        
+        Router.router.on_body_mousemove(Mock(clientX=520, clientY=530))
 
+        assert button['x'] == 30
+        assert button['y'] == 50
+        vnode_button = get_matching_vnode(view, is_nvode_button)
+        assert style_to_dict(vnode_button.get_attribs()['style'])['left'] == str(button['x'])
+        assert style_to_dict(vnode_button.get_attribs()['style'])['top'] == str(button['y'])
+
+        # Check moving the mouse with nothing selected does nothing
+        preview_node.get_attribs()['onmousedown'](Mock())
+        assert view.selected_item == ''
+        assert view.mouse_is_down == True
+
+        Router.router.on_body_mousemove(Mock(clientX=550, clientY=550))
+
+        assert button['x'] == 30
+        assert button['y'] == 50
+        vnode_button = get_matching_vnode(view, is_nvode_button)
+        assert style_to_dict(vnode_button.get_attribs()['style'])['left'] == str(button['x'])
+        assert style_to_dict(vnode_button.get_attribs()['style'])['top'] == str(button['y'])
 

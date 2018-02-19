@@ -33,3 +33,18 @@ def get_matching_vnode(vnode, callback):
                 return match
     return None
 
+
+def style_to_dict(style_str):
+    # style_str = an inline style as a string
+    l = style_str.split(';')
+    l = [s for s in l if s != '']
+    def remove_quotes(s):
+        if s == '' or s == '"' or s == "'":
+            return ''
+        if (s[0] == "'" and s[-1] == "'") or (s[0] == '"' and s[-1] == '"'):
+            return s[1:-1]
+        return s
+    l = [(s[:s.find(':')].strip(), remove_quotes(s[s.find(':') + 1:]).strip()) for s in l]
+    ret = {s[0]: s[1] for s in l}
+    return ret
+

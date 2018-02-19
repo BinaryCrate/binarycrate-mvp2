@@ -276,7 +276,7 @@ class EditorView(BCChrome):
                         self.code_mirror,
                         div({'class': 'row col-md-5 output-col'}, [
                           #iframe({'id': 'preview', 'class': 'col-12 code-output'}),
-                          div({'id': 'preview', 'class': 'col-12 code-output', 'oncontextmenu': self.contextmenu_preview, 'style': 'padding-left: 0px'}, self.get_selected_de_form_controls()),
+                          div({'id': 'preview', 'class': 'col-12 code-output', 'oncontextmenu': self.contextmenu_preview, 'style': 'padding-left: 0px', 'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up}, self.get_selected_de_form_controls()),
                           div({'id': 'console', 'class': 'console-editor col-12'}, [
                             div({'class': 'logMessage'}, [
                               span('//: '),
@@ -294,6 +294,17 @@ class EditorView(BCChrome):
             self.mount_redraw()
             Router.router.ResetHashChange()
 
+    def on_body_mousemove(self, e, change_x, change_y):
+        if self.mouse_is_down and self.selected_item != '':
+            fi = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item][0]
+            fi['x'] += change_x
+            fi['y'] += change_y
+            self.mount_redraw()
+            Router.router.ResetHashChange()
+            e.stopPropagation()
+            e.preventDefault()
+            print('Mouse is down mousemove e=', change_x, ',', change_y)
+        #Router.router.ResetHashChange()
 
     def get_context_menu(self):
         return self.context_menu
@@ -320,12 +331,17 @@ class EditorView(BCChrome):
         e.preventDefault()
 
     def select_new_item(self, form_item_id, e):
-        #print('select_new_item form_item_id=', form_item_id)
+        self.mouse_is_down = True
+        print('select_new_item mouse is down')
         self.selected_item = form_item_id
         self.mount_redraw()
         Router.router.ResetHashChange()
         e.stopPropagation()
         e.preventDefault()
+
+    def on_mouse_up(self, e):
+        print('on_mouse_up mouse is up')
+        self.mouse_is_down = False
 
     def get_selected_de_form_controls(self):
         ret = list()
@@ -340,10 +356,10 @@ class EditorView(BCChrome):
                                 ))
                 #print('get_selected_de_form_controls form_item[id]=',form_item['id'])
                 form_item_id = form_item['id']
-                ret.append(html_button({'style': style, 'onclick': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption']))
+                ret.append(html_button({'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption']))
             if self.selected_item != '':
                 selected_form_item = [form_item for form_item in self.selected_de['form_items'] if self.selected_item == form_item['id']][0]
-                ret.extend([svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%', 'oncontextmenu': self.contextmenu_preview, 'z-index':-5, 'onclick': self.clear_selected_item}, [
+                ret.extend([svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%', 'oncontextmenu': self.contextmenu_preview, 'z-index':-5, 'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up}, [
                               svg('rect', {'x': selected_form_item['x'], 
                                            'y':selected_form_item['y'],
                                            'width': selected_form_item['width'],
@@ -373,11 +389,15 @@ class EditorView(BCChrome):
         return ret
 
     def clear_selected_item(self, e):
-        self.selected_item = ''
-        self.mount_redraw()
-        Router.router.ResetHashChange()
-        e.stopPropagation()
-        e.preventDefault()
+        #self.mouse_is_down = True
+        print('clear_selected_item mouse is down')
+        if self.selected_item != '':
+            print('clearing item')
+            self.selected_item = ''
+            self.mount_redraw()
+            Router.router.ResetHashChange()
+            e.stopPropagation()
+            e.preventDefault()
 
     def new_button(self, e):
         if not self.selected_de:
@@ -479,6 +499,7 @@ class EditorView(BCChrome):
         self.folder_state = defaultdict(bool)
         self.context_menu = None
         self.selected_item = ''
+        self.mouse_is_down = False
         self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code', 'class': 'col-md-5 CodeMirror'}, [t(self.get_selected_de_content)], change_handler=self.code_mirror_change)
         super(EditorView, self).__init__(
                     None,
