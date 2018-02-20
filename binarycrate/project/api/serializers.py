@@ -14,7 +14,7 @@ class DirectoryEntrySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DirectoryEntry
-        fields = ('id', 'name', 'is_file', 'parent_id', 'content')
+        fields = ('id', 'name', 'is_file', 'parent_id', 'content', 'form_items')
 
 class ProjectGetSerializer(serializers.ModelSerializer):
     directory_entry = DirectoryEntrySerializer(many=True, source='get_directory_entries')

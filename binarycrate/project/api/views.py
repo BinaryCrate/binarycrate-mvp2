@@ -97,6 +97,7 @@ class DirectoryEntryDetail(APIView):
         if serializer.is_valid():
             de = serializer.save()
             de.content = request.data['content'] # TODO: Add some validation here
+            de.form_items = request.data['form_items'] # TODO: Add some validation here
             if request.data['parent_id'] is None:
                 de.parent = None
             else:
@@ -105,6 +106,7 @@ class DirectoryEntryDetail(APIView):
             #print('DirectoryEntryDetail de=', de)
             response_data = copy.copy(serializer.data)
             response_data['content'] = de.content
+            response_data['form_items'] = de.form_items
             return Response(response_data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
