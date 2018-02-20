@@ -1,6 +1,6 @@
 from __future__ import absolute_import, print_function
 import cavorite
-from cavorite import c, t, Router, callbacks, timeouts, get_current_hash
+from cavorite import c, t, Router, callbacks, timeouts, get_current_hash, get_uuid
 from cavorite.HTML import *
 try:
     import js
@@ -173,8 +173,10 @@ def save_project(e):
         pass
 
     for de in project['directory_entry']:
-        if de['name'] != '': # Don't try to save the root folder                
-            ajaxput('/api/projects/directoryentry/' + de['id'] + '/', de, dummy_put_result_handler)
+        if de['name'] != '': # Don't try to save the root folder
+            de_copy = copy.copy(de)
+            de_copy['form_items'] = json.dumps(de_copy['form_items'])
+            ajaxput('/api/projects/directoryentry/' + de['id'] + '/', de_copy, dummy_put_result_handler)
     for de_id in project['deleted_directory_entries']:
         ajaxdelete('/api/projects/directoryentry/' + de_id + '/', dummy_delete_result_handler)
 
@@ -228,7 +230,10 @@ class EditorView(BCChrome):
                 project = new_project
                 project['deleted_directory_entries'] = list()
                 for de in project['directory_entry']:
-                    de['form_items'] = list()
+                    if de['form_items'] == '':
+                        de['form_items'] = []
+                    else:
+                        de['form_items'] = json.loads(de['form_items'])
                 self.mount_redraw()
                 Router.router.ResetHashChange()
 
@@ -452,12 +457,12 @@ class EditorView(BCChrome):
         rect = js.globals.document.getElementById('preview').getBoundingClientRect()
         posx = posx - rect.left
         posy = posy - rect.top
-        new_id = str(uuid.uuid4())
+        new_id = str(get_uuid())
 
         self.selected_de['form_items'].append(
             {'type': 'button',
-             'x': posx,
-             'y': posy,
+             'x': int(posx),
+             'y': int(posy),
              'width': 100,
              'height': 30,
              'caption': 'Button',

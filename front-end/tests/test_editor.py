@@ -40,6 +40,8 @@ class TestEditor(object):
     def test_editor_displays_folder_structure(self, monkeypatch):
         def dummy_uuid():
             return uuid.UUID('d7114859-3a2f-4701-967a-fb66fd60b963')
+        def dummy_uuid_editor():
+            return uuid.UUID('236a5a73-0ffd-4329-95c0-9deaa95830f4')
         project_id = 'e1e37287-9127-46cb-bddb-4a1a825a5d8e'
 
         monkeypatch.setattr(editor.cavorite, 'js', js)
@@ -51,6 +53,7 @@ class TestEditor(object):
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(Router, 'router', Mock())
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(editor, 'get_uuid', dummy_uuid_editor)
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
@@ -97,6 +100,7 @@ class TestEditor(object):
                         'name': '',
                         'is_file': False,
                         'content': '',
+                        'form_items': '', # Test when we get a completely empty result may be necessary for some transitional things
                         'parent_id': None
                        },
                        # A file in the root directory
@@ -104,6 +108,7 @@ class TestEditor(object):
                         'name': 'hello_world.py',
                         'is_file': True,
                         'content': hello_world_content,
+                        'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
                        },
                        # A folder in the root directory
@@ -111,6 +116,7 @@ class TestEditor(object):
                         'name': 'folder',
                         'is_file': False, 
                         'content': '', 
+                        'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
                        },
                        # A file in the 'folder' folder
@@ -118,12 +124,20 @@ class TestEditor(object):
                         'name': 'hello_folder.py',
                         'is_file': True,
                         'content': hello_folder_content,
+                        'form_items': '[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
                        },
                      ]
                     }
         node.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)),
                                               response)
+
+        # Test that the text in form_items is translated in Python dicts
+        for de in editor.project['directory_entry']:
+            if de['id'] != '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a':
+                assert de['form_items'] == []
+            else:
+                assert de['form_items'] == [{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]
 
         tree = node.get_project_tree()
 
@@ -224,7 +238,7 @@ class TestEditor(object):
         assert checkbox_folder.tag == 'input'
         assert 'checked' in checkbox_folder.get_attribs()
 
-        js.return_get_element_by_id = {'preview': Mock()}
+        js.return_get_element_by_id = {'preview': Mock(getBoundingClientRect=Mock(return_value=Mock(left=0, top=0)))}
 
         hello_world2_content = "print('Hello world2')"
         mock_code_mirrow_get_value = Mock(side_effect=lambda: hello_world2_content)
@@ -236,6 +250,9 @@ class TestEditor(object):
         #editor.code_mirror_changed.assert_called_with(hello_world2_content)
         assert node.selected_file_de['content'] == hello_world2_content
 
+        # Test we send the correct stuff when we add a new button
+        node.new_button(Mock(clientX=100, clientY=100))
+
         editor.save_project(None)
         calls = [(a[0][0], a[0][2]) for a in js.globals.cavorite_ajaxPut.call_args_list]
 
@@ -243,13 +260,13 @@ class TestEditor(object):
         was_found = False
         for url, data in calls:
             if url == '/api/projects/directoryentry/ae935c72-cf56-48ed-ab35-575cb9a983ea/':
-                assert data == {'id': node.selected_de['id'],
-                                 'name': node.selected_de['name'],
-                                 'is_file': node.selected_de['is_file'],
-                                 'content': node.selected_de['content'],
-                                 'parent_id': node.selected_de['parent_id'],
-                                 'form_items': list(),
-                                }
+                assert len(data) == 6
+                assert data['id'] == node.selected_de['id']
+                assert data['name'] == node.selected_de['name']
+                assert data['is_file'] == node.selected_de['is_file']
+                assert data['content'] == node.selected_de['content']
+                assert data['parent_id'] == node.selected_de['parent_id']
+                assert json.loads(data['form_items']) == json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]')
                 was_found = True
 
         assert was_found
@@ -299,6 +316,7 @@ class TestEditor(object):
                         'name': '',
                         'is_file': False,
                         'content': '',
+                        'form_items': '[]',
                         'parent_id': None
                        },
                        # A file in the root directory
@@ -306,6 +324,7 @@ class TestEditor(object):
                         'name': 'hello_world.py',
                         'is_file': True,
                         'content': hello_world_content,
+                        'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
                        },
                        # A folder in the root directory
@@ -313,6 +332,7 @@ class TestEditor(object):
                         'name': 'folder',
                         'is_file': False, 
                         'content': '', 
+                        'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
                        },
                        # A file in the 'folder' folder
@@ -320,6 +340,7 @@ class TestEditor(object):
                         'name': 'hello_folder.py',
                         'is_file': True,
                         'content': hello_folder_content,
+                        'form_items': '[]',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
                        },
                      ]
@@ -470,6 +491,7 @@ class TestEditor(object):
                         'name': '',
                         'is_file': False,
                         'content': '',
+                        'form_items': '[]',
                         'parent_id': None
                        },
                        # A file in the root directory
@@ -477,6 +499,7 @@ class TestEditor(object):
                         'name': 'hello_world.py',
                         'is_file': True,
                         'content': hello_world_content,
+                        'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
                        },
                        # A folder in the root directory
@@ -484,6 +507,7 @@ class TestEditor(object):
                         'name': 'folder',
                         'is_file': False, 
                         'content': '', 
+                        'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
                        },
                        # A file in the 'folder' folder
@@ -491,6 +515,7 @@ class TestEditor(object):
                         'name': 'hello_folder.py',
                         'is_file': True,
                         'content': hello_folder_content,
+                        'form_items': '[]',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
                        },
                      ]
@@ -642,6 +667,7 @@ class TestEditor(object):
                         'name': '',
                         'is_file': False,
                         'content': '',
+                        'form_items': '[]',
                         'parent_id': None
                        },
                        # A file in the root directory
@@ -649,6 +675,7 @@ class TestEditor(object):
                         'name': 'hello_world.py',
                         'is_file': True,
                         'content': hello_world_content,
+                        'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
                        },
                        # A folder in the root directory
@@ -656,6 +683,7 @@ class TestEditor(object):
                         'name': 'folder',
                         'is_file': False, 
                         'content': '', 
+                        'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
                        },
                        # A file in the 'folder' folder
@@ -663,6 +691,7 @@ class TestEditor(object):
                         'name': 'hello_folder.py',
                         'is_file': True,
                         'content': hello_folder_content,
+                        'form_items': '[]',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
                        },
                      ]
@@ -751,6 +780,7 @@ class TestEditor(object):
                         'name': '',
                         'is_file': False,
                         'content': '',
+                        'form_items': '[]',
                         'parent_id': None
                        },
                        # A file in the root directory
@@ -758,6 +788,7 @@ class TestEditor(object):
                         'name': 'hello_world.py',
                         'is_file': True,
                         'content': hello_world_content,
+                        'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
                        },
                        # A folder in the root directory
@@ -765,6 +796,7 @@ class TestEditor(object):
                         'name': 'folder',
                         'is_file': False, 
                         'content': '', 
+                        'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
                        },
                        # A file in the 'folder' folder
@@ -772,6 +804,7 @@ class TestEditor(object):
                         'name': 'hello_folder.py',
                         'is_file': True,
                         'content': hello_folder_content,
+                        'form_items': '[]',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
                        },
                      ]
@@ -823,6 +856,12 @@ class TestContextMenu(object):
         monkeypatch.setattr(editor.cavorite, 'js', js)
         monkeypatch.setattr(editor, 'js', js)
         monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        callbacks.initialise_global_callbacks()
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
 
         body = js.globals.document.body
         error_404_page = c("div", [c("p", "No match 404 error"),
@@ -851,6 +890,7 @@ class TestContextMenu(object):
                         'name': '',
                         'is_file': False,
                         'content': '',
+                        'form_items': '[]',
                         'parent_id': None
                        },
                        # A file in the root directory
@@ -858,6 +898,7 @@ class TestContextMenu(object):
                         'name': 'hello_world.py',
                         'is_file': True,
                         'content': hello_world_content,
+                        'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
                        },
                        # A folder in the root directory
@@ -865,6 +906,7 @@ class TestContextMenu(object):
                         'name': 'folder',
                         'is_file': False, 
                         'content': '', 
+                        'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
                        },
                        # A file in the 'folder' folder
@@ -872,6 +914,7 @@ class TestContextMenu(object):
                         'name': 'hello_folder.py',
                         'is_file': True,
                         'content': hello_folder_content,
+                        'form_items': '[]',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
                        },
                      ]
