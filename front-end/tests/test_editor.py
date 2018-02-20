@@ -930,7 +930,7 @@ class TestContextMenu(object):
         Router.router.ResetHashChange.reset_mock()
         view.contextmenu_preview(Mock(pageX=10, pageY=10))
         assert type(view.context_menu) == ContextMenu
-        assert len(view.context_menu.menu_items) == 1
+        assert len(view.context_menu.menu_items) >= 1
         assert view.context_menu.menu_items[0][0] == 'New Button'
         assert callable(view.context_menu.menu_items[0][1])
         view.mount_redraw.assert_called()
