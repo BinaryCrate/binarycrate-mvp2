@@ -398,10 +398,17 @@ class EditorView(BCChrome):
                                 ))
                 #print('get_selected_de_form_controls form_item[id]=',form_item['id'])
                 form_item_id = form_item['id']
+                attribs = {'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}
+                attribs_extra = { }
                 if form_item['type'] == 'button':
-                    control = html_button({'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
-                else:
-                    control = html_input({'type': "text", 'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
+                    control_class = html_button
+                    #control = html_button({'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
+                elif form_item['type'] == 'textbox':
+                    control_class = html_input
+                    attribs_extra = {'type': "text"}           
+                    #control = html_input({'type': "text", 'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
+                attribs.update(attribs_extra)
+                control = control_class(attribs, form_item['caption'])
                 ret.append(control)
             if self.selected_item != '':
                 selected_form_item = [form_item for form_item in self.selected_de['form_items'] if self.selected_item == form_item['id']][0]
@@ -454,7 +461,7 @@ class EditorView(BCChrome):
             e.stopPropagation()
             e.preventDefault()
 
-    def new_button(self, e):
+    def new_control(self, e, control_dict):
         if not self.selected_de:
             return
         posx = e.clientX
@@ -464,51 +471,37 @@ class EditorView(BCChrome):
         posy = posy - rect.top
         new_id = str(get_uuid())
 
-        self.selected_de['form_items'].append(
+        control_dict = copy.copy(control_dict)
+        control_dict.update({'id': new_id,
+                             'x': int(posx),
+                             'y': int(posy),
+                            })
+        self.selected_de['form_items'].append(control_dict)
+        self.selected_item = new_id
+
+        self.context_menu = None
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+        e.stopPropagation()
+        e.preventDefault()
+
+    def new_button(self, e):
+        self.new_control(e, 
             {'type': 'button',
-             'x': int(posx),
-             'y': int(posy),
              'width': 100,
              'height': 30,
              'caption': 'Button',
              'name': 'button1',
-             'id': new_id,
             })
-        self.selected_item = new_id
-
-        self.context_menu = None
-        self.mount_redraw()
-        Router.router.ResetHashChange()
-        e.stopPropagation()
-        e.preventDefault()
 
     def new_textbox(self, e):
-        if not self.selected_de:
-            return
-        posx = e.clientX
-        posy = e.clientY
-        rect = js.globals.document.getElementById('preview').getBoundingClientRect()
-        posx = posx - rect.left
-        posy = posy - rect.top
-        new_id = str(get_uuid())
-
-        self.selected_de['form_items'].append(
+       self.new_control(e, 
             {'type': 'textbox',
-             'x': int(posx),
-             'y': int(posy),
              'width': 150,
              'height': 30,
              'caption': 'Textbox',
              'name': 'textbox1',
-             'id': new_id,
             })
-        self.selected_item = new_id
-
-        self.context_menu = None
-        self.mount_redraw()
-        Router.router.ResetHashChange()
-        e.stopPropagation()
-        e.preventDefault()
 
     def get_selected_de_content(self):
         if self.selected_file_de is None:
