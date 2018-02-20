@@ -18,6 +18,11 @@ from operator import itemgetter
 from collections import defaultdict
 from cavorite.svg import svg
 
+HANDLE_NONE = 0
+HANDLE_TOPLEFT = 1
+HANDLE_TOPRIGHT = 2
+HANDLE_BOTTOMLEFT = 3
+HANDLE_BOTTOMRIGHT = 4
 
 project = { }
 
@@ -296,10 +301,33 @@ class EditorView(BCChrome):
             Router.router.ResetHashChange()
 
     def on_body_mousemove(self, e, change_x, change_y):
+        change_x = int(change_x)
+        change_y = int(change_y)
         if self.mouse_is_down and self.selected_item != '':
             fi = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item][0]
-            fi['x'] += change_x
-            fi['y'] += change_y
+            if self.selected_handler == HANDLE_NONE:
+                fi['x'] += change_x
+                fi['y'] += change_y
+            elif self.selected_handler == HANDLE_TOPLEFT:
+                fi['x'] += change_x
+                fi['y'] += change_y
+                fi['width'] -= change_x
+                fi['height'] -= change_y
+            elif self.selected_handler == HANDLE_TOPRIGHT:
+                #fi['x'] += change_x
+                fi['y'] += change_y
+                fi['width'] += change_x
+                fi['height'] -= change_y
+            elif self.selected_handler == HANDLE_BOTTOMRIGHT:
+                #fi['x'] += change_x
+                #fi['y'] += change_y
+                fi['width'] += change_x
+                fi['height'] += change_y
+            elif self.selected_handler == HANDLE_BOTTOMLEFT:
+                fi['x'] += change_x
+                #fi['y'] += change_y
+                fi['width'] -= change_x
+                fi['height'] += change_y
             self.mount_redraw()
             Router.router.ResetHashChange()
             e.stopPropagation()
@@ -333,6 +361,7 @@ class EditorView(BCChrome):
 
     def select_new_item(self, form_item_id, e):
         self.mouse_is_down = True
+        self.selected_handler = HANDLE_NONE
         #print('select_new_item mouse is down')
         self.selected_item = form_item_id
         self.mount_redraw()
@@ -343,6 +372,12 @@ class EditorView(BCChrome):
     def on_mouse_up(self, e):
         #print('on_mouse_up mouse is up')
         self.mouse_is_down = False
+        self.selected_handler = HANDLE_NONE
+
+    def on_handle_mouse_down(self, e, handle):
+        self.mouse_is_down = True
+        self.selected_handler = handle
+        #print('on_handle_house_down called handle=', handle)
 
     def get_selected_de_form_controls(self):
         ret = list()
@@ -366,33 +401,42 @@ class EditorView(BCChrome):
                                            'width': selected_form_item['width'],
                                            'height': selected_form_item['height'],
                                            'style':"fill:None;stroke-width:5;stroke:rgb(255,0,0)"}),
-                              svg('rect', {'x': selected_form_item['x'] - 5, 
+                              svg('rect', {'id': 'handle-top-left', 'x': selected_form_item['x'] - 5, 
                                            'y':selected_form_item['y'] - 5,
                                            'width': 10,
                                            'height': 10,
-                                           'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)"}),
-                              svg('rect', {'x': selected_form_item['x'] + selected_form_item['width'] - 5, 
+                                           'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
+                                           'onmousedown': lambda e: self.on_handle_mouse_down(e, HANDLE_TOPLEFT),
+                                           'onmouseup': self.on_mouse_up}),
+                              svg('rect', {'id': 'handle-top-right', 'x': selected_form_item['x'] + selected_form_item['width'] - 5, 
                                            'y':selected_form_item['y'] - 5,
                                            'width': 10,
                                            'height': 10,
-                                           'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)"}),
-                              svg('rect', {'x': selected_form_item['x'] + selected_form_item['width'] - 5, 
+                                           'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
+                                           'onmousedown': lambda e: self.on_handle_mouse_down(e, HANDLE_TOPRIGHT),
+                                           'onmouseup': self.on_mouse_up}),
+                              svg('rect', {'id': 'handle-bottom-right', 'x': selected_form_item['x'] + selected_form_item['width'] - 5, 
                                            'y':selected_form_item['y'] + selected_form_item['height'] - 5,
                                            'width': 10,
                                            'height': 10,
-                                           'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)"}),
-                              svg('rect', {'x': selected_form_item['x'] - 5, 
+                                           'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
+                                           'onmousedown': lambda e: self.on_handle_mouse_down(e, HANDLE_BOTTOMRIGHT),
+                                           'onmouseup': self.on_mouse_up}),
+                              svg('rect', {'id': 'handle-bottom-left', 'x': selected_form_item['x'] - 5, 
                                            'y':selected_form_item['y'] + selected_form_item['height'] - 5,
                                            'width': 10,
                                            'height': 10,
-                                           'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)"}),
+                                           'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
+                                           'onmousedown': lambda e: self.on_handle_mouse_down(e, HANDLE_BOTTOMLEFT),
+                                           'onmouseup': self.on_mouse_up}),
                             ])])
         return ret
 
     def clear_selected_item(self, e):
         #self.mouse_is_down = True
-        #print('clear_selected_item mouse is down')
+        #print('clear_selected_item called')
         if self.selected_item != '':
+            self.selected_handler = HANDLE_NONE
             #print('clearing item')
             self.selected_item = ''
             self.mount_redraw()
@@ -502,6 +546,7 @@ class EditorView(BCChrome):
         self.context_menu = None
         self.selected_item = ''
         self.mouse_is_down = False
+        self.selected_handler = HANDLE_NONE
         self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code', 'class': 'col-md-5 CodeMirror'}, [t(self.get_selected_de_content)], change_handler=self.code_mirror_change)
         super(EditorView, self).__init__(
                     None,

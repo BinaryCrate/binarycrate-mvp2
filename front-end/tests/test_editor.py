@@ -9,8 +9,10 @@ from mock import Mock
 import json
 from binarycrate.editor import BCProjectTree, BCPFolder, BCPFile, ContextMenu
 from binarycrate.controls import codemirror
-from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode, style_to_dict
+from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode, style_to_dict, get_vnode_by_id
 import cavorite.bootstrap.modals
+from binarycrate.editor import HANDLE_NONE, HANDLE_TOPLEFT, HANDLE_TOPRIGHT, HANDLE_BOTTOMLEFT, HANDLE_BOTTOMRIGHT
+
 
 
 class TestEditor(object):
@@ -962,6 +964,8 @@ class TestContextMenu(object):
 
         assert button['x'] == 30
         assert button['y'] == 50
+        assert button['width'] == 100
+        assert button['height'] == 30
         vnode_button = get_matching_vnode(view, is_nvode_button)
         assert style_to_dict(vnode_button.get_attribs()['style'])['left'] == str(button['x'])
         assert style_to_dict(vnode_button.get_attribs()['style'])['top'] == str(button['y'])
@@ -975,7 +979,91 @@ class TestContextMenu(object):
 
         assert button['x'] == 30
         assert button['y'] == 50
+        assert button['width'] == 100
+        assert button['height'] == 30
         vnode_button = get_matching_vnode(view, is_nvode_button)
         assert style_to_dict(vnode_button.get_attribs()['style'])['left'] == str(button['x'])
         assert style_to_dict(vnode_button.get_attribs()['style'])['top'] == str(button['y'])
+
+        # Test clicking on handles selects them and allows us to resize the button
+        vnode_button.get_attribs()['onmousedown'](Mock())
+        assert view.selected_item == button['id']
+        assert view.mouse_is_down == True
+        assert view.selected_handler == HANDLE_NONE
+        vnode_button.get_attribs()['onmouseup'](Mock())
+        assert view.selected_item == button['id']
+        assert view.mouse_is_down == False
+
+        # Click the top left handle and move the mouse
+        vnode_handle = get_vnode_by_id(view, 'handle-top-left')
+        vnode_handle.get_attribs()['onmousedown'](Mock())
+        assert view.selected_item == button['id']
+        assert view.mouse_is_down == True
+        assert view.selected_handler == HANDLE_TOPLEFT
+        
+        Router.router.on_body_mousemove(Mock(clientX=540, clientY=540))
+        assert button['x'] == 20
+        assert button['y'] == 40
+        assert button['width'] == 110
+        assert button['height'] == 40
+
+        vnode_handle.get_attribs()['onmouseup'](Mock())
+        assert view.selected_item == button['id']
+        assert view.mouse_is_down == False
+        assert view.selected_handler == HANDLE_NONE
+
+        # Click the top right handle and move the mouse
+        vnode_handle = get_vnode_by_id(view, 'handle-top-right')
+        vnode_handle.get_attribs()['onmousedown'](Mock())
+        assert view.selected_item == button['id']
+        assert view.mouse_is_down == True
+        assert view.selected_handler == HANDLE_TOPRIGHT
+        
+        Router.router.on_body_mousemove(Mock(clientX=550, clientY=545))
+        assert button['x'] == 20
+        assert button['y'] == 45
+        assert button['width'] == 120
+        assert button['height'] == 35
+
+        vnode_handle.get_attribs()['onmouseup'](Mock())
+        assert view.selected_item == button['id']
+        assert view.mouse_is_down == False
+        assert view.selected_handler == HANDLE_NONE
+
+        # Click the bottom right handle and move the mouse
+        vnode_handle = get_vnode_by_id(view, 'handle-bottom-right')
+        vnode_handle.get_attribs()['onmousedown'](Mock())
+        assert view.selected_item == button['id']
+        assert view.mouse_is_down == True
+        assert view.selected_handler == HANDLE_BOTTOMRIGHT
+        
+        Router.router.on_body_mousemove(Mock(clientX=565, clientY=555))
+        assert button['x'] == 20
+        assert button['y'] == 45
+        assert button['width'] == 135
+        assert button['height'] == 45
+
+        vnode_handle.get_attribs()['onmouseup'](Mock())
+        assert view.selected_item == button['id']
+        assert view.mouse_is_down == False
+        assert view.selected_handler == HANDLE_NONE
+
+        # Click the bottom left handle and move the mouse
+        vnode_handle = get_vnode_by_id(view, 'handle-bottom-left')
+        vnode_handle.get_attribs()['onmousedown'](Mock())
+        assert view.selected_item == button['id']
+        assert view.mouse_is_down == True
+        assert view.selected_handler == HANDLE_BOTTOMLEFT
+        
+        Router.router.on_body_mousemove(Mock(clientX=555, clientY=550))
+        assert button['x'] == 10
+        assert button['y'] == 45
+        assert button['width'] == 145
+        assert button['height'] == 40
+
+        vnode_handle.get_attribs()['onmouseup'](Mock())
+        assert view.selected_item == button['id']
+        assert view.mouse_is_down == False
+        assert view.selected_handler == HANDLE_NONE
+
 

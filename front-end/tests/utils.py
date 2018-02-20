@@ -48,3 +48,7 @@ def style_to_dict(style_str):
     ret = {s[0]: s[1] for s in l}
     return ret
 
+def get_vnode_by_id(vnode, id):
+    return get_matching_vnode(vnode, lambda n: hasattr(n, 'get_attribs') and n.get_attribs().get('id') == id)
+
+
