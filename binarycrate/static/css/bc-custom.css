@@ -755,5 +755,30 @@ ____________________________________________________________________________ */
   display: block;
   position: absolute;
   z-index: 10;
+  padding: 0px;
+  background-color: #d0d0d0;
+}
+
+.context-menu__item {
+  min-width: 100px;
+  background-color: #d0d0d0;
+  padding-left: 5px;
+  padding-right: 5px;
+  border: 1px solid #303030;
+}
+
+.context-menu__link {
+  color: black;
+}
+
+.context-menu__items {
+  list-style-type: none;
+  list-style-image: none;
+  padding: 0;
+  margin: 0;
+}
+
+a.context-menu__link:visited {
+  color: black;
 }
 
