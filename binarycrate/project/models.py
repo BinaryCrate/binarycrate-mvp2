@@ -17,14 +17,22 @@ class DirectoryEntry(MPTTModel):
 
     @content.setter
     def content(self, value):
-        #print('DirectoryEntry content.setter value=', value)
         self._content = value
+
+    @property
+    def form_items(self):
+        return self._form_items
+
+    @form_items.setter
+    def form_items(self, value):
+        self._form_items = value
 
     class MPTTMeta:
         order_insertion_by = ['name']
 
     def __init__(self, *args, **kwargs):
         self._content = ''
+        self._form_items = '[]'
         super(DirectoryEntry, self).__init__(*args, **kwargs)
 
 
