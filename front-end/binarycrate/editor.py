@@ -358,7 +358,17 @@ class EditorView(BCChrome):
         posx, posy = self.xy_from_e(e)
         self.context_menu = ContextMenu(posx, posy, (
                                         ('New Button', self.new_button), 
-                                        ('New Textbox', self.new_textbox), 
+                                        ('New Textbox', self.new_textbox),
+                                        ('New Image', self.new_image),
+                                        ('New Label', self.new_label),
+                                        ('New Frame', self.new_frame),
+                                        ('New Checkbox', self.new_checkbox),
+                                        ('New Listbox', self.new_listbox),
+                                        ('New Rectangle', self.new_rectangle),
+                                        ('New Circle', self.new_circle),
+                                        ('New Ellipse', self.new_ellipse),
+                                        ('New Line', self.new_line),
+                                        ('New Polygon', self.new_polygon),
                                         ))
         self.mount_redraw()
         Router.router.ResetHashChange()
@@ -400,6 +410,7 @@ class EditorView(BCChrome):
                 form_item_id = form_item['id']
                 attribs = {'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}
                 attribs_extra = { }
+                control_class = None
                 if form_item['type'] == 'button':
                     control_class = html_button
                     #control = html_button({'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
@@ -407,6 +418,21 @@ class EditorView(BCChrome):
                     control_class = html_input
                     attribs_extra = {'type': "text"}           
                     #control = html_input({'type': "text", 'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
+                elif form_item['type'] == 'image':
+                    control_class = img
+                    attribs_extra = { }           
+                elif form_item['type'] == 'label':
+                    control_class = p
+                    attribs_extra = { }           
+                elif form_item['type'] == 'frame':
+                    control_class = div
+                    #attribs_extra = {'s': "text"}           
+                elif form_item['type'] == 'checkbox':
+                    control_class = html_input
+                    attribs_extra = {'type': "checkbox"}           
+                elif form_item['type'] == 'select':
+                    control_class = select
+                    attribs_extra = { }           
                 attribs.update(attribs_extra)
                 control = control_class(attribs, form_item['caption'])
                 ret.append(control)
@@ -501,6 +527,96 @@ class EditorView(BCChrome):
              'height': 30,
              'caption': 'Textbox',
              'name': 'textbox1',
+            })
+
+    def new_image(self, e):
+       self.new_control(e, 
+            {'type': 'image',
+             'width': 200,
+             'height': 200,
+             'caption': 'Image',
+             'name': 'image1',
+            })
+
+    def new_label(self, e):
+       self.new_control(e, 
+            {'type': 'label',
+             'width': 150,
+             'height': 30,
+             'caption': 'Label',
+             'name': 'label1',
+            })
+
+    def new_frame(self, e):
+       self.new_control(e, 
+            {'type': 'frame',
+             'width': 300,
+             'height': 300,
+             'caption': 'Frame',
+             'name': 'frame1',
+            })
+
+    def new_checkbox(self, e):
+       self.new_control(e, 
+            {'type': 'checkbox',
+             'width': 150,
+             'height': 30,
+             'caption': 'Checkbox',
+             'name': 'checkbox1',
+            })
+
+    def new_listbox(self, e):
+       self.new_control(e, 
+            {'type': 'listbox',
+             'width': 150,
+             'height': 150,
+             'caption': 'List Box',
+             'name': 'listbox1',
+            })
+
+    def new_rectangle(self, e):
+       self.new_control(e, 
+            {'type': 'rect',
+             'width': 150,
+             'height': 150,
+             'caption': 'List Box',
+             'name': 'listbox1',
+            })
+
+    def new_circle(self, e):
+       self.new_control(e, 
+            {'type': 'circle',
+             'width': 150,
+             'height': 150,
+             'caption': 'List Box',
+             'name': 'listbox1',
+            })
+
+    def new_ellipse(self, e):
+       self.new_control(e, 
+            {'type': 'ellipse',
+             'width': 150,
+             'height': 150,
+             'caption': 'List Box',
+             'name': 'listbox1',
+            })
+
+    def new_line(self, e):
+       self.new_control(e, 
+            {'type': 'line',
+             'width': 150,
+             'height': 150,
+             'caption': 'List Box',
+             'name': 'listbox1',
+            })
+
+    def new_polygon(self, e):
+       self.new_control(e, 
+            {'type': 'polygon',
+             'width': 150,
+             'height': 150,
+             'caption': 'List Box',
+             'name': 'listbox1',
             })
 
     def get_selected_de_content(self):
