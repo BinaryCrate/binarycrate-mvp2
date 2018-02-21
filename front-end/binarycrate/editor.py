@@ -520,6 +520,7 @@ class EditorView(BCChrome):
                    'name': str(form_values['txtFileName']),
                    'content': '',
                    'is_file': True, 
+                   'form_items': [],
                    'parent_id': parent_de['id'],
                   }
         project['directory_entry'].append(new_de)
@@ -533,6 +534,7 @@ class EditorView(BCChrome):
                    'name': str(form_values['txtFolderName']),
                    'content': '',
                    'is_file': False, 
+                   'form_items': [],
                    'parent_id': parent_de['id'],
                   }
         project['directory_entry'].append(new_de)
