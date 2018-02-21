@@ -20,12 +20,6 @@ class CodeMirrorHandlerVNode(textarea):
     def was_mounted(self):
         super(CodeMirrorHandlerVNode, self).was_mounted()
         should_init = False
-        if self.editor is None:
-            should_init = True
-        else:
-            textarea = js.globals.document.getElementById("code")
-            should_init = textarea.textContent != self.editor.getValue() or self.editor.getValue() == ''
-            
         #print('CodeMirrorHandlerVNode was_mounted called should_init=',should_init)
         #if should_init:
         if  self.waiting_for_timeout == False:
@@ -34,7 +28,7 @@ class CodeMirrorHandlerVNode(textarea):
 
     def codemirror_init(self):
         self.waiting_for_timeout = False
-        print('CodeMirrorHandlerVNode codemirror_init self=', self)
+        #print('CodeMirrorHandlerVNode codemirror_init self=', self)
         textarea = js.globals.document.getElementById("code")
         self.editor = js.globals.CodeMirror.fromTextArea(textarea, {
             'lineNumbers': True,
