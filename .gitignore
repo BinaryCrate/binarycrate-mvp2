@@ -16,6 +16,7 @@ downloads/
 eggs/
 .eggs/
 lib/
+!binarycrate/static/lib
 lib64/
 parts/
 sdist/
