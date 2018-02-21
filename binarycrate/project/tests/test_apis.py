@@ -72,11 +72,23 @@ class ProjectListTestCase(APITestCase):
         self.assertEqual(Project.objects.count(), 1)
         url = reverse('api:project-detail', kwargs={'pk':str(self.project_id)})
         data = { 'id': str(self.project_id), 'name': 'Test 1a', 'type': 0,
-                 'public': True} 
+                 'public': True}
         response = self.client.put(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Project.objects.count(), 1)
         self.assertEqual(Project.objects.first().name, 'Test 1a')
+
+    def test_delete_project_detail(self):
+        """
+        Ensure we can delete individual projects
+        """
+        self.assertEqual(Project.objects.count(), 1)
+        url = reverse('api:project-detail', kwargs={'pk':str(self.project_id)})
+        data = { }
+        response = self.client.delete(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Project.objects.count(), 0)
+
 
 
 class ProjectMustLogin(APITestCase):
@@ -118,7 +130,7 @@ class ProjectMustLogin(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(str(self.project_id) in response.content)
-    
+
 class ProjectCannotAccessOtherUserTestCase(APITestCase):
     def setUp(self):
         self.project_id1 = uuid.uuid4()
@@ -191,28 +203,28 @@ class ProjectCannotAccessOtherUserTestCase(APITestCase):
                           'is_file': self.de_rootfolder.is_file,
                           'content': '',
                           'form_items': '[]',
-                          'parent_id': None, 
+                          'parent_id': None,
                          }),
                          convert({'id': str(self.de_hello_world.id),
                           'name': self.de_hello_world.name,
                           'is_file': self.de_hello_world.is_file,
                           'content': self.de_hello_world.content,
                           'form_items': '[]',
-                          'parent_id': str(self.de_rootfolder.id), 
+                          'parent_id': str(self.de_rootfolder.id),
                          }),
                          convert({'id': str(self.de_folder.id),
                           'name': self.de_folder.name,
                           'is_file': self.de_folder.is_file,
                           'content': '',
                           'form_items': '[]',
-                          'parent_id': str(self.de_rootfolder.id), 
+                          'parent_id': str(self.de_rootfolder.id),
                          }),
                          convert({'id': str(self.de_hello_folder.id),
                           'name': self.de_hello_folder.name,
                           'is_file': self.de_hello_folder.is_file,
                           'content': self.de_hello_folder.content,
                           'form_items': '[]',
-                          'parent_id': str(self.de_folder.id), 
+                          'parent_id': str(self.de_folder.id),
                          }),
                          })
 
@@ -248,7 +260,7 @@ class ProjectCanSaveTestCase(APITestCase):
                           'name': self.de_hello_world.name,
                           'is_file': self.de_hello_world.is_file,
                           'content': "print('Hello world2')",
-                          'parent_id': str(self.de_rootfolder.id), 
+                          'parent_id': str(self.de_rootfolder.id),
                           'form_items': "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]"
                          }
         response = self.client.put(url, data, format='json')
@@ -262,7 +274,7 @@ class ProjectCanSaveTestCase(APITestCase):
                           'name': 'Hello world2',
                           'is_file': True,
                           'content': "print('Hello world4')",
-                          'parent_id': str(self.de_rootfolder.id), 
+                          'parent_id': str(self.de_rootfolder.id),
                           'form_items': "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]"
                          }
         url = reverse('api:directoryentry-detail', kwargs={'pk':data['id']})
@@ -280,7 +292,3 @@ class ProjectCanSaveTestCase(APITestCase):
         #print('response.content=', response.content)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(DirectoryEntry.objects.filter(name='hello_world.py').count(), 0)
-
-        
-
-

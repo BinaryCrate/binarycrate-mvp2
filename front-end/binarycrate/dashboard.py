@@ -10,7 +10,7 @@ import copy
 from .navigation import BCChrome
 import cavorite.bootstrap.modals as modals
 from cavorite.bootstrap.modals import ModalTrigger, Modal
-from cavorite.ajaxget import ajaxget, ajaxpost, ajaxput
+from cavorite.ajaxget import ajaxget, ajaxpost, ajaxput, ajaxdelete
 from cavorite import timeouts
 import json
 from . import editor
@@ -93,7 +93,7 @@ class DashboardView(BCChrome):
                           strong([t(lambda: self.get_project_name())]),
                           t(", this will also delete all projects and data."),
                         ]),
-                      ], None),
+                      ], self.deleteProj_ok),
                       Modal("renameProj", "Rename Project", [
                         form([
                           div({'class': 'form-group'}, [
@@ -133,6 +133,7 @@ class DashboardView(BCChrome):
                           label({'for': 'selectProjectType'}, 'Project Type'),
                           select({'class': 'form-control', 'id': 'selectProjectType'}, [
                             option({'value': 0}, 'Python'),
+                            option({'value': 1}, 'Webpage'),
                           ]),
                         ]),
                       ], self.createNew_ok),
@@ -143,6 +144,10 @@ class DashboardView(BCChrome):
             self.query_projects()
 
     def projects_api_ajax_put_result_handler(self, xmlhttp, response):
+        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+            self.query_projects()
+
+    def projects_api_ajax_delete_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             self.query_projects()
 
@@ -158,6 +163,9 @@ class DashboardView(BCChrome):
                 'type': self.selected_project['type'],
                 'public': True}
         ajaxput('/api/projects/' + self.selected_project['id'] + '/', data, self.projects_api_ajax_put_result_handler)
+
+    def deleteProj_ok(self, e, form_values):
+        ajaxdelete('/api/projects/' + self.selected_project['id'] + '/',self.projects_api_ajax_delete_result_handler)
 
     def get_central_content(self):
         return c("div", {'class': "container-fluid", 'style': {'padding-left': '1px'}}, [
@@ -177,4 +185,3 @@ def dashboard_view():
                     None)
 
     return dv
-

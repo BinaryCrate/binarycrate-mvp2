@@ -10,13 +10,13 @@ from rest_framework import permissions
 from project.models import DirectoryEntry
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication 
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import status
 from rest_framework.mixins import UpdateModelMixin
 import copy
-from django.http import Http404 
+from django.http import Http404
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -66,6 +66,12 @@ class ProjectDetail(APIView):
         serializer = ProjectGetSerializer(project)
         return Response(serializer.data)
 
+    def delete(self, request,pk, format=None):
+        project = self.get_object(pk)
+        project.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
     def put(self, request, pk, format=None):
         project = self.get_object(pk)
         serializer = ProjectPostSerializer(project, data=request.data)
@@ -91,7 +97,7 @@ class DirectoryEntryDetail(APIView):
             return DirectoryEntry(id=pk, is_file=True)
 
     def put(self, request, pk, format=None):
-        de = self.get_or_create_object(pk) 
+        de = self.get_or_create_object(pk)
         #print('DirectoryEntryDetail de=', de)
         serializer = DirectoryEntrySerializer(de, data=request.data)
         if serializer.is_valid():
