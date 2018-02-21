@@ -434,11 +434,55 @@ class EditorView(BCChrome):
                     control_class = select
                     attribs_extra = { }           
                 attribs.update(attribs_extra)
-                control = control_class(attribs, form_item['caption'])
-                ret.append(control)
+                if  control_class:
+                    control = control_class(attribs, form_item['caption'])
+                    ret.append(control)
+            svg_list = list()
+            for form_item in self.selected_de['form_items']:
+                if form_item['type'] == 'rect':
+                    svg_list.append(svg('rect', {'x': form_item['x'], 
+                                 'y':form_item['y'],
+                                 'width': form_item['width'],
+                                 'height': form_item['height'],
+                                 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e)}))
+                if form_item['type'] == 'circle':
+                    svg_list.append(svg('circle', {'cx': form_item['x'] + form_item['width'] / 2, 
+                                 'cy':form_item['y'] + form_item['height'] / 2,
+                                 'r': form_item['width'] / 2,
+                                 #'height': form_item['height'],
+                                 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e)}))
+                if form_item['type'] == 'ellipse':
+                    svg_list.append(svg('ellipse', {'cx': form_item['x'] + form_item['width'] / 2, 
+                                 'cy':form_item['y'] + form_item['height'] / 2,
+                                 'rx': form_item['width'] / 2,
+                                 'ry': form_item['height'] / 2,
+                                 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e)}))
+                if form_item['type'] == 'line':
+                    svg_list.append(svg('line', {'x1': form_item['x'], 
+                                 'y1':form_item['y'],
+                                 'x2': form_item['x'] + form_item['width'],
+                                 'y2': form_item['y'] + form_item['height'],
+                                 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e)}))
+                if form_item['type'] == 'polygon':
+                    # Draw a hexagon
+                    x1 = form_item['x'] + form_item['width'] / 2
+                    y1 = form_item['y']
+                    x2 = form_item['x'] + form_item['width']
+                    y2 = form_item['y'] + form_item['height'] / 4
+                    x3 = form_item['x'] + form_item['width']
+                    y3 = form_item['y'] + form_item['height'] * 3 / 4
+                    x4 = form_item['x'] + form_item['width'] / 2
+                    y4 = form_item['y']+ form_item['height']
+                    x5 = form_item['x']
+                    y5 = form_item['y'] + form_item['height'] * 3 / 4
+                    x6 = form_item['x']
+                    y6 = form_item['y'] + form_item['height'] / 4
+                    points = '{},{} {},{} {},{} {},{} {},{} {},{}'.format(x1, y1, x2, y2, x3, y3, x4, y4, x5, y5, x6, y6)
+                    svg_list.append(svg('polygon', {'points': points,
+                                 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e)}))
             if self.selected_item != '':
                 selected_form_item = [form_item for form_item in self.selected_de['form_items'] if self.selected_item == form_item['id']][0]
-                ret.extend([svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%', 'oncontextmenu': self.contextmenu_preview, 'z-index':-5, 'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up}, [
+                svg_list.extend([
                               svg('rect', {'x': selected_form_item['x'], 
                                            'y':selected_form_item['y'],
                                            'width': selected_form_item['width'],
@@ -472,7 +516,8 @@ class EditorView(BCChrome):
                                            'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
                                            'onmousedown': lambda e: self.on_handle_mouse_down(e, HANDLE_BOTTOMLEFT),
                                            'onmouseup': self.on_mouse_up}),
-                            ])])
+                            ])
+            ret.append(svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%', 'oncontextmenu': self.contextmenu_preview, 'z-index':-5, 'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up}, svg_list))
         return ret
 
     def clear_selected_item(self, e):
@@ -579,8 +624,8 @@ class EditorView(BCChrome):
             {'type': 'rect',
              'width': 150,
              'height': 150,
-             'caption': 'List Box',
-             'name': 'listbox1',
+             'caption': '',
+             'name': 'rect1',
             })
 
     def new_circle(self, e):
@@ -588,8 +633,8 @@ class EditorView(BCChrome):
             {'type': 'circle',
              'width': 150,
              'height': 150,
-             'caption': 'List Box',
-             'name': 'listbox1',
+             'caption': '',
+             'name': 'circle1',
             })
 
     def new_ellipse(self, e):
@@ -597,8 +642,8 @@ class EditorView(BCChrome):
             {'type': 'ellipse',
              'width': 150,
              'height': 150,
-             'caption': 'List Box',
-             'name': 'listbox1',
+             'caption': '',
+             'name': 'ellipse1',
             })
 
     def new_line(self, e):
@@ -606,8 +651,8 @@ class EditorView(BCChrome):
             {'type': 'line',
              'width': 150,
              'height': 150,
-             'caption': 'List Box',
-             'name': 'listbox1',
+             'caption': '',
+             'name': 'line1',
             })
 
     def new_polygon(self, e):
