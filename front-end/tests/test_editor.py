@@ -984,10 +984,10 @@ class TestContextMenu(object):
 
         preview_node = get_matching_vnode(view, find_preview)
         assert preview_node is not None
-        preview_node.get_attribs()['onmousedown'](Mock())
+        preview_node.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == ''
         
-        vnode_button.get_attribs()['onmousedown'](Mock())
+        vnode_button.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
     
@@ -997,7 +997,7 @@ class TestContextMenu(object):
         assert view.mouse_is_down == False
 
         # Click again
-        vnode_button.get_attribs()['onmousedown'](Mock())
+        vnode_button.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
 
@@ -1016,7 +1016,7 @@ class TestContextMenu(object):
         assert style_to_dict(vnode_button.get_attribs()['style'])['top'] == str(button['y'])
 
         # Check moving the mouse with nothing selected does nothing
-        preview_node.get_attribs()['onmousedown'](Mock())
+        preview_node.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == ''
         assert view.mouse_is_down == True
 
@@ -1031,7 +1031,7 @@ class TestContextMenu(object):
         assert style_to_dict(vnode_button.get_attribs()['style'])['top'] == str(button['y'])
 
         # Test clicking on handles selects them and allows us to resize the button
-        vnode_button.get_attribs()['onmousedown'](Mock())
+        vnode_button.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
         assert view.selected_handler == HANDLE_NONE
@@ -1041,7 +1041,7 @@ class TestContextMenu(object):
 
         # Click the top left handle and move the mouse
         vnode_handle = get_vnode_by_id(view, 'handle-top-left')
-        vnode_handle.get_attribs()['onmousedown'](Mock())
+        vnode_handle.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
         assert view.selected_handler == HANDLE_TOPLEFT
@@ -1059,7 +1059,7 @@ class TestContextMenu(object):
 
         # Click the top right handle and move the mouse
         vnode_handle = get_vnode_by_id(view, 'handle-top-right')
-        vnode_handle.get_attribs()['onmousedown'](Mock())
+        vnode_handle.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
         assert view.selected_handler == HANDLE_TOPRIGHT
@@ -1077,7 +1077,7 @@ class TestContextMenu(object):
 
         # Click the bottom right handle and move the mouse
         vnode_handle = get_vnode_by_id(view, 'handle-bottom-right')
-        vnode_handle.get_attribs()['onmousedown'](Mock())
+        vnode_handle.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
         assert view.selected_handler == HANDLE_BOTTOMRIGHT
@@ -1095,7 +1095,7 @@ class TestContextMenu(object):
 
         # Click the bottom left handle and move the mouse
         vnode_handle = get_vnode_by_id(view, 'handle-bottom-left')
-        vnode_handle.get_attribs()['onmousedown'](Mock())
+        vnode_handle.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
         assert view.selected_handler == HANDLE_BOTTOMLEFT
@@ -1110,5 +1110,20 @@ class TestContextMenu(object):
         assert view.selected_item == button['id']
         assert view.mouse_is_down == False
         assert view.selected_handler == HANDLE_NONE
+
+        view.mount_redraw = Mock()
+        assert view.context_menu is None
+        Router.router.ResetHashChange.reset_mock()
+        vnode_button.get_attribs()['oncontextmenu'](Mock())
+        assert type(view.context_menu) == ContextMenu
+        assert len(view.context_menu.menu_items) >= 1
+        assert view.context_menu.menu_items[0][0] == 'Delete'
+        assert callable(view.context_menu.menu_items[0][1])
+        view.mount_redraw.assert_called()
+        Router.router.ResetHashChange.assert_called()
+        view.context_menu.menu_items[0][1](Mock())
+
+        vnode_button = get_matching_vnode(view, is_nvode_button)
+        assert vnode_button is None
 
 
