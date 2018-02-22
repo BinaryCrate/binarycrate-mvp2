@@ -358,7 +358,17 @@ class EditorView(BCChrome):
         posx, posy = self.xy_from_e(e)
         self.context_menu = ContextMenu(posx, posy, (
                                         ('New Button', self.new_button), 
-                                        ('New Textbox', self.new_textbox), 
+                                        ('New Textbox', self.new_textbox),
+                                        ('New Image', self.new_image),
+                                        ('New Label', self.new_label),
+                                        ('New Frame', self.new_frame),
+                                        ('New Checkbox', self.new_checkbox),
+                                        ('New Listbox', self.new_listbox),
+                                        ('New Rectangle', self.new_rectangle),
+                                        ('New Circle', self.new_circle),
+                                        ('New Ellipse', self.new_ellipse),
+                                        ('New Line', self.new_line),
+                                        ('New Polygon', self.new_polygon),
                                         ))
         self.mount_redraw()
         Router.router.ResetHashChange()
@@ -366,14 +376,15 @@ class EditorView(BCChrome):
         e.preventDefault()
 
     def select_new_item(self, form_item_id, e):
-        self.mouse_is_down = True
-        self.selected_handler = HANDLE_NONE
-        #print('select_new_item mouse is down')
-        self.selected_item = form_item_id
-        self.mount_redraw()
-        Router.router.ResetHashChange()
-        e.stopPropagation()
-        e.preventDefault()
+        if e.button == 0:
+            self.mouse_is_down = True
+            self.selected_handler = HANDLE_NONE
+            #print('select_new_item mouse is down')
+            self.selected_item = form_item_id
+            self.mount_redraw()
+            Router.router.ResetHashChange()
+            e.stopPropagation()
+            e.preventDefault()
 
     def on_mouse_up(self, e):
         #print('on_mouse_up mouse is up')
@@ -381,9 +392,28 @@ class EditorView(BCChrome):
         self.selected_handler = HANDLE_NONE
 
     def on_handle_mouse_down(self, e, handle):
-        self.mouse_is_down = True
-        self.selected_handler = handle
-        #print('on_handle_house_down called handle=', handle)
+        if e.button == 0:
+            self.mouse_is_down = True
+            self.selected_handler = handle
+            #print('on_handle_house_down called handle=', handle)
+
+    def delete_selected_form_item(self, form_item_id, e):
+        self.selected_de['form_items'] = [form_item for form_item in self.selected_de['form_items'] if form_item_id != form_item['id']]
+        self.selected_item = ''
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
+
+    def contextmenu_control(self, form_item_id, e):
+        posx, posy = self.xy_from_e(e)
+        self.context_menu = ContextMenu(posx, posy, (
+                                        ('Delete', lambda e: self.delete_selected_form_item(form_item_id, e)),
+                                        ))
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+        e.stopPropagation()
+        e.preventDefault()
+        
 
     def get_selected_de_form_controls(self):
         ret = list()
@@ -398,8 +428,12 @@ class EditorView(BCChrome):
                                 ))
                 #print('get_selected_de_form_controls form_item[id]=',form_item['id'])
                 form_item_id = form_item['id']
-                attribs = {'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}
+                attribs = {'style': style, 'onmouseup': self.on_mouse_up, 
+                           'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e),
+                           'oncontextmenu': lambda e, form_item_id=form_item_id: self.contextmenu_control(form_item_id, e)
+                           }
                 attribs_extra = { }
+                control_class = None
                 if form_item['type'] == 'button':
                     control_class = html_button
                     #control = html_button({'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
@@ -407,12 +441,71 @@ class EditorView(BCChrome):
                     control_class = html_input
                     attribs_extra = {'type': "text"}           
                     #control = html_input({'type': "text", 'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
+                elif form_item['type'] == 'image':
+                    control_class = img
+                    attribs_extra = { }           
+                elif form_item['type'] == 'label':
+                    control_class = p
+                    attribs_extra = { }           
+                elif form_item['type'] == 'frame':
+                    control_class = div
+                    #attribs_extra = {'s': "text"}           
+                elif form_item['type'] == 'checkbox':
+                    control_class = html_input
+                    attribs_extra = {'type': "checkbox"}           
+                elif form_item['type'] == 'select':
+                    control_class = select
+                    attribs_extra = { }           
                 attribs.update(attribs_extra)
-                control = control_class(attribs, form_item['caption'])
-                ret.append(control)
+                if  control_class:
+                    control = control_class(attribs, form_item['caption'])
+                    ret.append(control)
+            svg_list = list()
+            for form_item in self.selected_de['form_items']:
+                if form_item['type'] == 'rect':
+                    svg_list.append(svg('rect', {'x': form_item['x'], 
+                                 'y':form_item['y'],
+                                 'width': form_item['width'],
+                                 'height': form_item['height'],
+                                 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e), 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                if form_item['type'] == 'circle':
+                    svg_list.append(svg('circle', {'cx': form_item['x'] + form_item['width'] / 2, 
+                                 'cy':form_item['y'] + form_item['height'] / 2,
+                                 'r': form_item['width'] / 2,
+                                 #'height': form_item['height'],
+                                 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e), 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                if form_item['type'] == 'ellipse':
+                    svg_list.append(svg('ellipse', {'cx': form_item['x'] + form_item['width'] / 2, 
+                                 'cy':form_item['y'] + form_item['height'] / 2,
+                                 'rx': form_item['width'] / 2,
+                                 'ry': form_item['height'] / 2,
+                                 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e), 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                if form_item['type'] == 'line':
+                    svg_list.append(svg('line', {'x1': form_item['x'], 
+                                 'y1':form_item['y'],
+                                 'x2': form_item['x'] + form_item['width'],
+                                 'y2': form_item['y'] + form_item['height'],
+                                 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e), 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                if form_item['type'] == 'polygon':
+                    # Draw a hexagon
+                    x1 = form_item['x'] + form_item['width'] / 2
+                    y1 = form_item['y']
+                    x2 = form_item['x'] + form_item['width']
+                    y2 = form_item['y'] + form_item['height'] / 4
+                    x3 = form_item['x'] + form_item['width']
+                    y3 = form_item['y'] + form_item['height'] * 3 / 4
+                    x4 = form_item['x'] + form_item['width'] / 2
+                    y4 = form_item['y']+ form_item['height']
+                    x5 = form_item['x']
+                    y5 = form_item['y'] + form_item['height'] * 3 / 4
+                    x6 = form_item['x']
+                    y6 = form_item['y'] + form_item['height'] / 4
+                    points = '{},{} {},{} {},{} {},{} {},{} {},{}'.format(x1, y1, x2, y2, x3, y3, x4, y4, x5, y5, x6, y6)
+                    svg_list.append(svg('polygon', {'points': points,
+                                 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e), 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
             if self.selected_item != '':
                 selected_form_item = [form_item for form_item in self.selected_de['form_items'] if self.selected_item == form_item['id']][0]
-                ret.extend([svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%', 'oncontextmenu': self.contextmenu_preview, 'z-index':-5, 'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up}, [
+                svg_list.extend([
                               svg('rect', {'x': selected_form_item['x'], 
                                            'y':selected_form_item['y'],
                                            'width': selected_form_item['width'],
@@ -446,7 +539,8 @@ class EditorView(BCChrome):
                                            'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
                                            'onmousedown': lambda e: self.on_handle_mouse_down(e, HANDLE_BOTTOMLEFT),
                                            'onmouseup': self.on_mouse_up}),
-                            ])])
+                            ])
+            ret.append(svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%', 'oncontextmenu': self.contextmenu_preview, 'z-index':-5, 'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up}, svg_list))
         return ret
 
     def clear_selected_item(self, e):
@@ -501,6 +595,96 @@ class EditorView(BCChrome):
              'height': 30,
              'caption': 'Textbox',
              'name': 'textbox1',
+            })
+
+    def new_image(self, e):
+       self.new_control(e, 
+            {'type': 'image',
+             'width': 200,
+             'height': 200,
+             'caption': 'Image',
+             'name': 'image1',
+            })
+
+    def new_label(self, e):
+       self.new_control(e, 
+            {'type': 'label',
+             'width': 150,
+             'height': 30,
+             'caption': 'Label',
+             'name': 'label1',
+            })
+
+    def new_frame(self, e):
+       self.new_control(e, 
+            {'type': 'frame',
+             'width': 300,
+             'height': 300,
+             'caption': 'Frame',
+             'name': 'frame1',
+            })
+
+    def new_checkbox(self, e):
+       self.new_control(e, 
+            {'type': 'checkbox',
+             'width': 150,
+             'height': 30,
+             'caption': 'Checkbox',
+             'name': 'checkbox1',
+            })
+
+    def new_listbox(self, e):
+       self.new_control(e, 
+            {'type': 'listbox',
+             'width': 150,
+             'height': 150,
+             'caption': 'List Box',
+             'name': 'listbox1',
+            })
+
+    def new_rectangle(self, e):
+       self.new_control(e, 
+            {'type': 'rect',
+             'width': 150,
+             'height': 150,
+             'caption': '',
+             'name': 'rect1',
+            })
+
+    def new_circle(self, e):
+       self.new_control(e, 
+            {'type': 'circle',
+             'width': 150,
+             'height': 150,
+             'caption': '',
+             'name': 'circle1',
+            })
+
+    def new_ellipse(self, e):
+       self.new_control(e, 
+            {'type': 'ellipse',
+             'width': 150,
+             'height': 150,
+             'caption': '',
+             'name': 'ellipse1',
+            })
+
+    def new_line(self, e):
+       self.new_control(e, 
+            {'type': 'line',
+             'width': 150,
+             'height': 150,
+             'caption': '',
+             'name': 'line1',
+            })
+
+    def new_polygon(self, e):
+       self.new_control(e, 
+            {'type': 'polygon',
+             'width': 150,
+             'height': 150,
+             'caption': 'List Box',
+             'name': 'listbox1',
             })
 
     def get_selected_de_content(self):
