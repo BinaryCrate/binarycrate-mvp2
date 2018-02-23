@@ -198,6 +198,20 @@ class ContextMenu(nav):
                               ul({'class': 'context-menu__items'}, menu_items),
                             ]
 
+class FormItemPropType(object):
+    INT = 0
+    STRING = 1
+
+def get_form_item_property(form_item_type):
+    props = {'x': FormItemPropType.INT,
+             'y': FormItemPropType.INT,
+             'width': FormItemPropType.INT,
+             'height': FormItemPropType.INT,
+             'name': FormItemPropType.STRING}
+    if form_item_type == 'button':
+        props.update({'caption': FormItemPropType.STRING})
+    return props
+
 
 class EditorView(BCChrome):
     #def add_new_folder_handler(self, e):
@@ -406,7 +420,10 @@ class EditorView(BCChrome):
 
     def contextmenu_control(self, form_item_id, e):
         posx, posy = self.xy_from_e(e)
-        self.context_menu = ContextMenu(posx, posy, (
+        form_item = [form_item for form_item in self.selected_de['form_items'] if form_item_id == form_item['id']][0]
+        change_items = tuple(sorted([('Change {}'.format(prop_name), lambda e: e) for prop_name in get_form_item_property(form_item['type'])],
+                                    key=itemgetter(0)))
+        self.context_menu = ContextMenu(posx, posy, change_items + (
                                         ('Delete', lambda e: self.delete_selected_form_item(form_item_id, e)),
                                         ))
         self.mount_redraw()

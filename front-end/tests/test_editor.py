@@ -12,6 +12,7 @@ from binarycrate.controls import codemirror
 from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode, style_to_dict, get_vnode_by_id
 import cavorite.bootstrap.modals
 from binarycrate.editor import HANDLE_NONE, HANDLE_TOPLEFT, HANDLE_TOPRIGHT, HANDLE_BOTTOMLEFT, HANDLE_BOTTOMRIGHT
+from binarycrate.editor import get_form_item_property, FormItemPropType
 
 
 
@@ -1117,13 +1118,34 @@ class TestContextMenu(object):
         vnode_button.get_attribs()['oncontextmenu'](Mock())
         assert type(view.context_menu) == ContextMenu
         assert len(view.context_menu.menu_items) >= 1
-        assert view.context_menu.menu_items[0][0] == 'Delete'
-        assert callable(view.context_menu.menu_items[0][1])
+
+        assert 'Change caption' ==  view.context_menu.menu_items[0][0]
+        assert 'Change height' ==   view.context_menu.menu_items[1][0]
+        assert 'Change name' ==     view.context_menu.menu_items[2][0]
+        assert 'Change width' ==    view.context_menu.menu_items[3][0]
+        assert 'Change x' ==        view.context_menu.menu_items[4][0]
+        assert 'Change y' ==        view.context_menu.menu_items[5][0]
+
+        assert view.context_menu.menu_items[-1][0] == 'Delete'
+        assert callable(view.context_menu.menu_items[-1][1])
         view.mount_redraw.assert_called()
         Router.router.ResetHashChange.assert_called()
-        view.context_menu.menu_items[0][1](Mock())
+        view.context_menu.menu_items[-1][1](Mock())
 
         vnode_button = get_matching_vnode(view, is_nvode_button)
         assert vnode_button is None
+
+class TestFormItems(object):
+    def gen_check_form_item_generic_properties(self, form_item_type):
+        assert get_form_item_property(form_item_type)['x'] == FormItemPropType.INT
+        assert get_form_item_property(form_item_type)['y'] == FormItemPropType.INT
+        assert get_form_item_property(form_item_type)['width'] == FormItemPropType.INT
+        assert get_form_item_property(form_item_type)['height'] == FormItemPropType.INT
+        assert get_form_item_property(form_item_type)['name'] == FormItemPropType.STRING
+
+    def test_form_item_button_properties(self):
+        self.gen_check_form_item_generic_properties('button')
+        assert get_form_item_property('button')['caption'] == FormItemPropType.STRING
+
 
 
