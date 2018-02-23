@@ -49,6 +49,11 @@ example_html = """<!doctype html>
   </body>
 </html>"""
 
+def merge_dicts(d1, d2):
+    ret = copy.copy(d1)
+    ret.update(d2)
+    return ret
+
 class BCProjectTree(ol):
     def __init__(self, children):
         super(BCProjectTree, self).__init__( {'class': 'tree'}, children)
@@ -351,7 +356,7 @@ class EditorView(BCChrome):
             Router.router.ResetHashChange()
             e.stopPropagation()
             e.preventDefault()
-            #print('Mouse is down mousemove e=', change_x, ',', change_y)
+            print('Mouse is down mousemove e=', change_x, ',', change_y)
         #Router.router.ResetHashChange()
 
     def get_context_menu(self):
@@ -417,11 +422,19 @@ class EditorView(BCChrome):
         self.mount_redraw()
         Router.router.ResetHashChange()
 
+    def display_property_change_modal(self, e, form_item, prop_name):
+        print('display_property_change_modal called form_item[name]=', form_item['name'])
+        self.current_prop_name = prop_name
+        self.context_menu = None
+        jquery = js.globals['$']
+        jquery('#changeProperty').modal('show')
+        e.stopPropagation()
+        e.preventDefault()
 
     def contextmenu_control(self, form_item_id, e):
         posx, posy = self.xy_from_e(e)
         form_item = [form_item for form_item in self.selected_de['form_items'] if form_item_id == form_item['id']][0]
-        change_items = tuple(sorted([('Change {}'.format(prop_name), lambda e: e) for prop_name in get_form_item_property(form_item['type'])],
+        change_items = tuple(sorted([('Change {}'.format(prop_name), lambda e, prop_name=prop_name: self.display_property_change_modal(e, form_item, prop_name)) for prop_name in get_form_item_property(form_item['type'])],
                                     key=itemgetter(0)))
         self.context_menu = ContextMenu(posx, posy, change_items + (
                                         ('Delete', lambda e: self.delete_selected_form_item(form_item_id, e)),
@@ -430,7 +443,6 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
         e.stopPropagation()
         e.preventDefault()
-        
 
     def get_selected_de_form_controls(self):
         ret = list()
@@ -742,6 +754,18 @@ class EditorView(BCChrome):
         self.mount_redraw()
         Router.router.ResetHashChange()
 
+    def changeProperty_ok(self, e, form_values):
+        print('changeProperty_ok called self.selected_item=', self.selected_item)
+        fi = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item][0]
+        if get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.INT:
+            value = int(form_values['txtValue'])
+        elif get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.STRING:
+            value = str(form_values['txtValue'])
+        fi[self.current_prop_name] = value
+        self.current_prop_name = None
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
     def get_top_navbar_items(self):
         return [
                       drop_down_menu('File', [
@@ -772,20 +796,8 @@ class EditorView(BCChrome):
                       ]),
                     ]
 
-    def __init__(self, *args, **kwargs):
-        #print('EditorView __init__')
-        self.selected_de = None
-        self.selected_file_de = None
-        self.folder_state = defaultdict(bool)
-        self.context_menu = None
-        self.selected_item = ''
-        self.mouse_is_down = False
-        self.selected_handler = HANDLE_NONE
-        self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code', 'class': 'col-md-5 CodeMirror'}, [t(self.get_selected_de_content)], change_handler=self.code_mirror_change)
-        super(EditorView, self).__init__(
-                    None,
-                    None,
-                    [
+    def get_modals(self):
+        return      [
                       Modal("shareProj", "Share Project", [
                         form([
                           div({'class': 'form-group'}, [
@@ -816,7 +828,30 @@ class EditorView(BCChrome):
                           ]),
                         ]),
                       ], self.newFolder_ok),
-                    ], *args, **kwargs)
+                      Modal("changeProperty", "Change Property", [
+                        form([
+                          div({'class': 'form-group'}, [
+                            label({'class':"col-form-label", 'for':"txtValue"}, 'Value'),
+                            html_input({'type': "text", 'class':"form-control", 'id':"txtValue", 'placeholder':"New Value"}),
+                          ]),
+                        ]),
+                      ], self.changeProperty_ok),
+                    ]
+
+    def __init__(self, *args, **kwargs):
+        #print('EditorView __init__')
+        self.selected_de = None
+        self.selected_file_de = None
+        self.folder_state = defaultdict(bool)
+        self.context_menu = None
+        self.selected_item = ''
+        self.mouse_is_down = False
+        self.selected_handler = HANDLE_NONE
+        self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code', 'class': 'col-md-5 CodeMirror'}, [t(self.get_selected_de_content)], change_handler=self.code_mirror_change)
+        super(EditorView, self).__init__(
+                    None,
+                    None,
+                    None, *args, **kwargs)
 
 def editor_view():
     return EditorView()

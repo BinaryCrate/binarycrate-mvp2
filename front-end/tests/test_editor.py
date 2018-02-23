@@ -1135,6 +1135,153 @@ class TestContextMenu(object):
         vnode_button = get_matching_vnode(view, is_nvode_button)
         assert vnode_button is None
 
+    def test_context_menu_can_change_parameters(self, monkeypatch):
+        monkeypatch.setattr(Router, 'ResetHashChange', Mock())
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(cavorite.svg, 'js', js)
+        callbacks.initialise_global_callbacks()
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        body = js.globals.document.body
+        error_404_page = c("div", [c("p", "No match 404 error"),
+                                   c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
+        view = editor.EditorView()
+        r = Router({r'^$': view},
+                    error_404_page, body)
+        r.route()
+
+        view.mount_redraw = Mock()
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+    print('Hello folder i={}'.format(i))
+"""
+
+        response = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': '[]',
+                        'parent_id': None
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False, 
+                        'content': '', 
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'form_items': '[]',
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+                       },
+                     ]
+                    }
+        view.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)),
+                                              response)
+        view.selected_de = [de for de in editor.project['directory_entry'] if de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'][0]
+
+        view.mount_redraw = Mock()
+        Router.router.ResetHashChange.reset_mock()
+        view.contextmenu_preview(Mock(pageX=10, pageY=10))
+
+        Router.router.ResetHashChange.reset_mock()
+        view.mount_redraw.reset_mock()
+        js.return_get_element_by_id = {'preview': Mock(getBoundingClientRect=Mock(return_value=Mock(left=0, top=0)))}
+        view.new_button(Mock(clientX=10, clientY=20))
+
+        button = view.selected_de['form_items'][0]
+
+        def is_nvode_button(vnode, button_title):
+            if hasattr(vnode, 'tag') is False:
+                return None
+            if vnode.tag != 'button':
+                return None
+            l = vnode.get_children()
+            if len(l) != 1:
+                return None
+            child = l[0]
+            if type(child) == t and child.text == button_title:
+                return vnode
+            else:
+                return None
+
+        vnode_button = get_matching_vnode(view, lambda vnode: is_nvode_button(vnode, 'Button'))
+
+        view.mount_redraw = Mock()
+        Router.router.ResetHashChange.reset_mock()
+        vnode_button.get_attribs()['oncontextmenu'](Mock())
+
+        assert 'Change caption' ==  view.context_menu.menu_items[0][0]
+        assert callable(view.context_menu.menu_items[0][1])
+        view.mount_redraw.assert_called()
+        Router.router.ResetHashChange.assert_called()
+        view.context_menu.menu_items[0][1](Mock())
+
+        result = dict()
+
+        def mock_element_iterator_callback(vnode):
+            if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'changeProperty':
+
+                def mock_element_iterator_callback2(vnode):
+                    if hasattr(vnode, 'tag'):
+                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                            result['changeProperty_OK_handler'] = vnode.get_attribs()['onclick']
+                        #if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtValue":
+                        #    node.value = ''
+                IterateVirtualDOM(vnode, mock_element_iterator_callback2)
+
+        view.mount_redraw = Mock()
+
+        virtual_node = view._build_virtual_dom()
+        IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
+
+        # Call the modal handler
+        rendered_modal = view._render(None)
+        cavorite.bootstrap.modals.js.return_get_element_by_id = {'changeProperty': rendered_modal}
+
+        def setup_mock_modal_callback(node, file_name):
+            if isinstance(node, js.MockElement) and node.getAttribute('id') == 'txtValue':
+                node.value = file_name
+
+        js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, 'Fastasico!'))
+
+        print('test_editor result[changeProperty_OK_handler]=', result['changeProperty_OK_handler'])
+        result['changeProperty_OK_handler'](Mock())
+
+        rendered = view._render(None)
+
+        vnode_button = get_matching_vnode(view, lambda vnode: is_nvode_button(vnode, 'Fastasico!'))
+        assert vnode_button is not None
+
 class TestFormItems(object):
     def gen_check_form_item_generic_properties(self, form_item_type):
         assert get_form_item_property(form_item_type)['x'] == FormItemPropType.INT
