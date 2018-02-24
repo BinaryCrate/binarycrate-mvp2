@@ -387,7 +387,7 @@ class EditorView(BCChrome):
                                         ('New Circle', self.new_circle),
                                         ('New Ellipse', self.new_ellipse),
                                         ('New Line', self.new_line),
-                                        ('New Polygon', self.new_polygon),
+                                        ('New Hexagon', self.new_hexagon),
                                         ))
         self.mount_redraw()
         Router.router.ResetHashChange()
@@ -519,7 +519,7 @@ class EditorView(BCChrome):
                                  'x2': form_item['x'] + form_item['width'],
                                  'y2': form_item['y'] + form_item['height'],
                                  'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e), 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
-                if form_item['type'] == 'polygon':
+                if form_item['type'] == 'hexagon':
                     # Draw a hexagon
                     x1 = form_item['x'] + form_item['width'] / 2
                     y1 = form_item['y']
@@ -711,9 +711,9 @@ class EditorView(BCChrome):
              'name': 'line1',
             })
 
-    def new_polygon(self, e):
+    def new_hexagon(self, e):
        self.new_control(e, 
-            {'type': 'polygon',
+            {'type': 'hexagon',
              'width': 150,
              'height': 150,
              'caption': 'List Box',
