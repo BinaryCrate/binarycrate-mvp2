@@ -206,15 +206,29 @@ class ContextMenu(nav):
 class FormItemPropType(object):
     INT = 0
     STRING = 1
+    BOOLEAN = 1
 
 def get_form_item_property(form_item_type):
+    if form_item_type == 'line':
+        return  {'x1': FormItemPropType.INT,
+                 'y1': FormItemPropType.INT,
+                 'x2': FormItemPropType.INT,
+                 'y2': FormItemPropType.INT,
+                 'name': FormItemPropType.STRING}
     props = {'x': FormItemPropType.INT,
              'y': FormItemPropType.INT,
              'width': FormItemPropType.INT,
              'height': FormItemPropType.INT,
              'name': FormItemPropType.STRING}
-    if form_item_type == 'button':
+    if form_item_type == 'button' or form_item_type == 'label' \
+       or form_item_type == 'frame' or form_item_type == 'checkbox':
         props.update({'caption': FormItemPropType.STRING})
+    if form_item_type == 'textbox':
+        props.update({'text': FormItemPropType.STRING})
+    if form_item_type == 'image':
+        props.update({'src': FormItemPropType.STRING})
+    if form_item_type == 'checkbox':
+        props.update({'value': FormItemPropType.BOOLEAN})
     return props
 
 
@@ -485,13 +499,13 @@ class EditorView(BCChrome):
                     #attribs_extra = {'s': "text"}           
                 elif form_item['type'] == 'checkbox':
                     control_class = html_input
-                    attribs_extra = {'type': "checkbox"}           
+                    attribs_extra = {'type': "checkbox", 'form_item': 'True'}           
                 elif form_item['type'] == 'select':
                     control_class = select
                     attribs_extra = { }           
                 attribs.update(attribs_extra)
                 if  control_class:
-                    control = control_class(attribs, form_item['caption'])
+                    control = control_class(attribs, form_item.get('caption', ''))
                     ret.append(control)
             svg_list = list()
             for form_item in self.selected_de['form_items']:
@@ -626,7 +640,6 @@ class EditorView(BCChrome):
             {'type': 'textbox',
              'width': 150,
              'height': 30,
-             'caption': 'Textbox',
              'name': 'textbox1',
             })
 
@@ -635,7 +648,6 @@ class EditorView(BCChrome):
             {'type': 'image',
              'width': 200,
              'height': 200,
-             'caption': 'Image',
              'name': 'image1',
             })
 
@@ -664,6 +676,7 @@ class EditorView(BCChrome):
              'height': 30,
              'caption': 'Checkbox',
              'name': 'checkbox1',
+             'value': False,
             })
 
     def new_listbox(self, e):
@@ -671,7 +684,6 @@ class EditorView(BCChrome):
             {'type': 'listbox',
              'width': 150,
              'height': 150,
-             'caption': 'List Box',
              'name': 'listbox1',
             })
 
@@ -680,7 +692,6 @@ class EditorView(BCChrome):
             {'type': 'rect',
              'width': 150,
              'height': 150,
-             'caption': '',
              'name': 'rect1',
             })
 
@@ -689,7 +700,6 @@ class EditorView(BCChrome):
             {'type': 'circle',
              'width': 150,
              'height': 150,
-             'caption': '',
              'name': 'circle1',
             })
 
@@ -698,7 +708,6 @@ class EditorView(BCChrome):
             {'type': 'ellipse',
              'width': 150,
              'height': 150,
-             'caption': '',
              'name': 'ellipse1',
             })
 
@@ -707,7 +716,6 @@ class EditorView(BCChrome):
             {'type': 'line',
              'width': 150,
              'height': 150,
-             'caption': '',
              'name': 'line1',
             })
 
@@ -716,7 +724,6 @@ class EditorView(BCChrome):
             {'type': 'hexagon',
              'width': 150,
              'height': 150,
-             'caption': 'List Box',
              'name': 'listbox1',
             })
 
@@ -759,13 +766,15 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
 
     def changeProperty_ok(self, e, form_values):
-        #print('changeProperty_ok called self.selected_item=', self.selected_item)
         fi = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item][0]
         if get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.INT:
             value = int(form_values['txtValue'])
         elif get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.STRING:
             value = str(form_values['txtValue'])
+        elif get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.BOOLEAN:
+            value = form_values['chkValue']
         fi[self.current_prop_name] = value
+        print('changeProperty_ok self.current_prop_name=', self.current_prop_name, ', form_values[chkValue]', form_values['chkValue'])
         self.current_prop_name = None
         self.mount_redraw()
         Router.router.ResetHashChange()
@@ -808,6 +817,15 @@ class EditorView(BCChrome):
             if len(fis) == 0 or self.current_prop_name == '' or self.current_prop_name is None:
                 return ''
             return str(fis[0][self.current_prop_name])
+        def get_current_form_item_checked():
+            if self.selected_de is None:
+                return { }
+            fis = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item]
+            if len(fis) == 0 or self.current_prop_name == '' or self.current_prop_name is None:
+                return { }
+            print ('get_current_form_item_checked self.current_prop_name=', self.current_prop_name)
+            print ('get_current_form_item_checked fis[0][self.current_prop_name]=', fis[0][self.current_prop_name])
+            return {'checked': 'checked'} if fis[0][self.current_prop_name] else { }
         return      [
                       Modal("shareProj", "Share Project", [
                         form([
@@ -844,6 +862,14 @@ class EditorView(BCChrome):
                           div({'class': 'form-group'}, [
                             label({'class':"col-form-label", 'for':"txtValue"}, 'Value'),
                             html_input({'type': "text", 'class':"form-control", 'id':"txtValue", 'placeholder':"New Value", 'value': get_current_form_item_prop_val()}),
+                          ]),
+                        ]),
+                      ], self.changeProperty_ok),
+                      Modal("changePropertyBoolean", "Change Boolean Property " + self.current_prop_name if self.current_prop_name else '', [
+                        form([
+                          div({'class': 'form-group'}, [
+                            label({'class':"col-form-label", 'for':"chkValue"}, 'Value'),
+                            html_input(merge_dicts({'type': "checkbox", 'class':"form-control", 'id':"chkValue"},  get_current_form_item_checked())),
                           ]),
                         ]),
                       ], self.changeProperty_ok),
