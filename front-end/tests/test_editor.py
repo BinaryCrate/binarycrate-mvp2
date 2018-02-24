@@ -1376,6 +1376,7 @@ class TestContextMenu(object):
                 return None
             if vnode.get_attribs().get('type', '') != 'checkbox':
                 return None
+            print('vnode called tag=input type=checkbox form_item=', vnode.get_attribs().get('form_item', ''))
             if vnode.get_attribs().get('form_item', '') != 'True':
                 return None
             return vnode
@@ -1429,9 +1430,9 @@ class TestContextMenu(object):
         #print('test_editor result[changeProperty_OK_handler]=', result['changeProperty_OK_handler'])
         result['changePropertyBoolean_OK_handler'](Mock())
 
-        rendered = view._render(None)
+        rendered = view._build_virtual_dom()
 
-        vnode_checkbox = get_matching_vnode(view, lambda vnode: is_nvode_checkbox(vnode))
+        vnode_checkbox = get_matching_vnode(rendered, lambda vnode: is_nvode_checkbox(vnode))
         assert vnode_checkbox.get_attribs()['checked'] == 'checked'
 
 

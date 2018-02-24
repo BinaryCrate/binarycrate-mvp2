@@ -206,7 +206,7 @@ class ContextMenu(nav):
 class FormItemPropType(object):
     INT = 0
     STRING = 1
-    BOOLEAN = 1
+    BOOLEAN = 2
 
 def get_form_item_property(form_item_type):
     if form_item_type == 'line':
@@ -439,10 +439,14 @@ class EditorView(BCChrome):
     def display_property_change_modal(self, e, form_item, prop_name):
         #print('display_property_change_modal called form_item[name]=', form_item['name'])
         self.current_prop_name = prop_name
+        prop_type = get_form_item_property(form_item['type'])[prop_name]
         self.context_menu = None
         def display_modal():
             jquery = js.globals['$']
-            jquery('#changeProperty').modal('show')
+            if prop_type == FormItemPropType.BOOLEAN:
+                jquery('#changePropertyBoolean').modal('show')
+            else:
+                jquery('#changeProperty').modal('show')
         self.mount_redraw()
         Router.router.ResetHashChange()
         e.stopPropagation()
@@ -499,7 +503,7 @@ class EditorView(BCChrome):
                     #attribs_extra = {'s': "text"}           
                 elif form_item['type'] == 'checkbox':
                     control_class = html_input
-                    attribs_extra = {'type': "checkbox", 'form_item': 'True'}           
+                    attribs_extra = merge_dicts({'type': "checkbox", 'form_item': 'True'}, {'checked': 'checked'} if form_item['value'] else { })
                 elif form_item['type'] == 'select':
                     control_class = select
                     attribs_extra = { }           
@@ -767,6 +771,8 @@ class EditorView(BCChrome):
 
     def changeProperty_ok(self, e, form_values):
         fi = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item][0]
+        print('changeProperty_ok called fi[type]=', fi['type'], ', self.current_prop_name=', self.current_prop_name)
+        print('changeProperty_ok called FormItemPropType=', get_form_item_property(fi['type'])[self.current_prop_name])
         if get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.INT:
             value = int(form_values['txtValue'])
         elif get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.STRING:
@@ -774,7 +780,7 @@ class EditorView(BCChrome):
         elif get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.BOOLEAN:
             value = form_values['chkValue']
         fi[self.current_prop_name] = value
-        print('changeProperty_ok self.current_prop_name=', self.current_prop_name, ', form_values[chkValue]', form_values['chkValue'])
+        print('changeProperty_ok self.current_prop_name=', self.current_prop_name, ', form_values[chkValue]', form_values.get('chkValue', None))
         self.current_prop_name = None
         self.mount_redraw()
         Router.router.ResetHashChange()
@@ -810,6 +816,7 @@ class EditorView(BCChrome):
                     ]
 
     def get_modals(self):
+        print('EditorView get_modals called')
         def get_current_form_item_prop_val():
             if self.selected_de is None:
                 return ''
@@ -818,13 +825,15 @@ class EditorView(BCChrome):
                 return ''
             return str(fis[0][self.current_prop_name])
         def get_current_form_item_checked():
+            #print ('get_current_form_item_checked 1')
             if self.selected_de is None:
                 return { }
             fis = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item]
+            #print ('get_current_form_item_checked 2')
             if len(fis) == 0 or self.current_prop_name == '' or self.current_prop_name is None:
                 return { }
-            print ('get_current_form_item_checked self.current_prop_name=', self.current_prop_name)
-            print ('get_current_form_item_checked fis[0][self.current_prop_name]=', fis[0][self.current_prop_name])
+            #print ('get_current_form_item_checked self.current_prop_name=', self.current_prop_name)
+            #print ('get_current_form_item_checked fis[0][self.current_prop_name]=', fis[0][self.current_prop_name])
             return {'checked': 'checked'} if fis[0][self.current_prop_name] else { }
         return      [
                       Modal("shareProj", "Share Project", [
