@@ -423,13 +423,17 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
 
     def display_property_change_modal(self, e, form_item, prop_name):
-        print('display_property_change_modal called form_item[name]=', form_item['name'])
+        #print('display_property_change_modal called form_item[name]=', form_item['name'])
         self.current_prop_name = prop_name
         self.context_menu = None
-        jquery = js.globals['$']
-        jquery('#changeProperty').modal('show')
+        def display_modal():
+            jquery = js.globals['$']
+            jquery('#changeProperty').modal('show')
+        self.mount_redraw()
+        Router.router.ResetHashChange()
         e.stopPropagation()
         e.preventDefault()
+        timeouts.set_timeout(display_modal, 1)
 
     def contextmenu_control(self, form_item_id, e):
         posx, posy = self.xy_from_e(e)
@@ -755,7 +759,7 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
 
     def changeProperty_ok(self, e, form_values):
-        print('changeProperty_ok called self.selected_item=', self.selected_item)
+        #print('changeProperty_ok called self.selected_item=', self.selected_item)
         fi = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item][0]
         if get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.INT:
             value = int(form_values['txtValue'])
@@ -797,6 +801,13 @@ class EditorView(BCChrome):
                     ]
 
     def get_modals(self):
+        def get_current_form_item_prop_val():
+            if self.selected_de is None:
+                return ''
+            fis = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item]
+            if len(fis) == 0 or self.current_prop_name == '' or self.current_prop_name is None:
+                return ''
+            return str(fis[0][self.current_prop_name])
         return      [
                       Modal("shareProj", "Share Project", [
                         form([
@@ -828,11 +839,11 @@ class EditorView(BCChrome):
                           ]),
                         ]),
                       ], self.newFolder_ok),
-                      Modal("changeProperty", "Change Property", [
+                      Modal("changeProperty", "Change Property " + self.current_prop_name if self.current_prop_name else '', [
                         form([
                           div({'class': 'form-group'}, [
                             label({'class':"col-form-label", 'for':"txtValue"}, 'Value'),
-                            html_input({'type': "text", 'class':"form-control", 'id':"txtValue", 'placeholder':"New Value"}),
+                            html_input({'type': "text", 'class':"form-control", 'id':"txtValue", 'placeholder':"New Value", 'value': get_current_form_item_prop_val()}),
                           ]),
                         ]),
                       ], self.changeProperty_ok),
@@ -846,6 +857,7 @@ class EditorView(BCChrome):
         self.context_menu = None
         self.selected_item = ''
         self.mouse_is_down = False
+        self.current_prop_name = ''
         self.selected_handler = HANDLE_NONE
         self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code', 'class': 'col-md-5 CodeMirror'}, [t(self.get_selected_de_content)], change_handler=self.code_mirror_change)
         super(EditorView, self).__init__(

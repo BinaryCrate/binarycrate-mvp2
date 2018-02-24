@@ -1255,14 +1255,16 @@ class TestContextMenu(object):
                     if hasattr(vnode, 'tag'):
                         if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
                             result['changeProperty_OK_handler'] = vnode.get_attribs()['onclick']
-                        #if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtValue":
-                        #    node.value = ''
+                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtValue":
+                            result['default_value'] = vnode.get_attribs().get('value', '')
                 IterateVirtualDOM(vnode, mock_element_iterator_callback2)
 
         view.mount_redraw = Mock()
 
         virtual_node = view._build_virtual_dom()
         IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
+
+        assert result['default_value'] == 'Button'        
 
         # Call the modal handler
         rendered_modal = view._render(None)
