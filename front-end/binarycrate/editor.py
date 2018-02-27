@@ -17,6 +17,7 @@ import json
 from operator import itemgetter
 from collections import defaultdict
 from cavorite.svg import svg
+import re
 
 HANDLE_NONE = 0
 HANDLE_TOPLEFT = 1
@@ -207,6 +208,7 @@ class FormItemPropType(object):
     INT = 0
     STRING = 1
     BOOLEAN = 2
+    COLOR = 3
 
 def get_form_item_property(form_item_type):
     if form_item_type == 'line':
@@ -214,7 +216,9 @@ def get_form_item_property(form_item_type):
                  'y1': FormItemPropType.INT,
                  'x2': FormItemPropType.INT,
                  'y2': FormItemPropType.INT,
-                 'name': FormItemPropType.STRING}
+                 'name': FormItemPropType.STRING,
+                 'stroke_width': FormItemPropType.INT,
+                 'stroke': FormItemPropType.COLOR}
     props = {'x': FormItemPropType.INT,
              'y': FormItemPropType.INT,
              'width': FormItemPropType.INT,
@@ -229,6 +233,11 @@ def get_form_item_property(form_item_type):
         props.update({'src': FormItemPropType.STRING})
     if form_item_type == 'checkbox':
         props.update({'value': FormItemPropType.BOOLEAN})
+    if form_item_type in {'rect', 'circle', 'ellipse', 'hexagon'}:
+        props.update({'stroke_width': FormItemPropType.INT,
+                      'stroke': FormItemPropType.COLOR,
+                      'fill': FormItemPropType.COLOR,
+                     })
     return props
 
 
@@ -445,10 +454,12 @@ class EditorView(BCChrome):
             jquery = js.globals['$']
             if prop_type == FormItemPropType.BOOLEAN:
                 jquery('#changePropertyBoolean').modal('show')
+            elif prop_type == FormItemPropType.COLOR:
+                jquery('#changePropertyColor').modal('show')
             else:
                 jquery('#changeProperty').modal('show')
-        self.mount_redraw()
-        Router.router.ResetHashChange()
+        #self.mount_redraw()
+        #Router.router.ResetHashChange()
         e.stopPropagation()
         e.preventDefault()
         timeouts.set_timeout(display_modal, 1)
@@ -518,25 +529,49 @@ class EditorView(BCChrome):
                                  'y':form_item['y'],
                                  'width': form_item['width'],
                                  'height': form_item['height'],
-                                 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e), 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                                 'fill': form_item['fill'],
+                                 'stroke-width':  form_item['stroke_width'],
+                                 'stroke': form_item['stroke'],
+                                 #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e), 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                                 'onmouseup': self.on_mouse_up,
+                                 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e), 
+                                 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
                 if form_item['type'] == 'circle':
                     svg_list.append(svg('circle', {'cx': form_item['x'] + form_item['width'] / 2, 
                                  'cy':form_item['y'] + form_item['height'] / 2,
                                  'r': form_item['width'] / 2,
                                  #'height': form_item['height'],
-                                 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e), 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                                 'fill': form_item['fill'],
+                                 'stroke-width':  form_item['stroke_width'],
+                                 'stroke': form_item['stroke'],
+                                 #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
+                                 'onmouseup': self.on_mouse_up,
+                                 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e),
+                                 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
                 if form_item['type'] == 'ellipse':
                     svg_list.append(svg('ellipse', {'cx': form_item['x'] + form_item['width'] / 2, 
                                  'cy':form_item['y'] + form_item['height'] / 2,
                                  'rx': form_item['width'] / 2,
                                  'ry': form_item['height'] / 2,
-                                 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e), 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                                 'fill': form_item['fill'],
+                                 'stroke-width':  form_item['stroke_width'],
+                                 'stroke': form_item['stroke'],
+                                 #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
+                                 'onmouseup': self.on_mouse_up,
+                                 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e),
+                                 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
                 if form_item['type'] == 'line':
                     svg_list.append(svg('line', {'x1': form_item['x'], 
                                  'y1':form_item['y'],
                                  'x2': form_item['x'] + form_item['width'],
                                  'y2': form_item['y'] + form_item['height'],
-                                 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e), 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                                 'fill': form_item['fill'],
+                                 'stroke-width':  form_item['stroke_width'],
+                                 'stroke': form_item['stroke'],
+                                 #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
+                                 'onmouseup': self.on_mouse_up,
+                                 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e),
+                                 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
                 if form_item['type'] == 'hexagon':
                     # Draw a hexagon
                     x1 = form_item['x'] + form_item['width'] / 2
@@ -553,7 +588,12 @@ class EditorView(BCChrome):
                     y6 = form_item['y'] + form_item['height'] / 4
                     points = '{},{} {},{} {},{} {},{} {},{} {},{}'.format(x1, y1, x2, y2, x3, y3, x4, y4, x5, y5, x6, y6)
                     svg_list.append(svg('polygon', {'points': points,
-                                 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e), 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                                 'fill': form_item['fill'],
+                                 'stroke-width':  form_item['stroke_width'],
+                                 'stroke': form_item['stroke'],
+                                 'onmouseup': self.on_mouse_up,
+                                 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e),
+                                 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
             if self.selected_item != '':
                 selected_form_item = [form_item for form_item in self.selected_de['form_items'] if self.selected_item == form_item['id']][0]
                 svg_list.extend([
@@ -561,35 +601,45 @@ class EditorView(BCChrome):
                                            'y':selected_form_item['y'],
                                            'width': selected_form_item['width'],
                                            'height': selected_form_item['height'],
-                                           'style':"fill:None;stroke-width:5;stroke:rgb(255,0,0)"}),
+                                           'style':"fill:None;stroke-width:5;stroke:rgb(255,0,0)", 
+                                           'onmouseup': self.on_mouse_up, 
+                                           'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)}),
                               svg('rect', {'id': 'handle-top-left', 'x': selected_form_item['x'] - 5, 
                                            'y':selected_form_item['y'] - 5,
                                            'width': 10,
                                            'height': 10,
                                            'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
                                            'onmousedown': lambda e: self.on_handle_mouse_down(e, HANDLE_TOPLEFT),
-                                           'onmouseup': self.on_mouse_up}),
+                                           'onmouseup': self.on_mouse_up, 
+                                           #'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)
+                                           }),
                               svg('rect', {'id': 'handle-top-right', 'x': selected_form_item['x'] + selected_form_item['width'] - 5, 
                                            'y':selected_form_item['y'] - 5,
                                            'width': 10,
                                            'height': 10,
                                            'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
                                            'onmousedown': lambda e: self.on_handle_mouse_down(e, HANDLE_TOPRIGHT),
-                                           'onmouseup': self.on_mouse_up}),
+                                           'onmouseup': self.on_mouse_up, 
+                                           #'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)
+                                           }),
                               svg('rect', {'id': 'handle-bottom-right', 'x': selected_form_item['x'] + selected_form_item['width'] - 5, 
                                            'y':selected_form_item['y'] + selected_form_item['height'] - 5,
                                            'width': 10,
                                            'height': 10,
                                            'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
                                            'onmousedown': lambda e: self.on_handle_mouse_down(e, HANDLE_BOTTOMRIGHT),
-                                           'onmouseup': self.on_mouse_up}),
+                                           'onmouseup': self.on_mouse_up, 
+                                           #'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)
+                                           }),
                               svg('rect', {'id': 'handle-bottom-left', 'x': selected_form_item['x'] - 5, 
                                            'y':selected_form_item['y'] + selected_form_item['height'] - 5,
                                            'width': 10,
                                            'height': 10,
                                            'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
                                            'onmousedown': lambda e: self.on_handle_mouse_down(e, HANDLE_BOTTOMLEFT),
-                                           'onmouseup': self.on_mouse_up}),
+                                           'onmouseup': self.on_mouse_up, 
+                                           #'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)
+                                           }),
                             ])
             ret.append(svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%', 'oncontextmenu': self.contextmenu_preview, 'z-index':-5, 'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up}, svg_list))
         return ret
@@ -697,6 +747,9 @@ class EditorView(BCChrome):
              'width': 150,
              'height': 150,
              'name': 'rect1',
+             'stroke_width': 5,
+             'stroke': 'rgb(0,0,0)',
+             'fill': 'none',
             })
 
     def new_circle(self, e):
@@ -705,6 +758,9 @@ class EditorView(BCChrome):
              'width': 150,
              'height': 150,
              'name': 'circle1',
+             'stroke_width': 5,
+             'stroke': 'rgb(0,0,0)',
+             'fill': 'none',
             })
 
     def new_ellipse(self, e):
@@ -713,6 +769,9 @@ class EditorView(BCChrome):
              'width': 150,
              'height': 150,
              'name': 'ellipse1',
+             'stroke_width': 5,
+             'stroke': 'rgb(0,0,0)',
+             'fill': 'none',
             })
 
     def new_line(self, e):
@@ -721,6 +780,9 @@ class EditorView(BCChrome):
              'width': 150,
              'height': 150,
              'name': 'line1',
+             'stroke_width': 5,
+             'stroke': 'rgb(0,0,0)',
+             'fill': 'none',
             })
 
     def new_hexagon(self, e):
@@ -729,6 +791,9 @@ class EditorView(BCChrome):
              'width': 150,
              'height': 150,
              'name': 'listbox1',
+             'stroke_width': 5,
+             'stroke': 'rgb(0,0,0)',
+             'fill': 'none',
             })
 
     def get_selected_de_content(self):
@@ -770,17 +835,23 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
 
     def changeProperty_ok(self, e, form_values):
+        #print('changeProperty_ok called')
         fi = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item][0]
-        print('changeProperty_ok called fi[type]=', fi['type'], ', self.current_prop_name=', self.current_prop_name)
-        print('changeProperty_ok called FormItemPropType=', get_form_item_property(fi['type'])[self.current_prop_name])
+        #print('changeProperty_ok called fi[type]=', fi['type'], ', self.current_prop_name=', self.current_prop_name)
+        #print('changeProperty_ok form_values=', form_values)
+        #print('changeProperty_ok called FormItemPropType=', get_form_item_property(fi['type'])[self.current_prop_name])
         if get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.INT:
             value = int(form_values['txtValue'])
         elif get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.STRING:
             value = str(form_values['txtValue'])
         elif get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.BOOLEAN:
             value = form_values['chkValue']
+        elif get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.COLOR:
+            #print('changeProperty_ok form_values=', form_values)
+            #print('changeProperty_ok form_values[chkEmpty]=', form_values['chkEmpty'])
+            value = 'none' if form_values['chkEmpty'] else 'rgb({},{},{})'.format(form_values['txtRed'], form_values['txtGreen'], form_values['txtBlue'])
         fi[self.current_prop_name] = value
-        print('changeProperty_ok self.current_prop_name=', self.current_prop_name, ', form_values[chkValue]', form_values.get('chkValue', None))
+        #print('changeProperty_ok self.current_prop_name=', self.current_prop_name, ', form_values[chkValue]', form_values.get('chkValue', None))
         self.current_prop_name = None
         self.mount_redraw()
         Router.router.ResetHashChange()
@@ -816,7 +887,7 @@ class EditorView(BCChrome):
                     ]
 
     def get_modals(self):
-        print('EditorView get_modals called')
+        #print('EditorView get_modals called')
         def get_current_form_item_prop_val():
             if self.selected_de is None:
                 return ''
@@ -835,6 +906,36 @@ class EditorView(BCChrome):
             #print ('get_current_form_item_checked self.current_prop_name=', self.current_prop_name)
             #print ('get_current_form_item_checked fis[0][self.current_prop_name]=', fis[0][self.current_prop_name])
             return {'checked': 'checked'} if fis[0][self.current_prop_name] else { }
+        def get_current_form_item_color_empty():
+            if self.selected_de is None:
+                return { }
+            fis = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item]
+            #print ('get_current_form_item_checked 2')
+            if len(fis) == 0 or self.current_prop_name == '' or self.current_prop_name is None:
+                return { }
+            #print ('get_current_form_item_checked self.current_prop_name=', self.current_prop_name)
+            #print ('get_current_form_item_checked fis[0][self.current_prop_name]=', fis[0][self.current_prop_name])
+            return {'checked': 'checked'} if fis[0][self.current_prop_name] == 'none' else { }
+        def get_current_form_item_color(color):
+            if self.selected_de is None:
+                return ''
+            fis = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item]
+            if len(fis) == 0 or self.current_prop_name == '' or self.current_prop_name is None:
+                return ''
+            s = str(fis[0][self.current_prop_name])
+            p = re.compile('rgb(\s*)\((\s*)(?P<red>[0-9]+)(\s*),(\s*)(?P<green>[0-9]+)(\s*),(\s*)(?P<blue>[0-9]+)(\s*)\)')
+            m = p.search(s)
+            if m:
+                kwargs = m.groupdict()
+                return kwargs.get(color, '')
+            return ''
+        def get_current_form_item_color_red():
+            return get_current_form_item_color('red')
+        def get_current_form_item_color_green():
+            return get_current_form_item_color('green')
+        def get_current_form_item_color_blue():
+            return get_current_form_item_color('blue')
+
         return      [
                       Modal("shareProj", "Share Project", [
                         form([
@@ -879,6 +980,20 @@ class EditorView(BCChrome):
                           div({'class': 'form-group'}, [
                             label({'class':"col-form-label", 'for':"chkValue"}, 'Value'),
                             html_input(merge_dicts({'type': "checkbox", 'class':"form-control", 'id':"chkValue"},  get_current_form_item_checked())),
+                          ]),
+                        ]),
+                      ], self.changeProperty_ok),
+                      Modal("changePropertyColor", "Change Color Property " + self.current_prop_name if self.current_prop_name else '', [
+                        form([
+                          div({'class': 'form-group'}, [
+                            label({'class':"col-form-label", 'for':"chkEmpty"}, 'Empty'),
+                            html_input(merge_dicts({'type': "checkbox", 'class':"form-control", 'id':"chkEmpty"},  get_current_form_item_color_empty())),
+                            label({'class':"col-form-label", 'for':"txtRed"}, 'Red'),
+                            html_input(merge_dicts({'type': "text", 'class':"form-control", 'id':"txtRed"},  get_current_form_item_color_red())),
+                            label({'class':"col-form-label", 'for':"txtGreen"}, 'Green'),
+                            html_input(merge_dicts({'type': "text", 'class':"form-control", 'id':"txtGreen"},  get_current_form_item_color_green())),
+                            label({'class':"col-form-label", 'for':"txtBlue"}, 'Blue'),
+                            html_input(merge_dicts({'type': "text", 'class':"form-control", 'id':"txtBlue"},  get_current_form_item_color_blue())),
                           ]),
                         ]),
                       ], self.changeProperty_ok),
