@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, unicode_literals
+import sys
+import tempfile
+
 """
 Django settings for binarycrate project.
 
@@ -44,7 +49,9 @@ INSTALLED_APPS = [
 
     'mptt',
 
-    'lettuce.django',
+    'behave_django',
+
+    'rest_framework',
 
     'accounts',
     'landingpage',
@@ -135,6 +142,7 @@ STATICFILES_DIRS = [
     #os.path.join(BASE_DIR, 'static'),
     '/opt/project/pypyjs-release',
     '/opt/project/front-end',
+    '/opt/project/binarycrate/static',
 ]
 
 STATICFILES_FINDERS = [
@@ -158,8 +166,12 @@ AUTHENTICATION_BACKENDS = (
 
 SITE_ID = 1
 
-#Lettuce configuration
-LETTUCE_USE_TEST_DATABASE = True
-
 ACCOUNT_USER_MODEL_USERNAME_FIELD = 'email'
+
+# Project files
+
+if 'pytest' in sys.modules:
+    PROJECT_FILES_ROOT = tempfile.mkdtemp()
+else:
+    PROJECT_FILES_ROOT = os.path.join(BASE_DIR, 'private/projects')
 

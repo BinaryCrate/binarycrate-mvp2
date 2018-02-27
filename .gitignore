@@ -16,6 +16,7 @@ downloads/
 eggs/
 .eggs/
 lib/
+!binarycrate/static/lib
 lib64/
 parts/
 sdist/
@@ -101,4 +102,6 @@ ENV/
 .mypy_cache/
 
 binarycrate/db.sqlite3
+
+screenshot.png
 

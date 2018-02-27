@@ -4,9 +4,11 @@ The second mvp version of binary crate
 First create a virtual environment
 
 virtualenv venv -p python3
+
 source venv/bin/activate
 
 pip install --upgrade pip 
+
 pip install --upgrade setuptools urllib3[secure]
 
 pip install fabric3==1.13.1.post1  # We use fabric3 to automate tasks
@@ -20,20 +22,26 @@ fab development.setup
 
 This will create the development docker container
 
+fab development.run:command=createsuperuser
+
+This will create a superuser. Enter a user name and password
+
 fab development.runserver
 
 This will run the application. 
 
 fab development.run:command=shell
 
-This will start `python3 manage.py shell` inside the docker container
+This will start `python manage.py shell` inside the docker container
 
 fab development.run
 
-This will start `python3 manage.py check` inside the docker container.
+This will start `python manage.py check` inside the docker container.
 Ie check is ther default command
 
 
 To run unit tests fab development.test
 
-To run BDD tests fab development.harvest
+To run frontend unit tests fab development.frontend_test
+
+To run BDD tests fab development.behave

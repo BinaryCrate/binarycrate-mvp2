@@ -17,14 +17,15 @@ def build():
 @task
 def runserver():
     run(command='runserver 0.0.0.0:8000')
-    #print(yellow('Running docker process...'))
-    #with lcd('.'):
-    #    local('docker run --tty --interactive --volume "${PWD}":/opt/project --publish=8000:8000 "${PWD##*/}" runserver 0.0.0.0:8000')
-
 
 @task
-def harvest():
-    run(command='harvest -a landingpage --verbosity=3')
+def behave(scenario_regex=None):
+    command = 'behave --verbosity=3 {}'.format('' if scenario_regex is None else '--name="{}"'.format(scenario_regex))
+    run(command=command)
+
+@task
+def shell():
+    run(command='shell')
 
 @task
 def run(**kwargs):
@@ -42,6 +43,8 @@ def run(**kwargs):
               '--interactive '
               '--publish=8000:8000 '
               '--volume "{local_pwd}":/opt/project '
+              #'--volume "/home/mark/cavorite":/opt/project/cavorite '
+              #'--volume "/home/mark/behave-django/behave_django":/usr/local/lib/python2.7/dist-packages/behave_django '
               '--network={project_name}-network '
               '--network-alias=webserver '
               '{project_name} {command}'.format(command=command,
@@ -56,10 +59,28 @@ def migrate():
         local('docker run --tty --interactive --volume "${PWD}":/opt/project --publish=8000:8000 "${PWD##*/}" migrate')
 
 @task
-def test():
+def test(testname=None):
     print(yellow('Running docker process...'))
+    if testname:
+        testcommand = " -k '{0}'".format(testname)
+    else:
+        testcommand = ""
     with lcd('.'):
-        local('docker run --tty --interactive --volume "${PWD}":/opt/project --entrypoint="pytest" --publish=8000:8000 "${PWD##*/}"')
+        local('docker run --tty --interactive --volume "${PWD}":/opt/project --entrypoint="pytest" "${PWD##*/}"' + testcommand)
+
+@task
+def frontend_test(testname=None):
+    print(yellow('Running docker process...'))
+    if testname:
+        testcommand = " -k '{0}'".format(testname)
+    else:
+        testcommand = ""
+    with lcd('.'):
+        local('docker run --tty '
+              '--interactive --volume "${PWD}":/opt/project '
+              #'--volume "/home/mark/cavorite":/opt/project/cavorite '
+              '--entrypoint="/opt/project/run-frontend-tests" '
+              '"${PWD##*/}"' + testcommand)
 
 @task
 def makemigrations():
@@ -71,7 +92,7 @@ def makemigrations():
 def bash():
     print(yellow('Running docker process...'))
     with lcd('.'):
-        local('docker run --tty --interactive --volume "${PWD}":/opt/project --publish=8000:8000 --entrypoint="bash" "${PWD##*/}"')
+        local('docker run --tty --interactive --volume "${PWD}":/opt/project --entrypoint="bash" --publish=8000:8000 "${PWD##*/}"')
 
 @task
 def setup():
