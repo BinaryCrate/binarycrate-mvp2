@@ -6,6 +6,7 @@ except ImportError:
 from cavorite import c, t, Router, callbacks, timeouts, ajaxget
 from .dashboard import dashboard_view
 from .editor import editor_view
+from .settings import settings_view
 
 def start():
     callbacks.initialise_global_callbacks()
@@ -18,9 +19,9 @@ def start():
 
 
     r = Router({r'^$': dashboard_view(),
+                r'^settings$': settings_view(),
                 r'^editor/(?P<project_id>[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})$': editor_view(),
                 #r'^editor$': editor_view(),
                 },
                 error_404_page, body)
     r.route()
-

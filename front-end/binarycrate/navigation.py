@@ -45,7 +45,7 @@ class BCChrome(div):
         jquery = js.globals['$']
         jquery(".navbar-sidenav .nav-link-collapse").addClass("collapsed");
         jquery(".navbar-sidenav .sidenav-second-level, .navbar-sidenav .sidenav-third-level").removeClass("show");
-        e.preventDefault()    
+        e.preventDefault()
         return False
 
     def __init__(self, top_navbar_items, central_content, modals):
@@ -66,7 +66,7 @@ class BCChrome(div):
         return self.modals
 
     def get_context_menu(self):
-        return None
+        return []
 
     def get_context_menu_list(self):
         context_menu = self.get_context_menu()
@@ -76,7 +76,7 @@ class BCChrome(div):
             return [context_menu]
 
     def get_children(self):
-        return [ 
+        return [
                 nav({'class': "navbar navbar-expand-lg navbar-dark bg-dark fixed-top", 'id': 'mainNav'}, [
                   a({'class': "nav-link", 'id':"sidenavToggler", 'style':"padding: 0px 10px 0px 0px; color:white;"}, [
                     i({'class': "fa fa-fw fa-bars", "onclick": self.collapse_menu})
@@ -93,10 +93,7 @@ class BCChrome(div):
                       navitem('Dashboard', 'fa-dashboard', '#!'),
                       navitem('Editor', 'fa-code', '#!editor'),
                       navitem('Classroom', 'fa-laptop', '#!classroom'),
-                      navsubmenu('Settings', 'exampleAccordion', 'collapseComponents', [
-                        navsubmenuitem('Navbar', '#!navbar'),
-                        navsubmenuitem('Cards', '#!cards'),
-                      ])
+                      navitem('Settings', 'fa-wrench', '#!settings'),
                     ]),
                     ul({'class': 'navbar-nav mr-auto'}, self.get_top_navbar_items()),
                     ul({'class': 'navbar-nav ml-auto'}, [
@@ -111,7 +108,7 @@ class BCChrome(div):
                 ]),
                 div({'class': "content-wrapper", 'style': {'padding-top': '1px'}}, [self.get_central_content()]),
                 footer({'class': "sticky-footer"}, [
-                  div({'class':"container"}, [
+                  div({'class':" fluid-container"}, [
                     div({'class':"text-center"}, [
                       small("Copyright (C) Binary Crate 2018"),
                     ]),
@@ -121,4 +118,3 @@ class BCChrome(div):
                   div("Select \"Logout\" below if you are ready to end your current session."),
                 ], None),
               ] + self.get_modals() + self.get_context_menu_list()
-
