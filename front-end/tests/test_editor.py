@@ -12,6 +12,7 @@ from binarycrate.controls import codemirror
 from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode, style_to_dict, get_vnode_by_id
 import cavorite.bootstrap.modals
 from binarycrate.editor import HANDLE_NONE, HANDLE_TOPLEFT, HANDLE_TOPRIGHT, HANDLE_BOTTOMLEFT, HANDLE_BOTTOMRIGHT
+from binarycrate.editor import get_form_item_property, FormItemPropType
 
 
 
@@ -286,6 +287,7 @@ class TestEditor(object):
         monkeypatch.setattr(Router, 'router', Mock())
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        monkeypatch.setattr(cavorite.svg, 'js', js)
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
@@ -461,6 +463,7 @@ class TestEditor(object):
         monkeypatch.setattr(Router, 'router', Mock())
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        monkeypatch.setattr(cavorite.svg, 'js', js)
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
@@ -982,10 +985,10 @@ class TestContextMenu(object):
 
         preview_node = get_matching_vnode(view, find_preview)
         assert preview_node is not None
-        preview_node.get_attribs()['onmousedown'](Mock())
+        preview_node.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == ''
         
-        vnode_button.get_attribs()['onmousedown'](Mock())
+        vnode_button.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
     
@@ -995,7 +998,7 @@ class TestContextMenu(object):
         assert view.mouse_is_down == False
 
         # Click again
-        vnode_button.get_attribs()['onmousedown'](Mock())
+        vnode_button.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
 
@@ -1014,7 +1017,7 @@ class TestContextMenu(object):
         assert style_to_dict(vnode_button.get_attribs()['style'])['top'] == str(button['y'])
 
         # Check moving the mouse with nothing selected does nothing
-        preview_node.get_attribs()['onmousedown'](Mock())
+        preview_node.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == ''
         assert view.mouse_is_down == True
 
@@ -1029,7 +1032,7 @@ class TestContextMenu(object):
         assert style_to_dict(vnode_button.get_attribs()['style'])['top'] == str(button['y'])
 
         # Test clicking on handles selects them and allows us to resize the button
-        vnode_button.get_attribs()['onmousedown'](Mock())
+        vnode_button.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
         assert view.selected_handler == HANDLE_NONE
@@ -1039,7 +1042,7 @@ class TestContextMenu(object):
 
         # Click the top left handle and move the mouse
         vnode_handle = get_vnode_by_id(view, 'handle-top-left')
-        vnode_handle.get_attribs()['onmousedown'](Mock())
+        vnode_handle.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
         assert view.selected_handler == HANDLE_TOPLEFT
@@ -1057,7 +1060,7 @@ class TestContextMenu(object):
 
         # Click the top right handle and move the mouse
         vnode_handle = get_vnode_by_id(view, 'handle-top-right')
-        vnode_handle.get_attribs()['onmousedown'](Mock())
+        vnode_handle.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
         assert view.selected_handler == HANDLE_TOPRIGHT
@@ -1075,7 +1078,7 @@ class TestContextMenu(object):
 
         # Click the bottom right handle and move the mouse
         vnode_handle = get_vnode_by_id(view, 'handle-bottom-right')
-        vnode_handle.get_attribs()['onmousedown'](Mock())
+        vnode_handle.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
         assert view.selected_handler == HANDLE_BOTTOMRIGHT
@@ -1093,7 +1096,7 @@ class TestContextMenu(object):
 
         # Click the bottom left handle and move the mouse
         vnode_handle = get_vnode_by_id(view, 'handle-bottom-left')
-        vnode_handle.get_attribs()['onmousedown'](Mock())
+        vnode_handle.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
         assert view.selected_handler == HANDLE_BOTTOMLEFT
@@ -1108,5 +1111,559 @@ class TestContextMenu(object):
         assert view.selected_item == button['id']
         assert view.mouse_is_down == False
         assert view.selected_handler == HANDLE_NONE
+
+        view.mount_redraw = Mock()
+        assert view.context_menu is None
+        Router.router.ResetHashChange.reset_mock()
+        vnode_button.get_attribs()['oncontextmenu'](Mock())
+        assert type(view.context_menu) == ContextMenu
+        assert len(view.context_menu.menu_items) >= 1
+
+        assert 'Change caption' ==  view.context_menu.menu_items[0][0]
+        assert 'Change height' ==   view.context_menu.menu_items[1][0]
+        assert 'Change name' ==     view.context_menu.menu_items[2][0]
+        assert 'Change width' ==    view.context_menu.menu_items[3][0]
+        assert 'Change x' ==        view.context_menu.menu_items[4][0]
+        assert 'Change y' ==        view.context_menu.menu_items[5][0]
+
+        assert view.context_menu.menu_items[-1][0] == 'Delete'
+        assert callable(view.context_menu.menu_items[-1][1])
+        view.mount_redraw.assert_called()
+        Router.router.ResetHashChange.assert_called()
+        view.context_menu.menu_items[-1][1](Mock())
+
+        vnode_button = get_matching_vnode(view, is_nvode_button)
+        assert vnode_button is None
+
+    def test_context_menu_can_change_parameters(self, monkeypatch):
+        monkeypatch.setattr(Router, 'ResetHashChange', Mock())
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(cavorite.svg, 'js', js)
+        callbacks.initialise_global_callbacks()
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        body = js.globals.document.body
+        error_404_page = c("div", [c("p", "No match 404 error"),
+                                   c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
+        view = editor.EditorView()
+        r = Router({r'^$': view},
+                    error_404_page, body)
+        r.route()
+
+        view.mount_redraw = Mock()
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+    print('Hello folder i={}'.format(i))
+"""
+
+        response = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': '[]',
+                        'parent_id': None
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False, 
+                        'content': '', 
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'form_items': '[]',
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+                       },
+                     ]
+                    }
+        view.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)),
+                                              response)
+        view.selected_de = [de for de in editor.project['directory_entry'] if de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'][0]
+
+        view.mount_redraw = Mock()
+        Router.router.ResetHashChange.reset_mock()
+        view.contextmenu_preview(Mock(pageX=10, pageY=10))
+
+        Router.router.ResetHashChange.reset_mock()
+        view.mount_redraw.reset_mock()
+        js.return_get_element_by_id = {'preview': Mock(getBoundingClientRect=Mock(return_value=Mock(left=0, top=0)))}
+        view.new_button(Mock(clientX=10, clientY=20))
+
+        button = view.selected_de['form_items'][0]
+
+        def is_nvode_button(vnode, button_title):
+            if hasattr(vnode, 'tag') is False:
+                return None
+            if vnode.tag != 'button':
+                return None
+            l = vnode.get_children()
+            if len(l) != 1:
+                return None
+            child = l[0]
+            if type(child) == t and child.text == button_title:
+                return vnode
+            else:
+                return None
+
+        vnode_button = get_matching_vnode(view, lambda vnode: is_nvode_button(vnode, 'Button'))
+
+        view.mount_redraw = Mock()
+        Router.router.ResetHashChange.reset_mock()
+        vnode_button.get_attribs()['oncontextmenu'](Mock())
+
+        assert 'Change caption' ==  view.context_menu.menu_items[0][0]
+        assert callable(view.context_menu.menu_items[0][1])
+        view.mount_redraw.assert_called()
+        Router.router.ResetHashChange.assert_called()
+        view.context_menu.menu_items[0][1](Mock())
+
+        result = dict()
+
+        def mock_element_iterator_callback(vnode):
+            if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'changeProperty':
+
+                def mock_element_iterator_callback2(vnode):
+                    if hasattr(vnode, 'tag'):
+                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                            result['changeProperty_OK_handler'] = vnode.get_attribs()['onclick']
+                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtValue":
+                            result['default_value'] = vnode.get_attribs().get('value', '')
+                IterateVirtualDOM(vnode, mock_element_iterator_callback2)
+
+        view.mount_redraw = Mock()
+
+        virtual_node = view._build_virtual_dom()
+        IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
+
+        assert result['default_value'] == 'Button'        
+
+        # Call the modal handler
+        rendered_modal = view._render(None)
+        cavorite.bootstrap.modals.js.return_get_element_by_id = {'changeProperty': rendered_modal}
+
+        def setup_mock_modal_callback(node, file_name):
+            if isinstance(node, js.MockElement) and node.getAttribute('id') == 'txtValue':
+                node.value = file_name
+
+        js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, 'Fastasico!'))
+
+        #print('test_editor result[changeProperty_OK_handler]=', result['changeProperty_OK_handler'])
+        result['changeProperty_OK_handler'](Mock())
+
+        rendered = view._render(None)
+
+        vnode_button = get_matching_vnode(view, lambda vnode: is_nvode_button(vnode, 'Fastasico!'))
+        assert vnode_button is not None
+
+    def test_context_menu_can_change_boolean_parameter(self, monkeypatch):
+        monkeypatch.setattr(Router, 'ResetHashChange', Mock())
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(cavorite.svg, 'js', js)
+        callbacks.initialise_global_callbacks()
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        body = js.globals.document.body
+        error_404_page = c("div", [c("p", "No match 404 error"),
+                                   c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
+        view = editor.EditorView()
+        r = Router({r'^$': view},
+                    error_404_page, body)
+        r.route()
+
+        view.mount_redraw = Mock()
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+    print('Hello folder i={}'.format(i))
+"""
+
+        response = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': '[]',
+                        'parent_id': None
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False, 
+                        'content': '', 
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'form_items': '[]',
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+                       },
+                     ]
+                    }
+        view.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)),
+                                              response)
+        view.selected_de = [de for de in editor.project['directory_entry'] if de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'][0]
+
+        view.mount_redraw = Mock()
+        Router.router.ResetHashChange.reset_mock()
+        view.contextmenu_preview(Mock(pageX=10, pageY=10))
+
+        Router.router.ResetHashChange.reset_mock()
+        view.mount_redraw.reset_mock()
+        js.return_get_element_by_id = {'preview': Mock(getBoundingClientRect=Mock(return_value=Mock(left=0, top=0)))}
+        view.new_checkbox(Mock(clientX=10, clientY=20))
+
+        checkbox = view.selected_de['form_items'][0]
+
+        def is_nvode_checkbox(vnode):
+            if hasattr(vnode, 'tag') is False:
+                return None
+            if vnode.tag != 'input':
+                return None
+            if vnode.get_attribs().get('type', '') != 'checkbox':
+                return None
+            #print('vnode called tag=input type=checkbox form_item=', vnode.get_attribs().get('form_item', ''))
+            if vnode.get_attribs().get('form_item', '') != 'True':
+                return None
+            return vnode
+
+        vnode_checkbox = get_matching_vnode(view, lambda vnode: is_nvode_checkbox(vnode))
+
+        view.mount_redraw = Mock()
+        Router.router.ResetHashChange.reset_mock()
+        vnode_checkbox.get_attribs()['oncontextmenu'](Mock())
+
+        assert 'Change value' ==  view.context_menu.menu_items[3][0]
+        assert callable(view.context_menu.menu_items[3][1])
+        view.mount_redraw.assert_called()
+        Router.router.ResetHashChange.assert_called()
+        view.context_menu.menu_items[3][1](Mock())
+
+        result = dict()
+
+        def mock_element_iterator_callback(vnode):
+            #if hasattr(vnode, 'get_attribs'):
+            #    print('mock_element_iterator_callback called vnodeid=', vnode.get_attribs().get('id'))
+            if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'changePropertyBoolean':
+                #print('mock_element_iterator_callback changeBooleanProperty found')
+
+                def mock_element_iterator_callback2(vnode):
+                    if hasattr(vnode, 'tag'):
+                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                            result['changePropertyBoolean_OK_handler'] = vnode.get_attribs()['onclick']
+                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "chkValue":
+                            #print('mock_element_iterator_callback  vnode.checked=',vnode.get_attribs().get('checked', ''))
+                            result['default_value'] = vnode.get_attribs().get('checked', '') == 'checked'
+                IterateVirtualDOM(vnode, mock_element_iterator_callback2)
+
+        view.mount_redraw = Mock()
+
+        virtual_node = view._build_virtual_dom()
+        IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
+
+        assert result['default_value'] == False
+
+        # Call the modal handler
+        rendered_modal = view._render(None)
+        cavorite.bootstrap.modals.js.return_get_element_by_id = {'changePropertyBoolean': rendered_modal}
+
+        def setup_mock_modal_callback(node, checked):
+            if isinstance(node, js.MockElement) and node.getAttribute('id') == 'chkValue':
+                node.checked = checked
+
+        js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, True))
+
+        #print('test_editor result[changeProperty_OK_handler]=', result['changeProperty_OK_handler'])
+        result['changePropertyBoolean_OK_handler'](Mock())
+
+        rendered = view._build_virtual_dom()
+
+        vnode_checkbox = get_matching_vnode(rendered, lambda vnode: is_nvode_checkbox(vnode))
+        assert vnode_checkbox.get_attribs()['checked'] == 'checked'
+
+    def test_context_menu_can_change_color_parameter(self, monkeypatch):
+        monkeypatch.setattr(Router, 'ResetHashChange', Mock())
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(cavorite.svg, 'js', js)
+        callbacks.initialise_global_callbacks()
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        body = js.globals.document.body
+        error_404_page = c("div", [c("p", "No match 404 error"),
+                                   c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
+        view = editor.EditorView()
+        r = Router({r'^$': view},
+                    error_404_page, body)
+        r.route()
+
+        view.mount_redraw = Mock()
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+    print('Hello folder i={}'.format(i))
+"""
+
+        response = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': '[]',
+                        'parent_id': None
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False, 
+                        'content': '', 
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'form_items': '[]',
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+                       },
+                     ]
+                    }
+        view.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)),
+                                              response)
+        view.selected_de = [de for de in editor.project['directory_entry'] if de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'][0]
+
+        view.mount_redraw = Mock()
+        Router.router.ResetHashChange.reset_mock()
+        view.contextmenu_preview(Mock(pageX=10, pageY=10))
+
+        Router.router.ResetHashChange.reset_mock()
+        view.mount_redraw.reset_mock()
+        js.return_get_element_by_id = {'preview': Mock(getBoundingClientRect=Mock(return_value=Mock(left=0, top=0)))}
+        view.new_rectangle(Mock(clientX=10, clientY=20))
+
+        checkbox = view.selected_de['form_items'][0]
+
+        def is_nvode_rect(vnode):
+            if hasattr(vnode, 'tag') is False:
+                return None
+            if vnode.tag != 'rect':
+                return None
+            #if vnode.get_attribs().get('type', '') != 'checkbox':
+            #    return None
+            #print('vnode called tag=input type=checkbox form_item=', vnode.get_attribs().get('form_item', ''))
+            #if vnode.get_attribs().get('form_item', '') != 'True':
+            #    return None
+            return vnode
+
+        vnode_rect = get_matching_vnode(view, lambda vnode: is_nvode_rect(vnode))
+
+        view.mount_redraw = Mock()
+        Router.router.ResetHashChange.reset_mock()
+        vnode_rect.get_attribs()['oncontextmenu'](Mock())
+
+        fill_index = 0
+        #print('menu items=', [view.context_menu.menu_items[i][0] for i in range(len(view.context_menu.menu_items))])
+        assert 'Change fill' ==  view.context_menu.menu_items[fill_index][0]
+        assert callable(view.context_menu.menu_items[fill_index][1])
+        view.mount_redraw.assert_called()
+        Router.router.ResetHashChange.assert_called()
+        view.context_menu.menu_items[fill_index][1](Mock())
+
+        result = dict()
+
+        def mock_element_iterator_callback(vnode):
+            #if hasattr(vnode, 'get_attribs'):
+            #    print('mock_element_iterator_callback called vnodeid=', vnode.get_attribs().get('id'))
+            if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'changePropertyColor':
+                #print('mock_element_iterator_callback changeBooleanProperty found')
+
+                def mock_element_iterator_callback2(vnode):
+                    if hasattr(vnode, 'tag'):
+                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                            result['changePropertyColor_OK_handler'] = vnode.get_attribs()['onclick']
+                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "chkEmpty":
+                            result['color_empty'] = vnode.get_attribs().get('checked', '') == 'checked'
+                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtRed":
+                            result['color_red'] = vnode.get_attribs().get('value', '')
+                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtGreen":
+                            result['color_green'] = vnode.get_attribs().get('value', '')
+                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtBlue":
+                            result['color_blue'] = vnode.get_attribs().get('value', '')
+                IterateVirtualDOM(vnode, mock_element_iterator_callback2)
+
+        view.mount_redraw = Mock()
+
+        virtual_node = view._build_virtual_dom()
+        IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
+
+        assert result['color_empty'] == True
+
+        # Call the modal handler
+        rendered_modal = view._render(None)
+        cavorite.bootstrap.modals.js.return_get_element_by_id = {'changePropertyColor': rendered_modal}
+
+        def setup_mock_modal_callback(node, empty, red, green, blue):
+            if isinstance(node, js.MockElement) and node.getAttribute('id') == 'chkEmpty':
+                #print('setup_mock_modal_callback setting chkEmpty=', empty)
+                node.checked = empty
+            if isinstance(node, js.MockElement) and node.getAttribute('id') == 'txtRed':
+                node.value = red
+            if isinstance(node, js.MockElement) and node.getAttribute('id') == 'txtGreen':
+                node.value = green
+            if isinstance(node, js.MockElement) and node.getAttribute('id') == 'txtBlue':
+                node.value = blue
+
+        js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, False, '255', '0', '0'))
+
+        result['changePropertyColor_OK_handler'](Mock())
+
+        rendered = view._build_virtual_dom()
+
+        vnode_rect = get_matching_vnode(rendered, lambda vnode: is_nvode_rect(vnode))
+        assert vnode_rect.get_attribs()['fill'] == 'rgb(255,0,0)'
+
+        vnode_rect.get_attribs()['oncontextmenu'](Mock())
+        fill_index = 0
+        #print('menu items=', [view.context_menu.menu_items[i][0] for i in range(len(view.context_menu.menu_items))])
+        assert 'Change fill' ==  view.context_menu.menu_items[fill_index][0]
+        assert callable(view.context_menu.menu_items[fill_index][1])
+        view.mount_redraw.assert_called()
+        Router.router.ResetHashChange.assert_called()
+        view.context_menu.menu_items[fill_index][1](Mock())
+
+        js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, True, '', '', ''))
+
+        result['changePropertyColor_OK_handler'](Mock())
+
+        rendered = view._build_virtual_dom()
+
+        vnode_rect = get_matching_vnode(rendered, lambda vnode: is_nvode_rect(vnode))
+        assert vnode_rect.get_attribs()['fill'] == 'none'
+
+
+class TestFormItems(object):
+    def gen_check_form_item_generic_properties(self, form_item_type):
+        assert get_form_item_property(form_item_type)['x'] == FormItemPropType.INT
+        assert get_form_item_property(form_item_type)['y'] == FormItemPropType.INT
+        assert get_form_item_property(form_item_type)['width'] == FormItemPropType.INT
+        assert get_form_item_property(form_item_type)['height'] == FormItemPropType.INT
+        assert get_form_item_property(form_item_type)['name'] == FormItemPropType.STRING
+
+    def gen_check_svg_form_item_generic_properties(self, form_item_type):
+        self.gen_check_form_item_generic_properties(form_item_type)
+        assert get_form_item_property(form_item_type)['stroke_width'] == FormItemPropType.INT
+        assert get_form_item_property(form_item_type)['stroke'] == FormItemPropType.COLOR
+        assert get_form_item_property(form_item_type)['fill'] == FormItemPropType.COLOR
+
+    def test_form_item_line_properties(self):
+        #Lines are different to the other types
+        assert 'x' not in get_form_item_property('line')
+        assert 'y' not in get_form_item_property('line')
+        assert 'width' not in get_form_item_property('line')
+        assert 'height' not in get_form_item_property('line')
+
+        assert get_form_item_property('line')['x1'] == FormItemPropType.INT
+        assert get_form_item_property('line')['y1'] == FormItemPropType.INT
+        assert get_form_item_property('line')['x2'] == FormItemPropType.INT
+        assert get_form_item_property('line')['y2'] == FormItemPropType.INT
+        assert get_form_item_property('line')['name'] == FormItemPropType.STRING
+        assert get_form_item_property('line')['stroke_width'] == FormItemPropType.INT
+        assert get_form_item_property('line')['stroke'] == FormItemPropType.COLOR
+
+    def test_form_item_button_properties(self):
+
+        self.gen_check_form_item_generic_properties('button')
+        assert get_form_item_property('button')['caption'] == FormItemPropType.STRING
+        self.gen_check_form_item_generic_properties('label')
+        assert get_form_item_property('label')['caption'] == FormItemPropType.STRING
+        self.gen_check_form_item_generic_properties('frame')
+        assert get_form_item_property('frame')['caption'] == FormItemPropType.STRING
+        self.gen_check_form_item_generic_properties('checkbox')
+        assert get_form_item_property('checkbox')['caption'] == FormItemPropType.STRING
+        self.gen_check_form_item_generic_properties('textbox')
+        assert get_form_item_property('textbox')['text'] == FormItemPropType.STRING
+        self.gen_check_form_item_generic_properties('image')
+        assert get_form_item_property('image')['src'] == FormItemPropType.STRING
+        self.gen_check_form_item_generic_properties('checkbox')
+        assert get_form_item_property('checkbox')['value'] == FormItemPropType.BOOLEAN
+
+
 
 
