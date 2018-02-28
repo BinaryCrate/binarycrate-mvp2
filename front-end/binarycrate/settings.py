@@ -31,6 +31,6 @@ def settings_view():
                         ]),
                       ]),
                     ],
-                    [p("Hello")],
+                    div([p("Hello")]),
                     [])
     return dv

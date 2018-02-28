@@ -66,7 +66,7 @@ class BCChrome(div):
         return self.modals
 
     def get_context_menu(self):
-        return []
+        return None
 
     def get_context_menu_list(self):
         context_menu = self.get_context_menu()
