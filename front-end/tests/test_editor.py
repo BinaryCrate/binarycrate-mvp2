@@ -112,7 +112,7 @@ class TestEditor(object):
                         'content': hello_world_content,
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
-                        'is_default': True,
+                        'is_default': False,
                        },
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
@@ -130,7 +130,7 @@ class TestEditor(object):
                         'content': hello_folder_content,
                         'form_items': '[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
-                        'is_default': False,
+                        'is_default': True,
                        },
                      ]
                     }
@@ -157,11 +157,11 @@ class TestEditor(object):
         assert root_folder.folder_children[0].de['name'] == 'folder'
         #hello_world = root_folder.folder_children[1]
         assert type(hello_world) == BCPFile
-        assert self.get_BCPFile_title(hello_world) == '* hello_world.py'
+        assert self.get_BCPFile_title(hello_world) == 'hello_world.py'
         #folder = root_folder.folder_children[0]
         #hello_folder = folder.folder_children[0]
         assert type(hello_folder) == BCPFile
-        assert self.get_BCPFile_title(hello_folder) == 'hello_folder.py'
+        assert self.get_BCPFile_title(hello_folder) == '* hello_folder.py'
 
         assert root_folder.get_display_title() == '/'
         assert folder.get_display_title() == 'folder'
@@ -255,6 +255,10 @@ class TestEditor(object):
         #editor.code_mirror_changed.assert_called_with(hello_world2_content)
         assert node.selected_file_de['content'] == hello_world2_content
 
+        # Test we send the correct thing when we change the default file
+        #editor.selected_de = [de for de in editor.project['directory_entry'] if de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'][0]
+        node.set_current_file_as_default(Mock())
+
         # Test we send the correct stuff when we add a new button
         node.new_button(Mock(clientX=100, clientY=100))
 
@@ -265,19 +269,26 @@ class TestEditor(object):
 
         assert len(calls) == len(editor.project['directory_entry']) - 1 # We don't send the root folder
         was_found = False
+        was_found2 = False
         for url, data in calls:
             if url == '/api/projects/directoryentry/ae935c72-cf56-48ed-ab35-575cb9a983ea/':
                 assert len(data) == 7
                 assert data['id'] == node.selected_de['id']
                 assert data['name'] == node.selected_de['name']
                 assert data['is_file'] == node.selected_de['is_file']
-                assert data['content'] == node.selected_de['content']
+                assert data['content'] == hello_world2_content
                 assert data['parent_id'] == node.selected_de['parent_id']
-                assert data['is_default'] == node.selected_de['is_default']
+                assert data['is_default'] == True
                 assert json.loads(data['form_items']) == json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]')
                 was_found = True
+            if url == '/api/projects/directoryentry/6a05e63e-6db4-4898-a3eb-2aad50dd5f9a/':
+                assert len(data) == 7
+                assert data['name'] == 'hello_folder.py'
+                assert data['is_default'] == False
+                was_found2 = True
 
         assert was_found
+        assert was_found2
 
 
     def test_editor_can_add_new_files(self, monkeypatch):

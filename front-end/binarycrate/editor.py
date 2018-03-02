@@ -267,6 +267,13 @@ class EditorView(BCChrome):
     def run_project(self, e):
         print('EditorView run_project called')
 
+    def set_current_file_as_default(self, e):
+        for de in project['directory_entry']:
+            de['is_default'] = False
+        self.selected_de['is_default'] = True
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
     def projects_api_ajax_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             global project
@@ -866,6 +873,7 @@ class EditorView(BCChrome):
                       drop_down_menu('File', [
                         drop_down_item('Save Project', '', save_project),
                         drop_down_item('Delete File/Folder', '', self.delete_selected_de),
+                        drop_down_item('Set Default', '', self.set_current_file_as_default),
                         drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
                         drop_down_item('Square', 'fa-square', None),
                         drop_down_item('Something else here', 'fa-btc', None),
