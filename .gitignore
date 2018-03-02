@@ -105,3 +105,5 @@ binarycrate/db.sqlite3
 
 screenshot.png
 
+.pytest_cache
+
