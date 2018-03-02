@@ -257,7 +257,7 @@ class TestEditor(object):
         editor.save_project(None)
         calls = [(a[0][0], a[0][2]) for a in js.globals.cavorite_ajaxPut.call_args_list]
 
-        assert len(calls) == len(editor.project['directory_entry']) - 1 # We don't send the root folder
+        assert len(calls) == len(editor.project['directory_entry']) - 1 + 1 # We don't send the root folder put we do put the project
         was_found = False
         for url, data in calls:
             if url == '/api/projects/directoryentry/ae935c72-cf56-48ed-ab35-575cb9a983ea/':
