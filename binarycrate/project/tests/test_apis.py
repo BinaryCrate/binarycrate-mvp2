@@ -10,7 +10,7 @@ from rest_framework.test import APIClient
 
 # From https://gist.github.com/href/1319371
 from collections import namedtuple
-DirectoryEntryDict = namedtuple('DirectoryEntryDict', ['id', 'name', 'is_file', 'parent_id', 'content', 'form_items'])
+DirectoryEntryDict = namedtuple('DirectoryEntryDict', ['id', 'name', 'is_file', 'parent_id', 'content', 'form_items', 'is_default'])
 def convert(dictionary):
     return DirectoryEntryDict(**dictionary)
 
@@ -145,6 +145,7 @@ class ProjectCannotAccessOtherUserTestCase(APITestCase):
                                root_folder=self.de_rootfolder, owner=self.user2)
         self.de_hello_world = DirectoryEntry.objects.create(parent=self.de_rootfolder, name='hello_world.py', is_file=True)
         self.de_hello_world.content = "print('Hello world')"
+        self.de_hello_world.is_default = True
         self.de_hello_world.save()
         self.de_folder = DirectoryEntry.objects.create(parent=self.de_rootfolder, name='folder', is_file=False)
         self.de_hello_folder = DirectoryEntry.objects.create(parent=self.de_folder, name='hello_folder.py', is_file=True)
@@ -204,6 +205,7 @@ class ProjectCannotAccessOtherUserTestCase(APITestCase):
                           'content': '',
                           'form_items': '[]',
                           'parent_id': None,
+                          'is_default': False,
                          }),
                          convert({'id': str(self.de_hello_world.id),
                           'name': self.de_hello_world.name,
@@ -211,6 +213,7 @@ class ProjectCannotAccessOtherUserTestCase(APITestCase):
                           'content': self.de_hello_world.content,
                           'form_items': '[]',
                           'parent_id': str(self.de_rootfolder.id),
+                          'is_default': True,
                          }),
                          convert({'id': str(self.de_folder.id),
                           'name': self.de_folder.name,
@@ -218,6 +221,7 @@ class ProjectCannotAccessOtherUserTestCase(APITestCase):
                           'content': '',
                           'form_items': '[]',
                           'parent_id': str(self.de_rootfolder.id),
+                          'is_default': False,
                          }),
                          convert({'id': str(self.de_hello_folder.id),
                           'name': self.de_hello_folder.name,
@@ -225,6 +229,7 @@ class ProjectCannotAccessOtherUserTestCase(APITestCase):
                           'content': self.de_hello_folder.content,
                           'form_items': '[]',
                           'parent_id': str(self.de_folder.id),
+                          'is_default': False,
                          }),
                          })
 
@@ -261,13 +266,15 @@ class ProjectCanSaveTestCase(APITestCase):
                           'is_file': self.de_hello_world.is_file,
                           'content': "print('Hello world2')",
                           'parent_id': str(self.de_rootfolder.id),
-                          'form_items': "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]"
+                          'form_items': "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]",
+                          'is_default': True,
                          }
         response = self.client.put(url, data, format='json')
         #print('response.content=', response.content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(DirectoryEntry.objects.get(id=self.de_hello_world.id).content, "print('Hello world2')")
         self.assertEqual(DirectoryEntry.objects.get(id=self.de_hello_world.id).form_items, "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]")
+        self.assertEqual(DirectoryEntry.objects.get(id=self.de_hello_world.id).is_default, True)
 
     def test_put_can_create_a_new_directory_entry(self):
         data = {'id': str(uuid.uuid4()),
@@ -275,7 +282,8 @@ class ProjectCanSaveTestCase(APITestCase):
                           'is_file': True,
                           'content': "print('Hello world4')",
                           'parent_id': str(self.de_rootfolder.id),
-                          'form_items': "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]"
+                          'form_items': "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]",
+                          'is_default': True,
                          }
         url = reverse('api:directoryentry-detail', kwargs={'pk':data['id']})
         response = self.client.put(url, data, format='json')
@@ -284,6 +292,7 @@ class ProjectCanSaveTestCase(APITestCase):
         self.assertEqual(DirectoryEntry.objects.get(id=data['id']).content, "print('Hello world4')")
         self.assertEqual(DirectoryEntry.objects.get(id=data['id']).form_items, "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]")
         self.assertEqual(str(DirectoryEntry.objects.get(id=data['id']).parent_id), data['parent_id'])
+        self.assertEqual(DirectoryEntry.objects.get(id=data['id']).is_default, True)
 
     def test_delete_a_directory_entry(self):
         url = reverse('api:directoryentry-detail', kwargs={'pk':str(self.de_hello_world.id)})
