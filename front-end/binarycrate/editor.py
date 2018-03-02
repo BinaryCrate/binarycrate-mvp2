@@ -264,6 +264,9 @@ class EditorView(BCChrome):
         self.mount_redraw()
         Router.router.ResetHashChange()
 
+    def run_project(self, e):
+        print('EditorView run_project called')
+
     def projects_api_ajax_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             global project
@@ -874,8 +877,8 @@ class EditorView(BCChrome):
                         drop_down_item('Square', 'fa-square', None),
                         drop_down_item('Something else here', 'fa-btc', None),
                       ]),
-                      drop_down_menu('Options', [
-                        drop_down_item('Triangle', 'fa-caret-up', None),
+                      drop_down_menu('Debug', [
+                        drop_down_item('Run', 'fa-caret-right', self.run_project),
                         drop_down_item('Square', 'fa-square', None),
                         drop_down_item('Something else here', 'fa-btc', None),
                       ]),
