@@ -102,7 +102,8 @@ class TestEditor(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '', # Test when we get a completely empty result may be necessary for some transitional things
-                        'parent_id': None
+                        'parent_id': None,
+                        'is_default': False,
                        },
                        # A file in the root directory
                        {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
@@ -110,7 +111,8 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
-                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': True,
                        },
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
@@ -118,7 +120,8 @@ class TestEditor(object):
                         'is_file': False, 
                         'content': '', 
                         'form_items': '[]',
-                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
                        },
                        # A file in the 'folder' folder
                        {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
@@ -126,7 +129,8 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]',
-                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
                        },
                      ]
                     }
@@ -153,7 +157,7 @@ class TestEditor(object):
         assert root_folder.folder_children[0].de['name'] == 'folder'
         #hello_world = root_folder.folder_children[1]
         assert type(hello_world) == BCPFile
-        assert self.get_BCPFile_title(hello_world) == 'hello_world.py'
+        assert self.get_BCPFile_title(hello_world) == '* hello_world.py'
         #folder = root_folder.folder_children[0]
         #hello_folder = folder.folder_children[0]
         assert type(hello_folder) == BCPFile
@@ -254,19 +258,22 @@ class TestEditor(object):
         # Test we send the correct stuff when we add a new button
         node.new_button(Mock(clientX=100, clientY=100))
 
+        js.globals.cavorite_ajaxPut.reset_mock()
+
         editor.save_project(None)
         calls = [(a[0][0], a[0][2]) for a in js.globals.cavorite_ajaxPut.call_args_list]
 
-        assert len(calls) == len(editor.project['directory_entry']) - 1 + 1 # We don't send the root folder put we do put the project
+        assert len(calls) == len(editor.project['directory_entry']) - 1 # We don't send the root folder
         was_found = False
         for url, data in calls:
             if url == '/api/projects/directoryentry/ae935c72-cf56-48ed-ab35-575cb9a983ea/':
-                assert len(data) == 6
+                assert len(data) == 7
                 assert data['id'] == node.selected_de['id']
                 assert data['name'] == node.selected_de['name']
                 assert data['is_file'] == node.selected_de['is_file']
                 assert data['content'] == node.selected_de['content']
                 assert data['parent_id'] == node.selected_de['parent_id']
+                assert data['is_default'] == node.selected_de['is_default']
                 assert json.loads(data['form_items']) == json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]')
                 was_found = True
 
@@ -319,7 +326,8 @@ class TestEditor(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
-                        'parent_id': None
+                        'parent_id': None,
+                        'is_default': False,
                        },
                        # A file in the root directory
                        {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
@@ -327,7 +335,8 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
-                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
                        },
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
@@ -335,7 +344,8 @@ class TestEditor(object):
                         'is_file': False, 
                         'content': '', 
                         'form_items': '[]',
-                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
                        },
                        # A file in the 'folder' folder
                        {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
@@ -343,7 +353,8 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
-                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
                        },
                      ]
                     }
@@ -495,7 +506,8 @@ class TestEditor(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
-                        'parent_id': None
+                        'parent_id': None,
+                        'is_default': False,
                        },
                        # A file in the root directory
                        {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
@@ -503,7 +515,8 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
-                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
                        },
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
@@ -511,7 +524,8 @@ class TestEditor(object):
                         'is_file': False, 
                         'content': '', 
                         'form_items': '[]',
-                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
                        },
                        # A file in the 'folder' folder
                        {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
@@ -519,7 +533,8 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
-                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
                        },
                      ]
                     }
@@ -671,7 +686,8 @@ class TestEditor(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
-                        'parent_id': None
+                        'parent_id': None,
+                        'is_default': False,
                        },
                        # A file in the root directory
                        {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
@@ -679,7 +695,8 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
-                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
                        },
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
@@ -687,7 +704,8 @@ class TestEditor(object):
                         'is_file': False, 
                         'content': '', 
                         'form_items': '[]',
-                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
                        },
                        # A file in the 'folder' folder
                        {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
@@ -695,7 +713,8 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
-                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
                        },
                      ]
                     }
@@ -784,7 +803,8 @@ class TestEditor(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
-                        'parent_id': None
+                        'parent_id': None,
+                        'is_default': False,
                        },
                        # A file in the root directory
                        {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
@@ -792,7 +812,8 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
-                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
                        },
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
@@ -800,7 +821,8 @@ class TestEditor(object):
                         'is_file': False, 
                         'content': '', 
                         'form_items': '[]',
-                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
                        },
                        # A file in the 'folder' folder
                        {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
@@ -808,7 +830,8 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
-                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
                        },
                      ]
                     }
@@ -894,7 +917,8 @@ class TestContextMenu(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
-                        'parent_id': None
+                        'parent_id': None,
+                        'is_default': False,
                        },
                        # A file in the root directory
                        {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
@@ -902,7 +926,8 @@ class TestContextMenu(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
-                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
                        },
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
@@ -910,7 +935,8 @@ class TestContextMenu(object):
                         'is_file': False, 
                         'content': '', 
                         'form_items': '[]',
-                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
                        },
                        # A file in the 'folder' folder
                        {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
@@ -918,7 +944,8 @@ class TestContextMenu(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
-                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
                        },
                      ]
                     }
@@ -1177,7 +1204,8 @@ class TestContextMenu(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
-                        'parent_id': None
+                        'parent_id': None,
+                        'is_default': False,
                        },
                        # A file in the root directory
                        {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
@@ -1185,7 +1213,8 @@ class TestContextMenu(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
-                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
                        },
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
@@ -1193,7 +1222,8 @@ class TestContextMenu(object):
                         'is_file': False, 
                         'content': '', 
                         'form_items': '[]',
-                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
                        },
                        # A file in the 'folder' folder
                        {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
@@ -1201,7 +1231,8 @@ class TestContextMenu(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
-                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
                        },
                      ]
                     }
@@ -1326,7 +1357,8 @@ class TestContextMenu(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
-                        'parent_id': None
+                        'parent_id': None,
+                        'is_default': False,
                        },
                        # A file in the root directory
                        {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
@@ -1334,7 +1366,8 @@ class TestContextMenu(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
-                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
                        },
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
@@ -1342,7 +1375,8 @@ class TestContextMenu(object):
                         'is_file': False, 
                         'content': '', 
                         'form_items': '[]',
-                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
                        },
                        # A file in the 'folder' folder
                        {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
@@ -1350,7 +1384,8 @@ class TestContextMenu(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
-                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
                        },
                      ]
                     }
@@ -1477,7 +1512,8 @@ class TestContextMenu(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
-                        'parent_id': None
+                        'parent_id': None,
+                        'is_default': False,
                        },
                        # A file in the root directory
                        {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
@@ -1485,7 +1521,8 @@ class TestContextMenu(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
-                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
                        },
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
@@ -1493,7 +1530,8 @@ class TestContextMenu(object):
                         'is_file': False, 
                         'content': '', 
                         'form_items': '[]',
-                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054'
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
                        },
                        # A file in the 'folder' folder
                        {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
@@ -1501,7 +1539,8 @@ class TestContextMenu(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
-                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
                        },
                      ]
                     }

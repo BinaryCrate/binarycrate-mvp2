@@ -111,7 +111,7 @@ class BCPFile(li):
         if self.get_is_active():
             a_attribs.update({'class': 'file-active'})
         return [
-          a(a_attribs, self.de['name'])
+          a(a_attribs, ('* ' if self.de['is_default'] else '') + self.de['name'])
         ]
 
     def get_attribs(self):
@@ -818,6 +818,7 @@ class EditorView(BCChrome):
                    'is_file': True, 
                    'form_items': [],
                    'parent_id': parent_de['id'],
+                   'is_default': False,
                   }
         project['directory_entry'].append(new_de)
         self.mount_redraw()
@@ -832,6 +833,7 @@ class EditorView(BCChrome):
                    'is_file': False, 
                    'form_items': [],
                    'parent_id': parent_de['id'],
+                   'is_default': False,
                   }
         project['directory_entry'].append(new_de)
         self.mount_redraw()
