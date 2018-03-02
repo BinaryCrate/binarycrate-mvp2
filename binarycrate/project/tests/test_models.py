@@ -20,6 +20,7 @@ class TestModels(APITestCase):
         de = DirectoryEntry.objects.create(name='hello_world.py', is_file=True)
         de.content = "print('Hello world')"
         de.form_items = "[{'id': '2f991f85-fea5-466f-ab79-58b5241729e7'}]"
+        de.is_default = True
         de.save()
 
         with open(settings.PROJECT_FILES_ROOT + '/' + str(de.id), 'r') as project_file:
@@ -34,4 +35,5 @@ class TestModels(APITestCase):
         de2 = DirectoryEntry.objects.get(id=de.id)
         assert de.content == de2.content
         assert de.form_items == de2.form_items
+        assert de.is_default == de2.is_default
 

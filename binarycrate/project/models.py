@@ -10,6 +10,7 @@ class DirectoryEntry(MPTTModel):
     name = models.CharField(max_length=1000)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
     is_file = models.BooleanField()
+    is_default = models.BooleanField(default=False)
 
     @property
     def content(self):
