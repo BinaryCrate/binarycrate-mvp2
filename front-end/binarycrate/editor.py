@@ -287,25 +287,30 @@ class EditorView(BCChrome):
                     with open(python_module_dir + extra_path + de['name'], "w+") as fl:
                          fl.write(de['content'])
 
-            
-
-    def run_project(self, e):
-        self.write_program_to_virtual_file_system()
-        js.globals.document.print_to_secondary_output = True
-        #print('EditorView run_project called')
+    def get_default_module_form_classes(self):
         de = [de for de in project['directory_entry'] if de['is_default']][0]
         imported_module = __import__(de['name'][:de['name'].find('.')])
         #print('EditorView run_project dir(imported_module)=', dir(imported_module))
-        form_classes = [getattr(imported_module, name) for name in dir(imported_module) if inspect.isclass(getattr(imported_module, name)) and issubclass(getattr(imported_module, name), StudentForm)]
+        return [getattr(imported_module, name) for name in dir(imported_module) if inspect.isclass(getattr(imported_module, name)) and issubclass(getattr(imported_module, name), StudentForm)]
+
+    def run_project(self, e):
+        print('EditorView run_project called')
+        self.program_is_running = True
+        self.write_program_to_virtual_file_system()
+        js.globals.document.print_to_secondary_output = True
+        #print('EditorView run_project called')
+        form_classes = self.get_default_module_form_classes()
+        print('EditorView run_project form_classes=', form_classes)
         if len(form_classes) > 0:
             print('EditorView run_project Found usable class name=' + form_classes[0].__name__)
-            pass
+            self.form_stack.append(form_classes[0]())
+            self.mount_redraw()
+            Router.router.ResetHashChange()
         else:
             print('EditorView run_project Found  no usable class')
-            pass
+            js.globals.document.print_to_secondary_output = False
         #aa.tr()
-        #print('EditorView run_project called2')
-        js.globals.document.print_to_secondary_output = False
+        print('EditorView run_project called2')
 
     def set_current_file_as_default(self, e):
         #print('set_current_file_as_default called')
@@ -533,8 +538,10 @@ class EditorView(BCChrome):
 
     def get_selected_de_form_controls(self):
         ret = list()
-        if self.selected_de:
+        if self.selected_de and not self.program_is_running:
             for form_item in self.selected_de['form_items']:
+                #TODO: Copied code to studentform.py should be refactored
+
                 style = ''.join(('position: absolute; ',
                                 'z-index: 1; ',
                                 'left: {};'.format(form_item['x']),
@@ -696,6 +703,8 @@ class EditorView(BCChrome):
                                            }),
                             ])
             ret.append(svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%', 'oncontextmenu': self.contextmenu_preview, 'z-index':-5, 'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up}, svg_list))
+        if self.program_is_running and len(self.form_stack) > 0:
+            ret = self.form_stack[-1].control_list
         return ret
 
     def clear_selected_item(self, e):
@@ -1066,6 +1075,8 @@ class EditorView(BCChrome):
         self.mouse_is_down = False
         self.current_prop_name = ''
         self.selected_handler = HANDLE_NONE
+        self.program_is_running = False
+        self.form_stack = list()
         self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code', 'class': 'col-md-5 CodeMirror'}, [t(self.get_selected_de_content)], change_handler=self.code_mirror_change)
         super(EditorView, self).__init__(
                     None,
