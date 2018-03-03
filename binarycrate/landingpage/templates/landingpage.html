@@ -76,11 +76,20 @@ function console_exec(code) {
         pypyjs.stderr(err.trace); // the human-readable traceback, as a string
     });
 }
+document.print_to_secondary_output = false;
 $(function () {
     out = $("#output");
-    pypyjs.stdout = pypyjs.stderr = function(data) {
+
+    function python_output(data) {
         console.log(data);
-    }
+        if (document.print_to_secondary_output) {
+            secondary_out = $('#secondary-output')
+            secondary_out.append(data);
+            secondary_out.scrollTop(secondary_out.prop("scrollHeight")); // scoll down
+        }
+    };
+
+    pypyjs.stdout = pypyjs.stderr = python_output
     pypyjs.stdout.reset = pypyjs.stderr.reset = function(data) {
     }
 

@@ -265,7 +265,9 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
 
     def run_project(self, e):
+        js.globals.document.print_to_secondary_output = True
         print('EditorView run_project called')
+        js.globals.document.print_to_secondary_output = False
 
     def set_current_file_as_default(self, e):
         for de in project['directory_entry']:
@@ -341,9 +343,9 @@ class EditorView(BCChrome):
                           #iframe({'id': 'preview', 'class': 'col-12 code-output'}),
                           div({'id': 'preview', 'class': 'col-12 code-output', 'oncontextmenu': self.contextmenu_preview, 'style': 'padding-left: 0px', 'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up}, self.get_selected_de_form_controls()),
                           div({'id': 'console', 'class': 'console-editor col-12'}, [
-                            div({'class': 'logMessage'}, [
-                              span('//: '),
-                              t('request sent'),
+                            pre({'id': 'secondary-output', 'class': 'logMessage'}, [
+                              #span('//: '),
+                              #t('request sent'),
                             ]),
                           ]),
                         ]),
