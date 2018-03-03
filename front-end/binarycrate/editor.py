@@ -303,7 +303,7 @@ class EditorView(BCChrome):
         print('EditorView run_project form_classes=', form_classes)
         if len(form_classes) > 0:
             print('EditorView run_project Found usable class name=' + form_classes[0].__name__)
-            self.form_stack.append(form_classes[0]())
+            self.form_stack.append(form_classes[0](self))
             self.mount_redraw()
             Router.router.ResetHashChange()
         else:
@@ -925,6 +925,7 @@ class EditorView(BCChrome):
     def get_top_navbar_items(self):
         return [
                       drop_down_menu('File', [
+                        drop_down_item('Run', 'fa-caret-right', self.run_project),
                         drop_down_item('Save Project', '', self.save_project),
                         drop_down_item('Delete File/Folder', '', self.delete_selected_de),
                         drop_down_item('Set Default', '', self.set_current_file_as_default),

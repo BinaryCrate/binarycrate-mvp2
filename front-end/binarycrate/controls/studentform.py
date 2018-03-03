@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function
 from cavorite.HTML import *
 from cavorite.svg import svg
 import copy
+from cavorite import Router
 
 
 class StudentForm(object):
@@ -40,6 +41,14 @@ class StudentForm(object):
         for control in self.form_controls:
             setattr(self, control['name'], control)
 
+    def handle_onclick(self, e, form_item_name):
+        print('handle_onclick form_item_name=', form_item_name)
+        if hasattr(self, form_item_name + '_onclick'):
+            print('handle_onclick calling custom handler')
+            getattr(self, form_item_name + '_onclick')(e)
+        self.editorview.mount_redraw()
+        Router.router.ResetHashChange()
+
     def get_form_controls(self):
         ret = list()
         html_controls = dict()
@@ -61,6 +70,7 @@ class StudentForm(object):
             control_class = None
             if form_item['type'] == 'button':
                 control_class = html_button
+                attribs_extra = { 'onclick': lambda e, form_item_name=form_item['name']: self.handle_onclick(e, form_item_name) }
                 #control = html_button({'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
             elif form_item['type'] == 'textbox':
                 control_class = html_input
@@ -154,8 +164,9 @@ class StudentForm(object):
         ret.append(svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%'}, svg_list))
         return ret
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, editorview, *args, **kwargs):
         super(StudentForm, self).__init__(*args, **kwargs)
         self.initialise_form_controls()
+        self.editorview = editorview
 
 
