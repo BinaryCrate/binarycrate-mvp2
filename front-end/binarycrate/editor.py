@@ -18,12 +18,16 @@ from operator import itemgetter
 from collections import defaultdict
 from cavorite.svg import svg
 import re
+import os
+
 
 HANDLE_NONE = 0
 HANDLE_TOPLEFT = 1
 HANDLE_TOPRIGHT = 2
 HANDLE_BOTTOMLEFT = 3
 HANDLE_BOTTOMRIGHT = 4
+
+python_module_dir = '/lib/pypyjs/lib_pypy/'
 
 project = { }
 
@@ -264,9 +268,33 @@ class EditorView(BCChrome):
         self.mount_redraw()
         Router.router.ResetHashChange()
 
+    def write_program_to_virtual_file_system(self, parent_id=None, extra_path=''):
+        global project
+        if parent_id is None:
+            de = [de for de in project['directory_entry'] if de['parent_id'] is None][0]
+            self.write_program_to_virtual_file_system(de['id'])
+        else:
+            des = [de for de in project['directory_entry'] if de['parent_id'] == parent_id]
+            for de in des:
+                if de['is_file'] is False:
+                    try:
+                        os.stat(python_module_dir + extra_path + de['name'] + '/')
+                    except:
+                        os.mkdir(python_module_dir + extra_path + de['name'] + '/')       
+                    self.write_program_to_virtual_file_system(de['id'], extra_path + de['name'] + '/')
+                else:
+                    with open(python_module_dir + extra_path + de['name'], "w+") as fl:
+                         fl.write(de['content'])
+
+            
+
     def run_project(self, e):
+        self.write_program_to_virtual_file_system()
         js.globals.document.print_to_secondary_output = True
-        print('EditorView run_project called')
+        #print('EditorView run_project called')
+        aa = __import__('aa')
+        #aa.tr()
+        #print('EditorView run_project called2')
         js.globals.document.print_to_secondary_output = False
 
     def set_current_file_as_default(self, e):

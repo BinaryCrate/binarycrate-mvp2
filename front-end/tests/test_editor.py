@@ -13,7 +13,9 @@ from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode, style_to
 import cavorite.bootstrap.modals
 from binarycrate.editor import HANDLE_NONE, HANDLE_TOPLEFT, HANDLE_TOPRIGHT, HANDLE_BOTTOMLEFT, HANDLE_BOTTOMRIGHT
 from binarycrate.editor import get_form_item_property, FormItemPropType
-
+import tempfile
+from backports.tempfile import TemporaryDirectory
+import os
 
 
 class TestEditor(object):
@@ -78,9 +80,6 @@ class TestEditor(object):
 
         js.globals.cavorite_ajaxGet.assert_called_with('/api/projects/' + project_id, str(dummy_uuid()))
 
-
-        #assert False
-        #pass
 
         monkeypatch.setattr(node, 'mount_redraw', Mock())
 
@@ -1714,6 +1713,95 @@ class TestFormItems(object):
         self.gen_check_form_item_generic_properties('checkbox')
         assert get_form_item_property('checkbox')['value'] == FormItemPropType.BOOLEAN
 
+class TestRunningAProgram(object):
+    def test_files_are_loaded_into_virtual_file_system(self, monkeypatch):
+        # Test the default module directory location is correct
+        assert editor.python_module_dir == '/lib/pypyjs/lib_pypy/'
 
+        monkeypatch.setattr(Router, 'ResetHashChange', Mock())
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(cavorite.svg, 'js', js)
 
+        callbacks.initialise_global_callbacks()
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        with TemporaryDirectory() as temp_dir:
+            assert os.path.isdir(temp_dir)
+            editor.python_module_dir = temp_dir + '/'
+            body = js.globals.document.body
+            error_404_page = c("div", [c("p", "No match 404 error"),
+                                       c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
+            view = editor.EditorView()
+            r = Router({r'^$': view},
+                        error_404_page, body)
+            r.route()
+            view.mount_redraw = Mock()
+            hello_world_content = "print('Hello world')"
+            hello_folder_content = \
+"""for i in range(3):
+    print('Hello folder i={}'.format(i))
+"""
+
+            response = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                        'name': 'Mark\'s Project',
+                        'type': 0,
+                        'public': True,
+                        'directory_entry':
+                         [
+                           # Root directory
+                           {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                            'name': '',
+                            'is_file': False,
+                            'content': '',
+                            'form_items': '[]',
+                            'parent_id': None,
+                            'is_default': False,
+                           },
+                           # A file in the root directory
+                           {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                            'name': 'hello_world.py',
+                            'is_file': True,
+                            'content': hello_world_content,
+                            'form_items': '[]',
+                            'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                            'is_default': True,
+                           },
+                           # A folder in the root directory
+                           {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                            'name': 'folder',
+                            'is_file': False, 
+                            'content': '', 
+                            'form_items': '[]',
+                            'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                            'is_default': False,
+                           },
+                           # A file in the 'folder' folder
+                           {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                            'name': 'hello_folder.py',
+                            'is_file': True,
+                            'content': hello_folder_content,
+                            'form_items': '[]',
+                            'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                            'is_default': False,
+                           },
+                         ]
+                        }
+            view.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)),
+                                                  response)
+
+            view.write_program_to_virtual_file_system()
+
+            with open(temp_dir + '/hello_world.py', 'r') as project_file:
+                file_content = project_file.read()
+            assert file_content == hello_world_content
+
+            with open(temp_dir + '/folder/hello_folder.py', 'r') as project_file:
+                file_content = project_file.read()
+            assert file_content == hello_folder_content
 

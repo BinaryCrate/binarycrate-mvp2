@@ -782,3 +782,6 @@ a.context-menu__link:visited {
   color: black;
 }
 
+.logMessage {
+    color: white;
+}
