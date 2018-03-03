@@ -292,7 +292,8 @@ class EditorView(BCChrome):
         self.write_program_to_virtual_file_system()
         js.globals.document.print_to_secondary_output = True
         #print('EditorView run_project called')
-        aa = __import__('aa')
+        de = [de for de in project['directory_entry'] if de['is_default']][0]
+        aa = __import__(de['name'][:de['name'].find('.')])
         #aa.tr()
         #print('EditorView run_project called2')
         js.globals.document.print_to_secondary_output = False
