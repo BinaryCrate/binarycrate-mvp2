@@ -1968,6 +1968,6 @@ print('Hello folder i={}'.format(i))
         view.run_project(Mock())
 
         assert len(view.form_stack) == 1
-        assert isinstance(view.form_stack[-1].button1, html_button)
+        assert isinstance(view.form_stack[-1].button1, dict)
 
 

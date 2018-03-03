@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function
 from cavorite.HTML import *
 from cavorite.svg import svg
+import copy
 
 
 class StudentForm(object):
@@ -35,9 +36,14 @@ class StudentForm(object):
 
 
     def initialise_form_controls(self):
+        self.form_controls = copy.deepcopy(self.get_form_items())
+        for control in self.form_controls:
+            setattr(self, control['name'], control)
+
+    def get_form_controls(self):
         ret = list()
         html_controls = dict()
-        for form_item in self.get_form_items():
+        for form_item in self.form_controls:
             print('initialise_form_controls form_item=', form_item)
             #TODO: Copied code from editor.py should be refactored
             style = ''.join(('position: absolute; ',
@@ -81,7 +87,7 @@ class StudentForm(object):
                 html_controls[form_item['name']] = control
                 ret.append(control)
         svg_list = list()
-        for form_item in self.get_form_items():
+        for form_item in self.form_controls:
             if form_item['type'] == 'rect':
                 control = svg('rect', {'x': form_item['x'], 
                              'y':form_item['y'],
@@ -146,10 +152,7 @@ class StudentForm(object):
                 html_controls[form_item['name']] = control
 
         ret.append(svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%'}, svg_list))
-
-        self.control_list = ret
-        for name, nvode in html_controls.items():
-            setattr(self, name, nvode)
+        return ret
 
     def __init__(self, *args, **kwargs):
         super(StudentForm, self).__init__(*args, **kwargs)
