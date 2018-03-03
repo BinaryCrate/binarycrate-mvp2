@@ -8,7 +8,7 @@ import uuid
 from mock import Mock
 import json
 from binarycrate.editor import BCProjectTree, BCPFolder, BCPFile, ContextMenu
-from binarycrate.controls import codemirror
+from binarycrate.controls import codemirror, StudentForm
 from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode, style_to_dict, get_vnode_by_id
 import cavorite.bootstrap.modals
 from binarycrate.editor import HANDLE_NONE, HANDLE_TOPLEFT, HANDLE_TOPRIGHT, HANDLE_BOTTOMLEFT, HANDLE_BOTTOMRIGHT
@@ -1804,4 +1804,76 @@ class TestRunningAProgram(object):
             with open(temp_dir + '/folder/hello_folder.py', 'r') as project_file:
                 file_content = project_file.read()
             assert file_content == hello_folder_content
+
+    def test_process_file_location(self):
+        editor.python_module_dir = '/lib/pypyjs/lib_pypy/'
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+print('Hello folder i={}'.format(i))
+"""
+        editor.project = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': '[]',
+                        'parent_id': None,
+                        'is_default': False,
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]'),
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': True,
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False, 
+                        'content': '', 
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'form_items': '[]',
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
+                       },
+                     ]
+                    }
+
+        class TestForm1(StudentForm):
+            file_location = '/lib/pypyjs/lib_pypy/hello_world.py'
+
+        t1 = TestForm1()
+        assert t1.get_file_location() == 'hello_world.py'
+
+        class TestForm2(StudentForm):
+            file_location = '/lib/pypyjs/lib_pypy/folder/hello_folder.py'
+
+        t2 = TestForm2()
+        assert t2.get_file_location() == 'folder/hello_folder.py'
+
+        form_items = t1.get_form_items()
+
+        assert len(form_items) == 1
+        fi = form_items[0]
+        assert fi['width'] == 100
+        assert fi['name'] == 'button1'
+
 

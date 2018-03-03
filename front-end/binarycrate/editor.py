@@ -1,4 +1,4 @@
-from __future__ import absolute_import, print_function
+from __future__ import unicode_literals, absolute_import, print_function
 import cavorite
 from cavorite import c, t, Router, callbacks, timeouts, get_current_hash, get_uuid
 from cavorite.HTML import *
@@ -19,6 +19,8 @@ from collections import defaultdict
 from cavorite.svg import svg
 import re
 import os
+from binarycrate.controls import StudentForm
+import inspect
 
 
 HANDLE_NONE = 0
@@ -175,21 +177,6 @@ def test_click_handler(e):
     e.stopPropagation()
     e.preventDefault()
     
-def save_project(e):
-    def dummy_put_result_handler(xmlhttp, response):
-        pass
-
-    def dummy_delete_result_handler(xmlhttp, response):
-        pass
-
-    for de in project['directory_entry']:
-        if de['name'] != '': # Don't try to save the root folder
-            de_copy = copy.copy(de)
-            de_copy['form_items'] = json.dumps(de_copy['form_items'])
-            ajaxput('/api/projects/directoryentry/' + de['id'] + '/', de_copy, dummy_put_result_handler)
-    for de_id in project['deleted_directory_entries']:
-        ajaxdelete('/api/projects/directoryentry/' + de_id + '/', dummy_delete_result_handler)
-
 class ContextMenu(nav):
     def __init__(self, posx, posy, menu_items, *args, **kwargs):
         self.menu_items = menu_items
@@ -246,8 +233,22 @@ def get_form_item_property(form_item_type):
 
 
 class EditorView(BCChrome):
-    #def add_new_folder_handler(self, e):
-    #    pass
+    def save_project(self, e):
+        print('save_project called')
+        def dummy_put_result_handler(xmlhttp, response):
+            pass
+
+        def dummy_delete_result_handler(xmlhttp, response):
+            pass
+
+        for de in project['directory_entry']:
+            if de['name'] != '': # Don't try to save the root folder
+                de_copy = copy.copy(de)
+                de_copy['form_items'] = json.dumps(de_copy['form_items'])
+                ajaxput('/api/projects/directoryentry/' + de['id'] + '/', de_copy, dummy_put_result_handler)
+        for de_id in project['deleted_directory_entries']:
+            ajaxdelete('/api/projects/directoryentry/' + de_id + '/', dummy_delete_result_handler)
+
 
     def delete_selected_de(self, e):
         if self.selected_de == None:
@@ -293,15 +294,27 @@ class EditorView(BCChrome):
         js.globals.document.print_to_secondary_output = True
         #print('EditorView run_project called')
         de = [de for de in project['directory_entry'] if de['is_default']][0]
-        aa = __import__(de['name'][:de['name'].find('.')])
+        imported_module = __import__(de['name'][:de['name'].find('.')])
+        #print('EditorView run_project dir(imported_module)=', dir(imported_module))
+        form_classes = [getattr(imported_module, name) for name in dir(imported_module) if inspect.isclass(getattr(imported_module, name)) and issubclass(getattr(imported_module, name), StudentForm)]
+        if len(form_classes) > 0:
+            print('EditorView run_project Found usable class name=' + form_classes[0].__name__)
+            pass
+        else:
+            print('EditorView run_project Found  no usable class')
+            pass
         #aa.tr()
         #print('EditorView run_project called2')
         js.globals.document.print_to_secondary_output = False
 
     def set_current_file_as_default(self, e):
-        for de in project['directory_entry']:
-            de['is_default'] = False
-        self.selected_de['is_default'] = True
+        #print('set_current_file_as_default called')
+        #from binarycrate.controls import StudentForm
+        #print('set_current_file_as_default StudentForm=', StudentForm)
+        if self.selected_de:
+            for de in project['directory_entry']:
+                de['is_default'] = False
+            self.selected_de['is_default'] = True
         self.mount_redraw()
         Router.router.ResetHashChange()
 
@@ -902,7 +915,7 @@ class EditorView(BCChrome):
     def get_top_navbar_items(self):
         return [
                       drop_down_menu('File', [
-                        drop_down_item('Save Project', '', save_project),
+                        drop_down_item('Save Project', '', self.save_project),
                         drop_down_item('Delete File/Folder', '', self.delete_selected_de),
                         drop_down_item('Set Default', '', self.set_current_file_as_default),
                         drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
