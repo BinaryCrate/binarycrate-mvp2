@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'rest_framework',
 
     'accounts',
+    'historygraphbackend',
     'landingpage',
     'project',
 ]
