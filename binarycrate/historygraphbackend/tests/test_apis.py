@@ -7,6 +7,7 @@ import uuid
 from django.urls import reverse
 from historygraphbackend.models import HistoryEdge
 from rest_framework import status
+import json
 
 
 class HistoryGraphGetTestCase(APITestCase):
@@ -66,16 +67,16 @@ class HistoryGraphGetTestCase(APITestCase):
         self.assertEqual(response.data['immutableobjects'], [])
         historyedges = response.data['history']
         self.assertEqual(len(historyedges), 1)
-        self.assertEqual(historyedges[0]['documentcollectionid'], str(self.dcid1))
-        self.assertEqual(historyedges[0]['documentid'], 'A')
-        self.assertEqual(historyedges[0]['documentclassname'], 'B')
-        self.assertEqual(historyedges[0]['classname'], 'C')
-        self.assertEqual(historyedges[0]['startnode1id'], 'D')
-        self.assertEqual(historyedges[0]['startnode2id'], 'E')
-        self.assertEqual(historyedges[0]['propertyownerid'], 'F')
-        self.assertEqual(historyedges[0]['propertyname'], 'G')
-        self.assertEqual(historyedges[0]['propertyvalue'], 'H')
-        self.assertEqual(historyedges[0]['propertytype'], 'I')
+        #self.assertEqual(historyedges[0]['documentcollectionid'], str(self.dcid1))
+        self.assertEqual(historyedges[0][0], 'A')
+        self.assertEqual(historyedges[0][1], 'B')
+        self.assertEqual(historyedges[0][2], 'C')
+        #self.assertEqual(historyedges[0][3], 'D')
+        self.assertEqual(historyedges[0][4], 'D')
+        self.assertEqual(historyedges[0][5], 'E')
+        self.assertEqual(historyedges[0][6], 'F')
+        self.assertEqual(historyedges[0][7], 'G')
+        self.assertEqual(historyedges[0][8], 'H')
 
         def get_response_data_set(response_data, k):
             return {d[k] for d in response_data}
@@ -87,16 +88,16 @@ class HistoryGraphGetTestCase(APITestCase):
         self.assertEqual(response.data['immutableobjects'], [])
         historyedges = response.data['history']
         self.assertEqual(len(historyedges), 2)
-        self.assertEqual(get_response_data_set(historyedges, 'documentcollectionid'), {str(self.dcid2)})
-        self.assertEqual(get_response_data_set(historyedges, 'documentid'), {'A1', 'A2'})
-        self.assertEqual(get_response_data_set(historyedges, 'documentclassname'), {'B1', 'B2'})
-        self.assertEqual(get_response_data_set(historyedges, 'classname'), {'C1', 'C2' })
-        self.assertEqual(get_response_data_set(historyedges, 'startnode1id'), {'D1', 'D2' })
-        self.assertEqual(get_response_data_set(historyedges, 'startnode2id'), {'E1', 'E2' })
-        self.assertEqual(get_response_data_set(historyedges, 'propertyownerid'), {'F1', 'F2' })
-        self.assertEqual(get_response_data_set(historyedges, 'propertyname'), {'G1', 'G2'})
-        self.assertEqual(get_response_data_set(historyedges, 'propertyvalue'), {'H1', 'H2'})
-        self.assertEqual(get_response_data_set(historyedges, 'propertytype'), {'I1', 'I2'})
+        #self.assertEqual(get_response_data_set(historyedges, 'documentcollectionid'), {str(self.dcid2)})
+        self.assertEqual(get_response_data_set(historyedges, 0), {'A1', 'A2'})
+        self.assertEqual(get_response_data_set(historyedges, 1), {'B1', 'B2'})
+        self.assertEqual(get_response_data_set(historyedges, 2), {'C1', 'C2' })
+        #self.assertEqual(get_response_data_set(historyedges, 3), {'D1', 'D2' })
+        self.assertEqual(get_response_data_set(historyedges, 4), {'D1', 'D2' })
+        self.assertEqual(get_response_data_set(historyedges, 5), {'E1', 'E2' })
+        self.assertEqual(get_response_data_set(historyedges, 6), {'F1', 'F2'})
+        self.assertEqual(get_response_data_set(historyedges, 7), {'G1', 'G2'})
+        self.assertEqual(get_response_data_set(historyedges, 8), {'H1', 'H2'})
 
     def test_login_is_required(self):
         url = reverse('api:historygraph-list', kwargs={'documentcollectionid': str(self.dcid1)})
@@ -126,6 +127,7 @@ class HistoryGraphGetTestCase(APITestCase):
         url = reverse('api:historygraph-list', kwargs={'documentcollectionid': str(self.dcid2)})
         project_id = str(uuid.uuid4())
         self.assertEqual(HistoryEdge.objects.count(), 3)
+        """
         historyedges = [{'documentcollectionid':str(self.dcid2),
                  'documentid':'A4',
                  'documentclassname':'B4',
@@ -148,7 +150,28 @@ class HistoryGraphGetTestCase(APITestCase):
                  'propertyname':'G5',
                  'propertyvalue':'H5',
                  'propertytype':'I5'}]
-        data = {'history': historyedges, 'immutableobject': []}
+        """
+        historyedges = [('A4',
+                 'B4',
+                 'C4',
+                 str(uuid.uuid4()),
+                 'D4',
+                 'E4',
+                 'F4',
+                 'G4',
+                 'H4',
+                 'I4'),
+                ('A5',
+                 'B5',
+                 'C5',
+                 str(uuid.uuid4()),
+                 'D5',
+                 'E5',
+                 'F5',
+                 'G5',
+                 'H5',
+                 'I5')]
+        data = {'history': json.dumps(historyedges), 'immutableobjects': json.dumps([])}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(HistoryEdge.objects.count(), 5)
@@ -195,6 +218,7 @@ class HistoryGraphGetTestCase(APITestCase):
         project_id = str(uuid.uuid4())
         self.assertEqual(HistoryEdge.objects.count(), 3)
         endnodeid = str(uuid.uuid4())
+        """
         historyedges = [{'documentcollectionid':str(self.dcid2),
                  'documentid':'A4',
                  'documentclassname':'B4',
@@ -217,7 +241,28 @@ class HistoryGraphGetTestCase(APITestCase):
                  'propertyname':'G4',
                  'propertyvalue':'H4',
                  'propertytype':'I4'}]
-        data = {'history': historyedges, 'immutableobjects': []}
+        """
+        historyedges = [('A4',
+                 'B4',
+                 'C4',
+                 endnodeid,
+                 'D4',
+                 'E4',
+                 'F4',
+                 'G4',
+                 'H4',
+                 'I4'),
+                ('A4',
+                 'B4',
+                 'C4',
+                 endnodeid,
+                 'D4',
+                 'E4',
+                 'F4',
+                 'G4',
+                 'H4',
+                 'I4')]
+        data = {'history': json.dumps(historyedges), 'immutableobjects': json.dumps([])}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(HistoryEdge.objects.count(), 4)

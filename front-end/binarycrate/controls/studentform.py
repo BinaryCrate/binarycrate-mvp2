@@ -42,9 +42,9 @@ class StudentForm(object):
             setattr(self, control['name'], control)
 
     def handle_onclick(self, e, form_item_name):
-        print('handle_onclick form_item_name=', form_item_name)
+        #print('handle_onclick form_item_name=', form_item_name)
         if hasattr(self, form_item_name + '_onclick'):
-            print('handle_onclick calling custom handler')
+            #print('handle_onclick calling custom handler')
             getattr(self, form_item_name + '_onclick')(e)
         self.editorview.mount_redraw()
         Router.router.ResetHashChange()
@@ -53,7 +53,7 @@ class StudentForm(object):
         ret = list()
         html_controls = dict()
         for form_item in self.form_controls:
-            print('initialise_form_controls form_item=', form_item)
+            #print('initialise_form_controls form_item=', form_item)
             #TODO: Copied code from editor.py should be refactored
             style = ''.join(('position: absolute; ',
                             'z-index: 1; ',

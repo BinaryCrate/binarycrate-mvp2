@@ -11,6 +11,7 @@ class HistoryGraphSerializer(serializers.ModelSerializer):
         fields = ('documentcollectionid', 'documentid', 'documentclassname',
                   'classname', 'endnodeid', 'startnode1id', 'startnode2id',
                   'propertyownerid', 'propertyname', 'propertyvalue', 'propertytype')
+        extra_kwargs = {'startnode2id': {'required': True}} 
 
     def create(self, validated_data):
         #TODO: There is no meaningful validation of submit HistoryGraph edges. Pls fix

@@ -299,22 +299,24 @@ class EditorView(BCChrome):
         self.program_is_running = True
         global project
         historygraphfrontend.initialise_document_collection(project['id'])
+        print('EditorView run_project 1')
         #historygraphfrontend.download_document_collection()
         self.write_program_to_virtual_file_system()
+        print('EditorView run_project 2')
         js.globals.document.print_to_secondary_output = True
         #print('EditorView run_project called')
         form_classes = self.get_default_module_form_classes()
-        print('EditorView run_project form_classes=', form_classes)
+        #print('EditorView run_project form_classes=', form_classes)
         if len(form_classes) > 0:
-            print('EditorView run_project Found usable class name=' + form_classes[0].__name__)
+            #print('EditorView run_project Found usable class name=' + form_classes[0].__name__)
             self.form_stack.append(form_classes[0](self))
             self.mount_redraw()
             Router.router.ResetHashChange()
         else:
-            print('EditorView run_project Found  no usable class')
+            #print('EditorView run_project Found  no usable class')
             js.globals.document.print_to_secondary_output = False
         #aa.tr()
-        print('EditorView run_project called2')
+        #print('EditorView run_project called2')
 
     def set_current_file_as_default(self, e):
         #print('set_current_file_as_default called')
@@ -708,7 +710,7 @@ class EditorView(BCChrome):
                             ])
             ret.append(svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%', 'oncontextmenu': self.contextmenu_preview, 'z-index':-5, 'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up}, svg_list))
         if self.program_is_running and len(self.form_stack) > 0:
-            print('get_selected_de_form_controls getting form controls from from_stack')
+            #print('get_selected_de_form_controls getting form controls from from_stack')
             ret = self.form_stack[-1].get_form_controls()
         return ret
 

@@ -15,9 +15,11 @@ def initialise_document_collection(project_id):
     documentcollection.id = project_id
 
 def historygraph_ajaxget_handler(xmlhttp, response):
+    #print('historygraph_ajaxget_handler xmlhttp.responseText=', xmlhttp.responseText)
+    #print('historygraph_ajaxget_handler response[history]=', response['history'])
     global documentcollection_download_ready
     global documentcollection
-    documentcollection.LoadFromJSON(json.dumps({'history': response, 'immutableobjects': []}))
+    documentcollection.LoadFromJSON(str(xmlhttp.responseText))
     documentcollection_download_ready = True
 
 def download_document_collection():
@@ -30,6 +32,8 @@ def historygraph_ajaxpost_handler(xmlhttp, response):
 def post_document_collection():
     global documentcollection
     (historyedges, immutableobjects) = documentcollection.getAllEdges()
-    ajaxpost('/api/historygraph/' + str(documentcollection.id) + '/', historyedges, historygraph_ajaxpost_handler)
+    data = {"history":json.dumps(historyedges),"immutableobjects":json.dumps(immutableobjects)}
+    #print('post_document_collection sending ', data)
+    ajaxpost('/api/historygraph/' + str(documentcollection.id) + '/', data, historygraph_ajaxpost_handler)
 
 

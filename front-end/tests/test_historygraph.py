@@ -34,7 +34,7 @@ class TestHistoryGraph(object):
         js.globals.cavorite_ajaxGet.assert_called_with('/api/historygraph/' + str(project_id) + '/', str(dummy_uuid()))
         assert historygraphfrontend.documentcollection_download_ready == False
 
-        response = []
+        response = {'history': [], 'immutableobjects': []}
         historygraphfrontend.historygraph_ajaxget_handler(Mock(status=200, responseText=json.dumps(response)),
                                               response)
         assert historygraphfrontend.documentcollection_download_ready == True
@@ -51,14 +51,18 @@ class TestHistoryGraph(object):
         #js.globals.cavorite_ajaxPost.assert_called()
         assert js.globals.cavorite_ajaxPost.call_count == 1
         dc_edges = js.globals.cavorite_ajaxPost.call_args[0][2]
+        assert len(dc_edges) == 2
+        assert len(json.loads(dc_edges['immutableobjects'])) == 0
+        assert len(json.loads(dc_edges['history'])) == 1
 
         historygraphfrontend.initialise_document_collection(project_id)
         historygraphfrontend.documentcollection.Register(Score)
         js.globals.cavorite_ajaxGet = Mock()
         historygraphfrontend.download_document_collection()
         js.globals.cavorite_ajaxGet.assert_called_with('/api/historygraph/' + str(project_id) + '/', str(dummy_uuid()))
-        historygraphfrontend.historygraph_ajaxget_handler(Mock(status=200, responseText=json.dumps(dc_edges)),
-                                              dc_edges)
+        dc_edges2 = {'history': json.loads(dc_edges['history']), 'immutableobjects': json.loads(dc_edges['immutableobjects'])}
+        historygraphfrontend.historygraph_ajaxget_handler(Mock(status=200, responseText=json.dumps(dc_edges2)),
+                                              dc_edges2)
 
         scores = historygraphfrontend.documentcollection.GetByClass(Score)
 
@@ -70,15 +74,14 @@ class TestHistoryGraph(object):
         js.globals.cavorite_ajaxGet = Mock()
         historygraphfrontend.download_document_collection()
         js.globals.cavorite_ajaxGet.assert_called_with('/api/historygraph/' + str(project_id) + '/', str(dummy_uuid()))
-        historygraphfrontend.historygraph_ajaxget_handler(Mock(status=200, responseText=json.dumps(dc_edges)),
-                                              dc_edges)
+        historygraphfrontend.historygraph_ajaxget_handler(Mock(status=200, responseText=json.dumps(dc_edges2)),
+                                              dc_edges2)
 
         scores = historygraphfrontend.documentcollection.GetByClass(Score)
 
         assert len(scores) == 1
         assert scores[0].id == score.id
         assert scores[0].current_count.get() == 1
-
 
 
 
