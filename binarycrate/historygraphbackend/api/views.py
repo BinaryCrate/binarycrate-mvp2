@@ -33,13 +33,10 @@ class HistoryGraphView(APIView):
     def get(self, request, documentcollectionid, format=None):
         edges = self.get_queryset(documentcollectionid)
         serializer = HistoryGraphSerializer(edges, many=True)
-        return Response(serializer.data)
+        return Response({'history': serializer.data, 'immutableobjects': []})
 
     def post(self, request, documentcollectionid, format=None):
-        #TODO: This kind of processing should be done in the serializer's save method
-        data = request.data
-        # Filter out everything we already have
-        #data = [d for d in data if HistoryEdge.objects.by_endnodeid(d['endnodeid']).count() == 0]
+        data = request.data['history'] # Ignore immutable objects for now
         serializer = HistoryGraphSerializer(data=data, many=True)
         if serializer.is_valid():
             serializer.save()
