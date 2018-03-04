@@ -1813,7 +1813,29 @@ class TestRunningAProgram(object):
                 file_content = project_file.read()
             assert file_content == hello_folder_content
 
-    def test_process_file_location(self):
+    def test_process_file_location(self, monkeypatch):
+        monkeypatch.setattr(Router, 'ResetHashChange', Mock())
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(cavorite.svg, 'js', js)
+
+        callbacks.initialise_global_callbacks()
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        body = js.globals.document.body
+        error_404_page = c("div", [c("p", "No match 404 error"),
+                                   c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
+        view = editor.EditorView()
+        r = Router({r'^$': view},
+                    error_404_page, body)
+        r.route()
+        view.mount_redraw = Mock()
+
         editor.python_module_dir = '/lib/pypyjs/lib_pypy/'
         hello_world_content = "print('Hello world')"
         hello_folder_content = \
@@ -1868,13 +1890,13 @@ print('Hello folder i={}'.format(i))
         class TestForm1(StudentForm):
             file_location = '/lib/pypyjs/lib_pypy/hello_world.py'
 
-        t1 = TestForm1()
+        t1 = TestForm1(view)
         assert t1.get_file_location() == 'hello_world.py'
 
         class TestForm2(StudentForm):
             file_location = '/lib/pypyjs/lib_pypy/folder/hello_folder.py'
 
-        t2 = TestForm2()
+        t2 = TestForm2(view)
         assert t2.get_file_location() == 'folder/hello_folder.py'
 
         form_items = t1.get_form_items()
