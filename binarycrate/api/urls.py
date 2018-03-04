@@ -7,6 +7,7 @@ app_name = 'api'
 
 urls = [
     url(r'^projects/', include('project.api.urls')),
+    url(r'^historygraph/', include('historygraphbackend.api.urls')),
 ]
 
 urlpatterns = [url(r'^', include(urls))]

@@ -3,6 +3,7 @@ from rest_framework.test import APITestCase
 import uuid
 from historygraphbackend.models import HistoryEdge
 
+
 class TestEdgeQueryset(APITestCase):
     def test_can_filter_by_documentcollection_id(self):
         dcid1 = uuid.uuid4()

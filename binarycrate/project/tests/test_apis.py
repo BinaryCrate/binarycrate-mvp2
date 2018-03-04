@@ -8,6 +8,7 @@ import uuid
 from accounts.factories import UserFactory
 from rest_framework.test import APIClient
 
+
 # From https://gist.github.com/href/1319371
 from collections import namedtuple
 DirectoryEntryDict = namedtuple('DirectoryEntryDict', ['id', 'name', 'is_file', 'parent_id', 'content', 'form_items', 'is_default'])
