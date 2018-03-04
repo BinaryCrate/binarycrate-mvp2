@@ -98,3 +98,108 @@ class HistoryGraphGetTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(str(self.dcid1) in response.content)
 
+    def test_post_creates_historygraph_edges(self):
+        u = UserFactory()
+        self.client.force_authenticate(user=u)
+
+        url = reverse('api:historygraph-list', kwargs={'documentcollectionid': str(self.dcid2)})
+        project_id = str(uuid.uuid4())
+        self.assertEqual(HistoryEdge.objects.count(), 3)
+        data = [{'documentcollectionid':str(self.dcid2),
+                 'documentid':'A4',
+                 'documentclassname':'B4',
+                 'classname':'C4',
+                 'endnodeid':str(uuid.uuid4()),
+                 'startnode1id':'D4',
+                 'startnode2id':'E4',
+                 'propertyownerid':'F4',
+                 'propertyname':'G4',
+                 'propertyvalue':'H4',
+                 'propertytype':'I4'},
+                {'documentcollectionid':str(self.dcid2),
+                 'documentid':'A5',
+                 'documentclassname':'B5',
+                 'classname':'C5',
+                 'endnodeid':str(uuid.uuid4()),
+                 'startnode1id':'D5',
+                 'startnode2id':'E5',
+                 'propertyownerid':'F5',
+                 'propertyname':'G5',
+                 'propertyvalue':'H5',
+                 'propertytype':'I5'}]
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(HistoryEdge.objects.count(), 5)
+
+        classnames = {edge.classname for edge in HistoryEdge.objects.by_document_collection_id(self.dcid2)}
+        self.assertIn('C4', classnames)
+        self.assertIn('C5', classnames)
+
+    def test_post_historygraph_edges_requires_login(self):
+        url = reverse('api:historygraph-list', kwargs={'documentcollectionid': str(self.dcid2)})
+        project_id = str(uuid.uuid4())
+        self.assertEqual(HistoryEdge.objects.count(), 3)
+        data = [{'documentcollectionid':str(self.dcid2),
+                 'documentid':'A4',
+                 'documentclassname':'B4',
+                 'classname':'C4',
+                 'endnodeid':str(uuid.uuid4()),
+                 'startnode1id':'D4',
+                 'startnode2id':'E4',
+                 'propertyownerid':'F4',
+                 'propertyname':'G4',
+                 'propertyvalue':'H4',
+                 'propertytype':'I4'},
+                {'documentcollectionid':str(self.dcid2),
+                 'documentid':'A5',
+                 'documentclassname':'B5',
+                 'classname':'C5',
+                 'endnodeid':str(uuid.uuid4()),
+                 'startnode1id':'D5',
+                 'startnode2id':'E5',
+                 'propertyownerid':'F5',
+                 'propertyname':'G5',
+                 'propertyvalue':'H5',
+                 'propertytype':'I5'}]
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+    def test_post_historygraph_edges_duplicates_are_ignored(self):
+        u = UserFactory()
+        self.client.force_authenticate(user=u)
+
+        url = reverse('api:historygraph-list', kwargs={'documentcollectionid': str(self.dcid2)})
+        project_id = str(uuid.uuid4())
+        self.assertEqual(HistoryEdge.objects.count(), 3)
+        endnodeid = str(uuid.uuid4())
+        data = [{'documentcollectionid':str(self.dcid2),
+                 'documentid':'A4',
+                 'documentclassname':'B4',
+                 'classname':'C4',
+                 'endnodeid':endnodeid,
+                 'startnode1id':'D4',
+                 'startnode2id':'E4',
+                 'propertyownerid':'F4',
+                 'propertyname':'G4',
+                 'propertyvalue':'H4',
+                 'propertytype':'I4'},
+                {'documentcollectionid':str(self.dcid2),
+                 'documentid':'A4',
+                 'documentclassname':'B4',
+                 'classname':'C4',
+                 'endnodeid':endnodeid,
+                 'startnode1id':'D4',
+                 'startnode2id':'E4',
+                 'propertyownerid':'F4',
+                 'propertyname':'G4',
+                 'propertyvalue':'H4',
+                 'propertytype':'I4'}]
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(HistoryEdge.objects.count(), 4)
+
+        classnames = {edge.classname for edge in HistoryEdge.objects.by_document_collection_id(self.dcid2)}
+        self.assertIn('C4', classnames)
+        self.assertNotIn('C5', classnames)
+

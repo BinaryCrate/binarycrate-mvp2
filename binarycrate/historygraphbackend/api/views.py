@@ -35,3 +35,14 @@ class HistoryGraphView(APIView):
         serializer = HistoryGraphSerializer(edges, many=True)
         return Response(serializer.data)
 
+    def post(self, request, documentcollectionid, format=None):
+        #TODO: This kind of processing should be done in the serializer's save method
+        data = request.data
+        # Filter out everything we already have
+        #data = [d for d in data if HistoryEdge.objects.by_endnodeid(d['endnodeid']).count() == 0]
+        serializer = HistoryGraphSerializer(data=data, many=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

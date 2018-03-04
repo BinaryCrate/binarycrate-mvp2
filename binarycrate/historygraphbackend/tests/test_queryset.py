@@ -16,3 +16,15 @@ class TestEdgeQueryset(APITestCase):
         assert qs.count() == 1
         assert qs.first().documentid == 'AAA'
 
+    def test_can_filter_by_endnodeid(self):
+        dcid1 = uuid.uuid4()
+        endnodeid1 = uuid.uuid4()
+        endnodeid2 = uuid.uuid4()
+        
+        HistoryEdge.objects.create(documentcollectionid=dcid1, documentid='AAA', endnodeid=endnodeid1)
+        HistoryEdge.objects.create(documentcollectionid=dcid1, documentid='BBB', endnodeid=endnodeid2)
+
+        qs = HistoryEdge.objects.by_endnodeid(endnodeid1)
+        assert qs.count() == 1
+        assert qs.first().documentid == 'AAA'
+
