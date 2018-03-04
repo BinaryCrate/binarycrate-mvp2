@@ -98,6 +98,20 @@ class HistoryGraphGetTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(str(self.dcid1) in response.content)
 
+    def test_get_unknown_historygraph(self):
+        """
+        Ensure we can list an emptp list if there are no historygraph edgess available
+        """
+        u = UserFactory()
+        self.client.force_authenticate(user=u)
+
+        url = reverse('api:historygraph-list', kwargs={'documentcollectionid': str(uuid.uuid4())})
+        print('url=', url)
+        data = { }
+        response = self.client.get(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
+
     def test_post_creates_historygraph_edges(self):
         u = UserFactory()
         self.client.force_authenticate(user=u)

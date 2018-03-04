@@ -79,7 +79,7 @@ class TestEditor(object):
         # Simulate the query which is sent after the screen is drawn
         node.query_project()
 
-        js.globals.cavorite_ajaxGet.assert_called_with('/api/projects/' + project_id, str(dummy_uuid()))
+        js.globals.cavorite_ajaxGet.assert_called_with('/api/projects/' + project_id + '/', str(dummy_uuid()))
 
 
         monkeypatch.setattr(node, 'mount_redraw', Mock())

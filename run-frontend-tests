@@ -4,6 +4,7 @@ cp /opt/project/front-end/tests tests -r
 cd tests
 ln -s /opt/project/front-end/binarycrate
 ln -s /opt/project/cavorite/cavorite
+ln -s /opt/project/historygraph/historygraph
 mkdir cavorite_tests
 cp /opt/project/cavorite/tests/__init__.py cavorite_tests/
 cp /opt/project/cavorite/tests/fakejs.py cavorite_tests/

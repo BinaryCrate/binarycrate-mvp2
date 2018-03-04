@@ -21,6 +21,7 @@ import re
 import os
 from binarycrate.controls import StudentForm
 import inspect
+from binarycrate import historygraphfrontend
 
 
 HANDLE_NONE = 0
@@ -296,6 +297,9 @@ class EditorView(BCChrome):
     def run_project(self, e):
         print('EditorView run_project called')
         self.program_is_running = True
+        global project
+        historygraphfrontend.initialise_document_collection(project['id'])
+        #historygraphfrontend.download_document_collection()
         self.write_program_to_virtual_file_system()
         js.globals.document.print_to_secondary_output = True
         #print('EditorView run_project called')
@@ -348,7 +352,7 @@ class EditorView(BCChrome):
         global project
         if len(project) == 0:
             # Only load the project if we don't alreayd have it
-            ajaxget('/api/projects/' + self.get_root().url_kwargs['project_id'], self.projects_api_ajax_result_handler)
+            ajaxget('/api/projects/' + self.get_root().url_kwargs['project_id'] + '/', self.projects_api_ajax_result_handler)
 
     def was_mounted(self):
         super(EditorView, self).was_mounted()
