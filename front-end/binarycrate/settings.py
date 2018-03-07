@@ -16,9 +16,13 @@ import json
 
 
 class SettingView(BCChrome):
-    def settings_tab(self):
-        return
+    '''
+    Settings view start
+    '''
 
+    def get_central_content(self):
+
+        return h1('Hello')
 
 
     # def my_details(self):
@@ -31,6 +35,6 @@ def settings_view():
                         ]),
                       ]),
                     ],
-                    div([p("Hello")]),
+                    None,
                     [])
     return dv
