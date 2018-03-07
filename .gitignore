@@ -108,4 +108,5 @@ screenshot.png
 .pytest_cache
 
 binarycrate/binarycrate/settings/__init__.py
+binarycrate/binarycrate/settings/production.py
 
