@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, unicode_literals
+
 """binarycrate URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
@@ -24,6 +27,14 @@ urlpatterns = [
 
     # Site
     url(r'^', include('landingpage.urls')),
+
+    # API
+    url(r'^api/', include('api.urls')),
+
 ]
 
+#Should be If settings.DEBUG:
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += [
+    url(r'^api-auth/', include('rest_framework.urls')),
+]

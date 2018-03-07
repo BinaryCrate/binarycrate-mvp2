@@ -4,10 +4,6 @@
 [submodule "cavorite"]
 	path = cavorite
 	url = https://github.com/mlockett42/cavorite.git
-[submodule "lettuce"]
-	path = lettuce
-	url = https://github.com/mlockett42/lettuce.git
-	branch = development-python3
 [submodule "pypyjs-release/pypyjs-release"]
 	path = pypyjs-release/pypyjs-release
 	url = https://github.com/pypyjs/pypyjs-release.git
