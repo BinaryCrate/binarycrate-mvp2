@@ -1,0 +1,48 @@
+server {
+    listen 80;  # ipv4
+    listen [::]:80;  # ipv6
+    server_name "licencing.oscarpos.com.au";
+
+    location / {
+        return 301 https://licencing.oscarpos.com.au$request_uri;
+    }
+
+    location /.well-known/ {
+        alias /srv/licencing/licencing/.well-known/;
+    }
+
+}
+
+
+server {
+
+    listen 443 ssl;  # ipv4
+    listen [::]:443 ssl;  # ipv6
+    server_name "licencing.oscarpos.com.au";
+
+    gzip off;
+    ssl on;
+    ssl_certificate /etc/letsencrypt/live/licencing.oscarpos.com.au/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/licencing.oscarpos.com.au/privkey.pem;
+
+    root /srv/licencing/licencing/public;
+
+    client_max_body_size 20M;
+    location / {
+      include uwsgi_params;
+      uwsgi_pass unix:///tmp/licencing.sock;
+    }
+
+    location /static/ {
+      alias /srv/licencing/licencing/static/;
+      expires 30d;
+    }
+
+    location /.well-known/ {
+        alias /srv/licencing/licencing/.well-known/;
+    }
+
+    root /srv/licencing/licencing/public;
+}
+
+
