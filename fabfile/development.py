@@ -97,6 +97,7 @@ def bash():
 @task
 def setup():
     build()
+    create_symlinks()
     migrate()
 
 @task
@@ -120,5 +121,12 @@ def setup_chrome():
             if result.failed:
                 abort(red('Could not setup chrome. Have you run '
                           '\'setup_network\'?'))
+
+@task
+def create_symlinks():
+    print(yellow('Creating symlinks...'))
+    with lcd('./binarycrate/binarycrate/settings'):
+        local('rm -r ./__init__.py')
+        local('ln -s ./development.py ./__init__.py')
 
 
