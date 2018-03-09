@@ -22,9 +22,23 @@ class CodeMirrorHandlerVNode(textarea):
         should_init = False
         #print('CodeMirrorHandlerVNode was_mounted called should_init=',should_init)
         #if should_init:
-        if  self.waiting_for_timeout == False:
-            self.waiting_for_timeout = True
-            timeouts.set_timeout(self.codemirror_init, 1)
+        #if  self.waiting_for_timeout == False:
+        #    self.waiting_for_timeout = True
+        #    timeouts.set_timeout(self.codemirror_init, 1)
+        textarea = js.globals.document.getElementById("code")
+        self.editor = js.globals.CodeMirror.fromTextArea(textarea, {
+            'lineNumbers': True,
+            'mode': 'text/html',
+            #'mode': 'python',
+            'viewportMargin': js.globals.Infinity,
+          })
+
+        @js.Function
+        def change_callback_handler(a, b):
+            callbacks.global_callbacks['onchange'][str(textarea.getAttribute('_cavorite_id'))](self.editor)
+        self.editor.on('change', change_callback_handler)
+
+        self.onchange_codemirror(None)
 
     def codemirror_init(self):
         self.waiting_for_timeout = False
