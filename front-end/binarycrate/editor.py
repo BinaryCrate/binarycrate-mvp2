@@ -444,7 +444,7 @@ class EditorView(BCChrome):
             Router.router.ResetHashChange()
             e.stopPropagation()
             e.preventDefault()
-            print('Mouse is down mousemove e=', change_x, ',', change_y)
+            #print('Mouse is down mousemove e=', change_x, ',', change_y)
         #Router.router.ResetHashChange()
 
     def get_context_menu(self):
