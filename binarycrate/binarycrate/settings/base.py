@@ -121,10 +121,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
-    #os.path.join(BASE_DIR, 'static'),
-    '/opt/project/pypyjs-release',
-    '/opt/project/front-end',
-    '/opt/project/binarycrate/static',
+    os.path.join(BASE_DIR, '..', 'pypyjs-release'),
+    os.path.join(BASE_DIR, '..', 'front-end'),
+    os.path.join(BASE_DIR, '..', 'binarycrate/static'),
 ]
 
 STATICFILES_FINDERS = [
