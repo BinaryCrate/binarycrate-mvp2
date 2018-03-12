@@ -288,21 +288,34 @@ class EditorView(BCChrome):
                     with open(python_module_dir + extra_path + de['name'], "w+") as fl:
                          fl.write(de['content'])
 
+    def get_default_directory_entry(self):
+        des = [de for de in project['directory_entry'] if de['is_default']]
+        if len(des) == 0:
+            return None
+        else:
+            return des[0]
+
     def get_default_module_form_classes(self):
-        de = [de for de in project['directory_entry'] if de['is_default']][0]
+        #de = [de for de in project['directory_entry'] if de['is_default']][0]
+        de = self.get_default_directory_entry()
+        if de is None:
+            return []
         imported_module = __import__(de['name'][:de['name'].find('.')])
         #print('EditorView run_project dir(imported_module)=', dir(imported_module))
         return [getattr(imported_module, name) for name in dir(imported_module) if inspect.isclass(getattr(imported_module, name)) and issubclass(getattr(imported_module, name), StudentForm)]
 
     def run_project(self, e):
-        print('EditorView run_project called')
+        if self.get_default_directory_entry() is None:
+            js.globals.window.alert('Error: You must select one of the files as the default to run')
+
+        #print('EditorView run_project called')
         self.program_is_running = True
         global project
         historygraphfrontend.initialise_document_collection(project['id'])
-        print('EditorView run_project 1')
+        #print('EditorView run_project 1')
         #historygraphfrontend.download_document_collection()
         self.write_program_to_virtual_file_system()
-        print('EditorView run_project 2')
+        #print('EditorView run_project 2')
         js.globals.document.print_to_secondary_output = True
         #print('EditorView run_project called')
         form_classes = self.get_default_module_form_classes()

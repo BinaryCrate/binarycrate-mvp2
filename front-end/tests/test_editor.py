@@ -2003,4 +2003,95 @@ print('Hello folder i={}'.format(i))
         assert len(view.form_stack) == 1
         assert isinstance(view.form_stack[-1].button1, dict)
 
+    def test_running_program_without_default_file_causes_an_error(self, monkeypatch):
+        monkeypatch.setattr(Router, 'ResetHashChange', Mock())
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(codemirror, 'js', js)
+
+        callbacks.initialise_global_callbacks()
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        body = js.globals.document.body
+        error_404_page = c("div", [c("p", "No match 404 error"),
+                                   c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
+        view = editor.EditorView()
+        r = Router({r'^$': view},
+                    error_404_page, body)
+        r.route()
+        view.mount_redraw = Mock()
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+print('Hello folder i={}'.format(i))
+"""
+        editor.project = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': [],
+                        'parent_id': None,
+                        'is_default': False,
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]'),
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False, 
+                        'content': '', 
+                        'form_items': [],
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'form_items': [],
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
+                       },
+                     ]
+                    }
+
+        assert len(view.form_stack) == 0
+
+        class TestForm1(StudentForm):
+            file_location = '/lib/pypyjs/lib_pypy/hello_world.py'
+
+        form_classes = [TestForm1]
+        view.get_default_module_form_classes = Mock(return_value=form_classes)
+        view.write_program_to_virtual_file_system = Mock()
+        editor.js.globals.window.alert = Mock()
+        view.run_project(Mock())
+
+
+        editor.js.globals.window.alert.assert_called_with('Error: You must select one of the files as the default to run')
+
+        #assert len(view.form_stack) == 1
+        #assert isinstance(view.form_stack[-1].button1, dict)
+
 
