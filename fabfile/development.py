@@ -126,7 +126,7 @@ def setup_chrome():
 def create_symlinks():
     print(yellow('Creating symlinks...'))
     with lcd('./binarycrate/binarycrate/settings'):
-        local('rm -r ./__init__.py')
+        local('rm -rf ./__init__.py')
         local('ln -s ./development.py ./__init__.py')
 
 

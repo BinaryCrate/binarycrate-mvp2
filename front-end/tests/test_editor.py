@@ -58,6 +58,7 @@ class TestEditor(object):
         monkeypatch.setattr(Router, 'router', Mock())
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(editor, 'get_uuid', dummy_uuid_editor)
+
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
@@ -899,6 +900,7 @@ class TestContextMenu(object):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        monkeypatch.setattr(codemirror, 'js', js)
 
         body = js.globals.document.body
         error_404_page = c("div", [c("p", "No match 404 error"),
@@ -1182,6 +1184,8 @@ class TestContextMenu(object):
         monkeypatch.setattr(ajaxget, 'js', js)
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(codemirror, 'js', js)
+
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
@@ -1342,6 +1346,8 @@ class TestContextMenu(object):
         monkeypatch.setattr(ajaxget, 'js', js)
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(codemirror, 'js', js)
+
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
@@ -1497,6 +1503,8 @@ class TestContextMenu(object):
         monkeypatch.setattr(ajaxget, 'js', js)
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(codemirror, 'js', js)
+
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
@@ -1733,6 +1741,7 @@ class TestRunningAProgram(object):
         monkeypatch.setattr(ajaxget, 'js', js)
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(codemirror, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -1821,6 +1830,7 @@ class TestRunningAProgram(object):
         monkeypatch.setattr(ajaxget, 'js', js)
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(codemirror, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -1914,6 +1924,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(ajaxget, 'js', js)
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(codemirror, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)

@@ -3,7 +3,7 @@ The second mvp version of binary crate
 
 First create a virtual environment
 
-virtualenv venv -p python3
+virtualenv venv 
 
 source venv/bin/activate
 

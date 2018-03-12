@@ -6,4 +6,4 @@
 	url = https://github.com/mlockett42/cavorite.git
 [submodule "pypyjs-release/pypyjs-release"]
 	path = pypyjs-release/pypyjs-release
-	url = https://github.com/pypyjs/pypyjs-release.git
+	url = https://github.com/pypyjs/pypyjs-release-nojit.git
