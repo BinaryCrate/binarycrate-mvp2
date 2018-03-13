@@ -271,22 +271,32 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
 
     def write_program_to_virtual_file_system(self, parent_id=None, extra_path=''):
+        #print('write_program_to_virtual_file_system called')
         global project
         if parent_id is None:
+            #print('write_program_to_virtual_file_system 1')
             de = [de for de in project['directory_entry'] if de['parent_id'] is None][0]
             self.write_program_to_virtual_file_system(de['id'])
         else:
+            #print('write_program_to_virtual_file_system 2')
             des = [de for de in project['directory_entry'] if de['parent_id'] == parent_id]
+            #print('write_program_to_virtual_file_system 3')
             for de in des:
                 if de['is_file'] is False:
+                    #print('write_program_to_virtual_file_system 4')
                     try:
                         os.stat(python_module_dir + extra_path + de['name'] + '/')
                     except:
                         os.mkdir(python_module_dir + extra_path + de['name'] + '/')       
                     self.write_program_to_virtual_file_system(de['id'], extra_path + de['name'] + '/')
+                    #print('write_program_to_virtual_file_system 5')
                 else:
+                    #print('write_program_to_virtual_file_system 6')
+                    #print('write_program_to_virtual_file_system de[content]', de['content'])
+                    #print('write_program_to_virtual_file_system type(de[content])', type(de['content']))
                     with open(python_module_dir + extra_path + de['name'], "w+") as fl:
                          fl.write(de['content'])
+                    #print('write_program_to_virtual_file_system 7')
 
     def get_default_directory_entry(self):
         des = [de for de in project['directory_entry'] if de['is_default']]
@@ -305,10 +315,11 @@ class EditorView(BCChrome):
         return [getattr(imported_module, name) for name in dir(imported_module) if inspect.isclass(getattr(imported_module, name)) and issubclass(getattr(imported_module, name), StudentForm)]
 
     def run_project(self, e):
+        #print('EditorView run_project called')
         if self.get_default_directory_entry() is None:
             js.globals.window.alert('Error: You must select one of the files as the default to run')
 
-        #print('EditorView run_project called')
+        #print('EditorView run_project 0.9')
         self.program_is_running = True
         global project
         historygraphfrontend.initialise_document_collection(project['id'])
@@ -317,7 +328,7 @@ class EditorView(BCChrome):
         self.write_program_to_virtual_file_system()
         #print('EditorView run_project 2')
         js.globals.document.print_to_secondary_output = True
-        #print('EditorView run_project called')
+        #print('EditorView run_project 3')
         form_classes = self.get_default_module_form_classes()
         #print('EditorView run_project form_classes=', form_classes)
         if len(form_classes) > 0:
@@ -329,7 +340,7 @@ class EditorView(BCChrome):
             #print('EditorView run_project Found  no usable class')
             js.globals.document.print_to_secondary_output = False
         #aa.tr()
-        #print('EditorView run_project called2')
+        #print('EditorView run_project called 4')
 
     def set_current_file_as_default(self, e):
         #print('set_current_file_as_default called')
@@ -887,7 +898,7 @@ class EditorView(BCChrome):
 
     def code_mirror_change(self, content):
         if self.selected_file_de is not None:
-            self.selected_file_de['content'] = content
+            self.selected_file_de['content'] = str(content)
 
     def newFile_ok(self, e, form_values):
         root_folder = [de for de in project['directory_entry'] if de['parent_id'] is None][0]
