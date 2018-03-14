@@ -51,4 +51,6 @@ def style_to_dict(style_str):
 def get_vnode_by_id(vnode, id):
     return get_matching_vnode(vnode, lambda n: hasattr(n, 'get_attribs') and n.get_attribs().get('id') == id)
 
+def get_vnode_by_css_class(vnode, css_class):
+    return get_matching_vnode(vnode, lambda n: hasattr(n, 'get_attribs') and n.get_attribs().get('class') == css_class)
 

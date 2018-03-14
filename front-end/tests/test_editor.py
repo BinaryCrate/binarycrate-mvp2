@@ -9,7 +9,7 @@ from mock import Mock
 import json
 from binarycrate.editor import BCProjectTree, BCPFolder, BCPFile, ContextMenu
 from binarycrate.controls import codemirror, StudentForm
-from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode, style_to_dict, get_vnode_by_id
+from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode, style_to_dict, get_vnode_by_id, get_vnode_by_css_class
 import cavorite.bootstrap.modals
 from binarycrate.editor import HANDLE_NONE, HANDLE_TOPLEFT, HANDLE_TOPRIGHT, HANDLE_BOTTOMLEFT, HANDLE_BOTTOMRIGHT
 from binarycrate.editor import get_form_item_property, FormItemPropType
@@ -398,8 +398,21 @@ class TestEditor(object):
         assert root_folder.get_display_title() == '/'
         assert folder.get_display_title() == 'folder'
         
+        virtual_node = node._build_virtual_dom()
+        #add_folder_link = get_matching_vnode(virtual_node, lambda vnode: get_vnode_by_css_class(vnode, 'fa fa-1x fa-folder-o'))
 
-        #node.add_new_folder_handler(Mock())
+        editor.js.globals.window.alert = Mock()
+        hello_world.on_click(Mock())
+        #add_folder_link.get_attribs()['onclick'](Mock())
+        node.display_new_file_modal(Mock())
+
+        editor.js.globals.window.alert.assert_called_with('Error: You must select a folder to insert this file in')
+
+        editor.js.globals.window.alert = Mock()
+        root_folder.on_click(Mock())
+        node.display_new_file_modal(Mock())
+
+        editor.js.globals.window.alert.assert_not_called()
 
         def mock_element_iterator_callback(vnode):
             if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'newFile':
@@ -578,8 +591,21 @@ class TestEditor(object):
         assert root_folder.get_display_title() == '/'
         assert folder.get_display_title() == 'folder'
         
+        virtual_node = node._build_virtual_dom()
+        #add_folder_link = get_matching_vnode(virtual_node, lambda vnode: get_vnode_by_css_class(vnode, 'fa fa-1x fa-folder-o'))
 
-        #node.add_new_folder_handler(Mock())
+        editor.js.globals.window.alert = Mock()
+        hello_world.on_click(Mock())
+        #add_folder_link.get_attribs()['onclick'](Mock())
+        node.display_new_folder_modal(Mock())
+
+        editor.js.globals.window.alert.assert_called_with('Error: You must select a folder to insert this folder in')
+
+        editor.js.globals.window.alert = Mock()
+        root_folder.on_click(Mock())
+        node.display_new_folder_modal(Mock())
+
+        editor.js.globals.window.alert.assert_not_called()
 
         def mock_element_iterator_callback(vnode):
             if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'newFolder':
@@ -603,6 +629,7 @@ class TestEditor(object):
 
         def setup_mock_modal_callback(node, file_name):
             if isinstance(node, js.MockElement) and node.getAttribute('id') == 'txtFolderName':
+                print('setup_mock_modal_callback settings node file_name to=', file_name)
                 node.value = file_name
 
         js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, 'folder2'))
@@ -617,7 +644,7 @@ class TestEditor(object):
                 #print('setup_mock_modal_callback_was_added node=', node)
                 child = node.children.item(0)
                 if isinstance(child, js.MockTextNode):
-                    #print('setup_mock_modal_callback_was_added child=', str(child))
+                    print('setup_mock_modal_callback_was_added child=', str(child))
                     if  str(child) == folder_name:
                         result['new_folder_found'] = True
 

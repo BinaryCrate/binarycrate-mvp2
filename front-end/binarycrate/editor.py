@@ -405,11 +405,13 @@ class EditorView(BCChrome):
                       div({'class': "project-fnf col-ms-2"}, [
                         div({'class': 'top-tree'}, [
                           p({'style': 'display:inline'}, 'Files'),
-                          a({'data-toggle': "modal", 'data-target': '#newFile', 'href': get_current_hash(), 'onclick': self.newFile_ok}, [
-                            span({'class': 'fa fa-1x fa-file-code-o'}),
+                          #a({'data-toggle': "modal", 'data-target': '#newFile', 'href': get_current_hash(), 'onclick': self.newFile_ok}, [
+                          a({'href': get_current_hash()}, [
+                            span({'class': 'fa fa-1x fa-file-code-o', 'onclick': self.display_new_file_modal}),
                           ]),
-                          a({'data-toggle': "modal", 'data-target': '#newFolder', 'href': get_current_hash(), 'onclick': self.newFolder_ok}, [
-                            span({'class': 'fa fa-1x fa-folder-o'}),
+                          #a({'data-toggle': "modal", 'data-target': '#newFolder', 'href': get_current_hash(), 'onclick': self.newFolder_ok}, [
+                          a({'href': get_current_hash()}, [
+                            span({'class': 'fa fa-1x fa-folder-o', 'onclick': self.display_new_folder_modal}),
                           ]),
                         ]),
                         self.get_project_tree(),
@@ -533,6 +535,28 @@ class EditorView(BCChrome):
         self.selected_item = ''
         self.mount_redraw()
         Router.router.ResetHashChange()
+
+    def display_new_file_modal(self, e):
+        if self.selected_de is not None and self.selected_de['is_file']:
+            js.globals.window.alert('Error: You must select a folder to insert this file in')
+            e.stopPropagation()
+            e.preventDefault()
+            return
+        jquery = js.globals['$']
+        jquery('#newFile').modal('show')
+        e.stopPropagation()
+        e.preventDefault()
+
+    def display_new_folder_modal(self, e):
+        if self.selected_de is not None and self.selected_de['is_file']:
+            js.globals.window.alert('Error: You must select a folder to insert this folder in')
+            e.stopPropagation()
+            e.preventDefault()
+            return
+        jquery = js.globals['$']
+        jquery('#newFolder').modal('show')
+        e.stopPropagation()
+        e.preventDefault()
 
     def display_property_change_modal(self, e, form_item, prop_name):
         #print('display_property_change_modal called form_item[name]=', form_item['name'])
