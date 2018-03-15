@@ -821,7 +821,7 @@ class EditorView(BCChrome):
             {'type': 'textbox',
              'width': 150,
              'height': 30,
-             'name': 'textbox1',
+             'name': self.get_next_name('textbox'),
             })
 
     def new_image(self, e):
@@ -829,7 +829,7 @@ class EditorView(BCChrome):
             {'type': 'image',
              'width': 200,
              'height': 200,
-             'name': 'image1',
+             'name': self.get_next_name('image'),
             })
 
     def new_label(self, e):
@@ -838,7 +838,7 @@ class EditorView(BCChrome):
              'width': 150,
              'height': 30,
              'caption': 'Label',
-             'name': 'label1',
+             'name': self.get_next_name('label'),
             })
 
     def new_frame(self, e):
@@ -847,7 +847,7 @@ class EditorView(BCChrome):
              'width': 300,
              'height': 300,
              'caption': 'Frame',
-             'name': 'frame1',
+             'name': self.get_next_name('frame'),
             })
 
     def new_checkbox(self, e):
@@ -856,7 +856,7 @@ class EditorView(BCChrome):
              'width': 150,
              'height': 30,
              'caption': 'Checkbox',
-             'name': 'checkbox1',
+             'name': self.get_next_name('checkbox'),
              'value': False,
             })
 
@@ -865,7 +865,7 @@ class EditorView(BCChrome):
             {'type': 'listbox',
              'width': 150,
              'height': 150,
-             'name': 'listbox1',
+             'name': self.get_next_name('listbox'),
             })
 
     def new_rectangle(self, e):
@@ -873,7 +873,7 @@ class EditorView(BCChrome):
             {'type': 'rect',
              'width': 150,
              'height': 150,
-             'name': 'rect1',
+             'name': self.get_next_name('rect'),
              'stroke_width': 5,
              'stroke': 'rgb(0,0,0)',
              'fill': 'none',
@@ -884,7 +884,7 @@ class EditorView(BCChrome):
             {'type': 'circle',
              'width': 150,
              'height': 150,
-             'name': 'circle1',
+             'name': self.get_next_name('circle'),
              'stroke_width': 5,
              'stroke': 'rgb(0,0,0)',
              'fill': 'none',

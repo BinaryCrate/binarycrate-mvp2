@@ -43,6 +43,7 @@ class TestDashboard(object):
                 
 
         node = dashboard.dashboard_view()
+        node.mount_redraw = Mock()
         # Simulate the query which is sent after the screen is drawn
         node.query_projects()
 
@@ -75,6 +76,7 @@ class TestDashboard(object):
 
         js.globals.cavorite_ajaxGet = Mock()
         js.globals.cavorite_ajaxPost = Mock()
+        Router.router = Mock()
 
         result = dict()
 
