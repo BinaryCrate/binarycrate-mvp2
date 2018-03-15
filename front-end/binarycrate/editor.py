@@ -798,13 +798,22 @@ class EditorView(BCChrome):
         e.stopPropagation()
         e.preventDefault()
 
+    def get_next_name(self, prefix):
+        s = {fi['name'][len(prefix):] for fi in self.selected_de['form_items'] if fi['name'].startswith(prefix)}
+        s = [int(num) for num in s if num.isdigit()]
+        s = sorted(s)
+        if len(s) == 0:
+            return '{}1'.format(prefix)
+        else:
+            return '{}{}'.format(prefix, str(s[-1] + 1))
+
     def new_button(self, e):
         self.new_control(e, 
             {'type': 'button',
              'width': 100,
              'height': 30,
              'caption': 'Button',
-             'name': 'button1',
+             'name': self.get_next_name('button'),
             })
 
     def new_textbox(self, e):
