@@ -969,6 +969,13 @@ class EditorView(BCChrome):
         #print('changeProperty_ok called fi[type]=', fi['type'], ', self.current_prop_name=', self.current_prop_name)
         #print('changeProperty_ok form_values=', form_values)
         #print('changeProperty_ok called FormItemPropType=', get_form_item_property(fi['type'])[self.current_prop_name])
+        if self.current_prop_name == 'name':
+            matches = [fi for fi in self.selected_de['form_items'] if fi['id'] != self.selected_item and fi['name'] == str(form_values['txtValue'])]
+            if len(matches) > 0:
+                js.globals.window.alert('Error: Another control with that name already exists')
+                self.mount_redraw()
+                Router.router.ResetHashChange()
+                return
         if get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.INT:
             value = int(form_values['txtValue'])
         elif get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.STRING:

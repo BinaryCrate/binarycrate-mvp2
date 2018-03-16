@@ -1815,13 +1815,67 @@ class TestContextMenu(object):
             else:
                 return None
 
-        #vnode_buttons = get_matching_vnodes(view, lambda vnode: is_nvode_button(vnode, 'Button'))
+        vnode_buttons = get_matching_vnodes(view, lambda vnode: is_nvode_button(vnode, 'Button'))
+        assert len(vnode_buttons) == 2
 
         assert len(view.selected_de['form_items']) == 2
 
         for fi in view.selected_de['form_items']:
             assert fi['type'] == 'button'
 
+        assert {fi['name'] for fi in view.selected_de['form_items']} == {'button1', 'button2'}
+
+        button2_fi = [fi for fi in view.selected_de['form_items'] if fi['name'] == 'button2'][0]
+
+        view.mount_redraw = Mock()
+        Router.router.ResetHashChange.reset_mock()
+        vnode_button = vnode_buttons[1]
+        vnode_button.get_attribs()['oncontextmenu'](Mock())
+
+        name_index = 2
+        assert 'Change name' ==  view.context_menu.menu_items[name_index][0]
+        assert callable(view.context_menu.menu_items[name_index][1])
+        view.mount_redraw.assert_called()
+        Router.router.ResetHashChange.assert_called()
+        view.context_menu.menu_items[name_index][1](Mock())
+
+        #assert False
+
+        result = dict()
+
+        def mock_element_iterator_callback(vnode):
+            if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'changeProperty':
+
+                def mock_element_iterator_callback2(vnode):
+                    if hasattr(vnode, 'tag'):
+                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                            result['changeProperty_OK_handler'] = vnode.get_attribs()['onclick']
+                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtValue":
+                            result['default_value'] = vnode.get_attribs().get('value', '')
+                IterateVirtualDOM(vnode, mock_element_iterator_callback2)
+
+        view.mount_redraw = Mock()
+
+        virtual_node = view._build_virtual_dom()
+        IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
+
+        assert result['default_value'] == 'button2'        
+
+        # Call the modal handler
+        rendered_modal = view._render(None)
+        cavorite.bootstrap.modals.js.return_get_element_by_id = {'changeProperty': rendered_modal}
+
+        def setup_mock_modal_callback(node, control_name):
+            if isinstance(node, js.MockElement) and node.getAttribute('id') == 'txtValue':
+                node.value = control_name
+
+        js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, 'button1'))
+
+        #print('test_editor result[changeProperty_OK_handler]=', result['changeProperty_OK_handler'])
+        editor.js.globals.window.alert = Mock()
+        result['changeProperty_OK_handler'](Mock())
+
+        editor.js.globals.window.alert.assert_called_with('Error: Another control with that name already exists')
         assert {fi['name'] for fi in view.selected_de['form_items']} == {'button1', 'button2'}
 
 class TestFormItems(object):
