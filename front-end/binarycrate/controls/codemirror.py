@@ -10,6 +10,7 @@ import copy
 global_editor = None
 global_textarea = None
 global_change_callback_handler = None
+global_on_tab = None
 
 def initialise_codemirror_callbacks():
     @js.Function
@@ -25,6 +26,24 @@ def initialise_codemirror_callbacks():
 
     global global_change_callback_handler
     global_change_callback_handler = change_callback_handler
+
+    @js.Function
+    def on_tab(cm):
+        if cm.somethingSelected():
+            sel = global_editor.getSelection("\n");
+            # Indent only if there are multiple lines selected, or if the selection spans a full line
+            if (sel.length > 0 and (sel.indexOf("\n") > -1 or sel.length == cm.getLine(cm.getCursor().line).length)):
+                cm.indentSelection("add")
+                return
+
+        if cm.options.indentWithTabs:
+            cm.execCommand("insertTab")
+        else:
+            cm.execCommand("insertSoftTab")
+
+    global global_on_tab
+    global_on_tab = on_tab
+
 
 class CodeMirrorHandlerVNode(textarea):
     def __init__(self, attribs=None, children=None, change_handler=None, **kwargs):
@@ -50,10 +69,12 @@ class CodeMirrorHandlerVNode(textarea):
             textarea = js.globals.document.getElementById("code")
             self.editor = js.globals.CodeMirror.fromTextArea(textarea, {
                 'lineNumbers': True,
-                'mode': 'text/html',
-                #'mode': 'python',
+                #'mode': 'text/html',
+                'mode': 'python',
+                'indentUnit': 4,
                 'viewportMargin': js.globals.Infinity,
               })
+            self.editor.addKeyMap({'Tab': global_on_tab,})
 
             #@js.Function
             #def change_callback_handler(a, b):
