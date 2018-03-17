@@ -577,10 +577,10 @@ class EditorView(BCChrome):
                 jquery('#changePropertyColor').modal('show')
             else:
                 jquery('#changeProperty').modal('show')
-        #self.mount_redraw()
-        #Router.router.ResetHashChange()
-        e.stopPropagation()
-        e.preventDefault()
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+        #e.stopPropagation()
+        #e.preventDefault()
         timeouts.set_timeout(display_modal, 1)
 
     def contextmenu_control(self, form_item_id, e):
