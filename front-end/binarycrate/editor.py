@@ -314,15 +314,21 @@ class EditorView(BCChrome):
         #print('EditorView run_project dir(imported_module)=', dir(imported_module))
         return [getattr(imported_module, name) for name in dir(imported_module) if inspect.isclass(getattr(imported_module, name)) and issubclass(getattr(imported_module, name), StudentForm)]
 
+    def on_historygraph_download_complete(self):
+        for form in self.form_stack:
+            form.on_historygraph_download_complete()
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
     def run_project(self, e):
-        #print('EditorView run_project called')
+        print('EditorView run_project called')
         if self.get_default_directory_entry() is None:
             js.globals.window.alert('Error: You must select one of the files as the default to run')
 
         #print('EditorView run_project 0.9')
         self.program_is_running = True
         global project
-        historygraphfrontend.initialise_document_collection(project['id'])
+        historygraphfrontend.initialise_document_collection(project['id'], self.on_historygraph_download_complete)
         #print('EditorView run_project 1')
         #historygraphfrontend.download_document_collection()
         self.write_program_to_virtual_file_system()
@@ -930,8 +936,12 @@ class EditorView(BCChrome):
             return self.selected_file_de['content']
 
     def code_mirror_change(self, content):
+        #print('code_mirror_change called')
         if self.selected_file_de is not None:
-            self.selected_file_de['content'] = str(content)
+            if self.selected_file_de['content'] != str(content):
+                self.selected_file_de['content'] = str(content)
+                #self.mount_redraw()
+                #Router.router.ResetHashChange()
 
     def newFile_ok(self, e, form_values):
         root_folder = [de for de in project['directory_entry'] if de['parent_id'] is None][0]

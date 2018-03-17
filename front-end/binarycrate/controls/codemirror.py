@@ -7,6 +7,25 @@ except ImportError:
     js = None
 import copy
 
+global_editor = None
+global_textarea = None
+global_change_callback_handler = None
+
+def initialise_codemirror_callbacks():
+    @js.Function
+    def change_callback_handler(a, b):
+        #print('change_callback_handler2 called a=',a)
+        #print('change_callback_handler2 called b=',b)
+        #print('change_callback_handler2 called type(a)=',type(a))
+        #print('change_callback_handler2 called type(b)=',type(b))
+        #print('change_callback_handler2 called dir(a)=',dir(a))
+        #print('change_callback_handler2 called dir(b)=',dir(b))
+        #print('change_callback_handler2 called a=global_editor',a == global_editor)
+        callbacks.global_callbacks['onchange'][str(global_textarea.getAttribute('_cavorite_id'))](global_editor)
+
+    global global_change_callback_handler
+    global_change_callback_handler = change_callback_handler
+
 class CodeMirrorHandlerVNode(textarea):
     def __init__(self, attribs=None, children=None, change_handler=None, **kwargs):
         #print('CodeMirrorHandlerVNode __init__ self=', self)
@@ -36,14 +55,20 @@ class CodeMirrorHandlerVNode(textarea):
                 'viewportMargin': js.globals.Infinity,
               })
 
-            @js.Function
-            def change_callback_handler(a, b):
-                #print('change_callback_handler called')
-                callbacks.global_callbacks['onchange'][str(textarea.getAttribute('_cavorite_id'))](self.editor)
-            self.editor.on('change', change_callback_handler)
+            #@js.Function
+            #def change_callback_handler(a, b):
+            #    #print('change_callback_handler called')
+            #    callbacks.global_callbacks['onchange'][str(textarea.getAttribute('_cavorite_id'))](self.editor)
+            assert global_change_callback_handler, 'CodeMirror global_change_callback_handler not set'
+            self.editor.on('change', global_change_callback_handler)
 
-            self.onchange_codemirror(None)
+            global global_editor
+            global_editor = self.editor
+            global global_textarea
+            global_textarea = textarea
+            #self.onchange_codemirror(None)
 
+    """
     def codemirror_init(self):
         self.waiting_for_timeout = False
         #print('CodeMirrorHandlerVNode codemirror_init self=', self)
@@ -57,11 +82,13 @@ class CodeMirrorHandlerVNode(textarea):
 
         @js.Function
         def change_callback_handler(a, b):
+            print('change_callback_handler called')
             callbacks.global_callbacks['onchange'][str(textarea.getAttribute('_cavorite_id'))](self.editor)
 
-        self.editor.on('change', change_callback_handler)
+        self.editor.on('change', change_callback_handler2)
 
         self.onchange_codemirror(None)
+    """
 
     def onchange_codemirror(self, e):
         #print ('onchange_codemirror self.change_handler=', self.change_handler)
@@ -74,6 +101,8 @@ class CodeMirrorHandlerVNode(textarea):
         #print ('onchange_codemirror content=', content)
         if self.change_handler is not None:
             self.change_handler(content)
+        #e.stopPropagation()
+        #e.preventDefault()
 
 
 

@@ -2245,6 +2245,11 @@ print('Hello folder i={}'.format(i))
         assert len(view.form_stack) == 1
         assert isinstance(view.form_stack[-1].button1, dict)
 
+        view.form_stack[-1].on_historygraph_download_complete = Mock()
+        view.form_stack[-1].on_historygraph_download_complete.assert_not_called()
+        view.on_historygraph_download_complete()
+        view.form_stack[-1].on_historygraph_download_complete.assert_called_once()
+
     def test_running_program_without_default_file_causes_an_error(self, monkeypatch):
         monkeypatch.setattr(Router, 'ResetHashChange', Mock())
         monkeypatch.setattr(editor.cavorite, 'js', js)
