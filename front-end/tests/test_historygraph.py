@@ -24,7 +24,9 @@ class TestHistoryGraph(object):
 
         historygraphfrontend.documentcollection = None
         project_id = uuid.uuid4()
-        historygraphfrontend.initialise_document_collection(project_id)
+        mock_download_commplete_callback = Mock()
+
+        historygraphfrontend.initialise_document_collection(project_id, mock_download_commplete_callback)
         assert isinstance(historygraphfrontend.documentcollection, DocumentCollection)
         assert historygraphfrontend.documentcollection.id == project_id
         historygraphfrontend.documentcollection.Register(Score)
@@ -35,8 +37,11 @@ class TestHistoryGraph(object):
         assert historygraphfrontend.documentcollection_download_ready == False
 
         response = {'history': [], 'immutableobjects': []}
+        mock_download_commplete_callback.assert_not_called()
         historygraphfrontend.historygraph_ajaxget_handler(Mock(status=200, responseText=json.dumps(response)),
                                               response)
+        mock_download_commplete_callback.assert_called_once()
+        mock_download_commplete_callback = None
         assert historygraphfrontend.documentcollection_download_ready == True
 
         score = Score(None)
@@ -55,7 +60,7 @@ class TestHistoryGraph(object):
         assert len(json.loads(dc_edges['immutableobjects'])) == 0
         assert len(json.loads(dc_edges['history'])) == 1
 
-        historygraphfrontend.initialise_document_collection(project_id)
+        historygraphfrontend.initialise_document_collection(project_id, None)
         historygraphfrontend.documentcollection.Register(Score)
         js.globals.cavorite_ajaxGet = Mock()
         historygraphfrontend.download_document_collection()
@@ -74,6 +79,7 @@ class TestHistoryGraph(object):
         js.globals.cavorite_ajaxGet = Mock()
         historygraphfrontend.download_document_collection()
         js.globals.cavorite_ajaxGet.assert_called_with('/api/historygraph/' + str(project_id) + '/', str(dummy_uuid()))
+
         historygraphfrontend.historygraph_ajaxget_handler(Mock(status=200, responseText=json.dumps(dc_edges2)),
                                               dc_edges2)
 

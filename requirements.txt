@@ -7,6 +7,7 @@ djangorestframework==3.7.7
 psutil==5.4.3
 mock==2.0.0
 backports.tempfile==1.0
+psycopg2==2.7.4
 
 # General requirements for testing
 selenium==3.5.0

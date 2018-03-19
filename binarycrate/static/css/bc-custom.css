@@ -179,8 +179,10 @@ ____________________________________________________________________________ */
   padding-left: 5px;
   padding-right: 5px;
   align-self: end;
-  flex:1;
-
+  #flex:1;
+  min-height: 120px;
+  max-height: 120px;
+  overflow-y: scroll;
 }
 
 /* Code Area

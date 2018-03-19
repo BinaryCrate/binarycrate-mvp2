@@ -64,6 +64,7 @@ class Project(div):
 class DashboardView(BCChrome):
     def __init__(self, *args, **kwargs):
         self.selected_project = None
+        self.projects_loaded = False
         super(DashboardView, self).__init__(*args, **kwargs)
 
     def get_project_name(self):
@@ -71,6 +72,7 @@ class DashboardView(BCChrome):
 
     def projects_api_ajax_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+            self.projects_loaded = True
             global projects
             new_projects = json.loads(str(xmlhttp.responseText))
             if projects != new_projects:
@@ -79,7 +81,10 @@ class DashboardView(BCChrome):
                 Router.router.ResetHashChange()
 
     def query_projects(self):
-        ajaxget('/api/projects/', self.projects_api_ajax_result_handler)
+        if self.projects_loaded == False:
+            ajaxget('/api/projects/', self.projects_api_ajax_result_handler)
+            self.mount_redraw()
+            Router.router.ResetHashChange()
 
     def was_mounted(self):
         super(DashboardView, self).was_mounted()
@@ -152,12 +157,14 @@ class DashboardView(BCChrome):
             self.query_projects()
 
     def createNew_ok(self, e, form_values):
+        self.projects_loaded = False
         data = {'name': form_values['txtProjectName'],
                 'type': form_values['selectProjectType'],
                 'public': True}
         ajaxpost('/api/projects/', data, self.projects_api_ajax_post_result_handler)
 
     def renameProj_ok(self, e, form_values):
+        self.projects_loaded = False
         data = {'id': self.selected_project['id'],
                 'name': form_values['txtProjectName'],
                 'type': self.selected_project['type'],
@@ -165,6 +172,7 @@ class DashboardView(BCChrome):
         ajaxput('/api/projects/' + self.selected_project['id'] + '/', data, self.projects_api_ajax_put_result_handler)
 
     def deleteProj_ok(self, e, form_values):
+        self.projects_loaded = False
         ajaxdelete('/api/projects/' + self.selected_project['id'] + '/',self.projects_api_ajax_delete_result_handler)
 
     def get_central_content(self):

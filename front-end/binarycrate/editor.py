@@ -271,40 +271,70 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
 
     def write_program_to_virtual_file_system(self, parent_id=None, extra_path=''):
+        #print('write_program_to_virtual_file_system called')
         global project
         if parent_id is None:
+            #print('write_program_to_virtual_file_system 1')
             de = [de for de in project['directory_entry'] if de['parent_id'] is None][0]
             self.write_program_to_virtual_file_system(de['id'])
         else:
+            #print('write_program_to_virtual_file_system 2')
             des = [de for de in project['directory_entry'] if de['parent_id'] == parent_id]
+            #print('write_program_to_virtual_file_system 3')
             for de in des:
                 if de['is_file'] is False:
+                    #print('write_program_to_virtual_file_system 4')
                     try:
                         os.stat(python_module_dir + extra_path + de['name'] + '/')
                     except:
                         os.mkdir(python_module_dir + extra_path + de['name'] + '/')       
                     self.write_program_to_virtual_file_system(de['id'], extra_path + de['name'] + '/')
+                    #print('write_program_to_virtual_file_system 5')
                 else:
+                    #print('write_program_to_virtual_file_system 6')
+                    #print('write_program_to_virtual_file_system de[content]', de['content'])
+                    #print('write_program_to_virtual_file_system type(de[content])', type(de['content']))
                     with open(python_module_dir + extra_path + de['name'], "w+") as fl:
                          fl.write(de['content'])
+                    #print('write_program_to_virtual_file_system 7')
+
+    def get_default_directory_entry(self):
+        des = [de for de in project['directory_entry'] if de['is_default']]
+        if len(des) == 0:
+            return None
+        else:
+            return des[0]
 
     def get_default_module_form_classes(self):
-        de = [de for de in project['directory_entry'] if de['is_default']][0]
+        #de = [de for de in project['directory_entry'] if de['is_default']][0]
+        de = self.get_default_directory_entry()
+        if de is None:
+            return []
         imported_module = __import__(de['name'][:de['name'].find('.')])
         #print('EditorView run_project dir(imported_module)=', dir(imported_module))
         return [getattr(imported_module, name) for name in dir(imported_module) if inspect.isclass(getattr(imported_module, name)) and issubclass(getattr(imported_module, name), StudentForm)]
 
+    def on_historygraph_download_complete(self):
+        for form in self.form_stack:
+            form.on_historygraph_download_complete()
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
     def run_project(self, e):
         print('EditorView run_project called')
+        if self.get_default_directory_entry() is None:
+            js.globals.window.alert('Error: You must select one of the files as the default to run')
+
+        #print('EditorView run_project 0.9')
         self.program_is_running = True
         global project
-        historygraphfrontend.initialise_document_collection(project['id'])
-        print('EditorView run_project 1')
+        historygraphfrontend.initialise_document_collection(project['id'], self.on_historygraph_download_complete)
+        #print('EditorView run_project 1')
         #historygraphfrontend.download_document_collection()
         self.write_program_to_virtual_file_system()
-        print('EditorView run_project 2')
+        #print('EditorView run_project 2')
         js.globals.document.print_to_secondary_output = True
-        #print('EditorView run_project called')
+        #print('EditorView run_project 3')
         form_classes = self.get_default_module_form_classes()
         #print('EditorView run_project form_classes=', form_classes)
         if len(form_classes) > 0:
@@ -316,7 +346,7 @@ class EditorView(BCChrome):
             #print('EditorView run_project Found  no usable class')
             js.globals.document.print_to_secondary_output = False
         #aa.tr()
-        #print('EditorView run_project called2')
+        #print('EditorView run_project called 4')
 
     def set_current_file_as_default(self, e):
         #print('set_current_file_as_default called')
@@ -381,11 +411,13 @@ class EditorView(BCChrome):
                       div({'class': "project-fnf col-ms-2"}, [
                         div({'class': 'top-tree'}, [
                           p({'style': 'display:inline'}, 'Files'),
-                          a({'data-toggle': "modal", 'data-target': '#newFile', 'href': get_current_hash(), 'onclick': self.newFile_ok}, [
-                            span({'class': 'fa fa-1x fa-file-code-o'}),
+                          #a({'data-toggle': "modal", 'data-target': '#newFile', 'href': get_current_hash(), 'onclick': self.newFile_ok}, [
+                          a({'href': get_current_hash()}, [
+                            span({'class': 'fa fa-1x fa-file-code-o', 'onclick': self.display_new_file_modal}),
                           ]),
-                          a({'data-toggle': "modal", 'data-target': '#newFolder', 'href': get_current_hash(), 'onclick': self.newFolder_ok}, [
-                            span({'class': 'fa fa-1x fa-folder-o'}),
+                          #a({'data-toggle': "modal", 'data-target': '#newFolder', 'href': get_current_hash(), 'onclick': self.newFolder_ok}, [
+                          a({'href': get_current_hash()}, [
+                            span({'class': 'fa fa-1x fa-folder-o', 'onclick': self.display_new_folder_modal}),
                           ]),
                         ]),
                         self.get_project_tree(),
@@ -510,6 +542,28 @@ class EditorView(BCChrome):
         self.mount_redraw()
         Router.router.ResetHashChange()
 
+    def display_new_file_modal(self, e):
+        if self.selected_de is not None and self.selected_de['is_file']:
+            js.globals.window.alert('Error: You must select a folder to insert this file in')
+            e.stopPropagation()
+            e.preventDefault()
+            return
+        jquery = js.globals['$']
+        jquery('#newFile').modal('show')
+        e.stopPropagation()
+        e.preventDefault()
+
+    def display_new_folder_modal(self, e):
+        if self.selected_de is not None and self.selected_de['is_file']:
+            js.globals.window.alert('Error: You must select a folder to insert this folder in')
+            e.stopPropagation()
+            e.preventDefault()
+            return
+        jquery = js.globals['$']
+        jquery('#newFolder').modal('show')
+        e.stopPropagation()
+        e.preventDefault()
+
     def display_property_change_modal(self, e, form_item, prop_name):
         #print('display_property_change_modal called form_item[name]=', form_item['name'])
         self.current_prop_name = prop_name
@@ -523,10 +577,10 @@ class EditorView(BCChrome):
                 jquery('#changePropertyColor').modal('show')
             else:
                 jquery('#changeProperty').modal('show')
-        #self.mount_redraw()
-        #Router.router.ResetHashChange()
-        e.stopPropagation()
-        e.preventDefault()
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+        #e.stopPropagation()
+        #e.preventDefault()
         timeouts.set_timeout(display_modal, 1)
 
     def contextmenu_control(self, form_item_id, e):
@@ -750,13 +804,22 @@ class EditorView(BCChrome):
         e.stopPropagation()
         e.preventDefault()
 
+    def get_next_name(self, prefix):
+        s = {fi['name'][len(prefix):] for fi in self.selected_de['form_items'] if fi['name'].startswith(prefix)}
+        s = [int(num) for num in s if num.isdigit()]
+        s = sorted(s)
+        if len(s) == 0:
+            return '{}1'.format(prefix)
+        else:
+            return '{}{}'.format(prefix, str(s[-1] + 1))
+
     def new_button(self, e):
         self.new_control(e, 
             {'type': 'button',
              'width': 100,
              'height': 30,
              'caption': 'Button',
-             'name': 'button1',
+             'name': self.get_next_name('button'),
             })
 
     def new_textbox(self, e):
@@ -764,7 +827,7 @@ class EditorView(BCChrome):
             {'type': 'textbox',
              'width': 150,
              'height': 30,
-             'name': 'textbox1',
+             'name': self.get_next_name('textbox'),
             })
 
     def new_image(self, e):
@@ -772,7 +835,7 @@ class EditorView(BCChrome):
             {'type': 'image',
              'width': 200,
              'height': 200,
-             'name': 'image1',
+             'name': self.get_next_name('image'),
             })
 
     def new_label(self, e):
@@ -781,7 +844,7 @@ class EditorView(BCChrome):
              'width': 150,
              'height': 30,
              'caption': 'Label',
-             'name': 'label1',
+             'name': self.get_next_name('label'),
             })
 
     def new_frame(self, e):
@@ -790,7 +853,7 @@ class EditorView(BCChrome):
              'width': 300,
              'height': 300,
              'caption': 'Frame',
-             'name': 'frame1',
+             'name': self.get_next_name('frame'),
             })
 
     def new_checkbox(self, e):
@@ -799,7 +862,7 @@ class EditorView(BCChrome):
              'width': 150,
              'height': 30,
              'caption': 'Checkbox',
-             'name': 'checkbox1',
+             'name': self.get_next_name('checkbox'),
              'value': False,
             })
 
@@ -808,7 +871,7 @@ class EditorView(BCChrome):
             {'type': 'listbox',
              'width': 150,
              'height': 150,
-             'name': 'listbox1',
+             'name': self.get_next_name('listbox'),
             })
 
     def new_rectangle(self, e):
@@ -816,7 +879,7 @@ class EditorView(BCChrome):
             {'type': 'rect',
              'width': 150,
              'height': 150,
-             'name': 'rect1',
+             'name': self.get_next_name('rect'),
              'stroke_width': 5,
              'stroke': 'rgb(0,0,0)',
              'fill': 'none',
@@ -827,7 +890,7 @@ class EditorView(BCChrome):
             {'type': 'circle',
              'width': 150,
              'height': 150,
-             'name': 'circle1',
+             'name': self.get_next_name('circle'),
              'stroke_width': 5,
              'stroke': 'rgb(0,0,0)',
              'fill': 'none',
@@ -873,8 +936,12 @@ class EditorView(BCChrome):
             return self.selected_file_de['content']
 
     def code_mirror_change(self, content):
+        #print('code_mirror_change called')
         if self.selected_file_de is not None:
-            self.selected_file_de['content'] = content
+            if self.selected_file_de['content'] != str(content):
+                self.selected_file_de['content'] = str(content)
+                #self.mount_redraw()
+                #Router.router.ResetHashChange()
 
     def newFile_ok(self, e, form_values):
         root_folder = [de for de in project['directory_entry'] if de['parent_id'] is None][0]
@@ -912,6 +979,13 @@ class EditorView(BCChrome):
         #print('changeProperty_ok called fi[type]=', fi['type'], ', self.current_prop_name=', self.current_prop_name)
         #print('changeProperty_ok form_values=', form_values)
         #print('changeProperty_ok called FormItemPropType=', get_form_item_property(fi['type'])[self.current_prop_name])
+        if self.current_prop_name == 'name':
+            matches = [fi for fi in self.selected_de['form_items'] if fi['id'] != self.selected_item and fi['name'] == str(form_values['txtValue'])]
+            if len(matches) > 0:
+                js.globals.window.alert('Error: Another control with that name already exists')
+                self.mount_redraw()
+                Router.router.ResetHashChange()
+                return
         if get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.INT:
             value = int(form_values['txtValue'])
         elif get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.STRING:

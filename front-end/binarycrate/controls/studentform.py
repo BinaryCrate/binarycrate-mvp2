@@ -169,4 +169,7 @@ class StudentForm(object):
         self.initialise_form_controls()
         self.editorview = editorview
 
+    def on_historygraph_download_complete(self):
+        pass
+
 

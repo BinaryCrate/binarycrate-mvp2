@@ -34,6 +34,19 @@ def get_matching_vnode(vnode, callback):
     return None
 
 
+def get_matching_vnodes(vnode, callback):
+    # Iterate over vnode and all of it's children. Return the first node for which
+    # callback returns true otherwise return None
+    ret = list()
+    if callback(vnode):
+        ret.append(vnode)
+    if hasattr(vnode, 'get_children'):
+        children = vnode.get_children()
+        if children is not None:
+            for child in children:
+                ret.extend(get_matching_vnodes(child, callback))
+    return ret
+
 def style_to_dict(style_str):
     # style_str = an inline style as a string
     l = style_str.split(';')
@@ -51,4 +64,6 @@ def style_to_dict(style_str):
 def get_vnode_by_id(vnode, id):
     return get_matching_vnode(vnode, lambda n: hasattr(n, 'get_attribs') and n.get_attribs().get('id') == id)
 
+def get_vnode_by_css_class(vnode, css_class):
+    return get_matching_vnode(vnode, lambda n: hasattr(n, 'get_attribs') and n.get_attribs().get('class') == css_class)
 

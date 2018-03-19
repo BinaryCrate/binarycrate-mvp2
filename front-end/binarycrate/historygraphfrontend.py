@@ -7,12 +7,16 @@ import json
 
 documentcollection = None
 documentcollection_download_ready = False
+download_complete_callback = None
 
-def initialise_document_collection(project_id):
+def initialise_document_collection(project_id, download_complete_callback_fn):
     documentcollection_download_ready = False
     global documentcollection
     documentcollection = historygraph.DocumentCollection()
     documentcollection.id = project_id
+
+    global download_complete_callback
+    download_complete_callback = download_complete_callback_fn
 
 def historygraph_ajaxget_handler(xmlhttp, response):
     #print('historygraph_ajaxget_handler xmlhttp.responseText=', xmlhttp.responseText)
@@ -21,6 +25,8 @@ def historygraph_ajaxget_handler(xmlhttp, response):
     global documentcollection
     documentcollection.LoadFromJSON(str(xmlhttp.responseText))
     documentcollection_download_ready = True
+    if download_complete_callback:
+        download_complete_callback()
 
 def download_document_collection():
     # Download the global document collection

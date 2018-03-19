@@ -9,7 +9,7 @@ from mock import Mock
 import json
 from binarycrate.editor import BCProjectTree, BCPFolder, BCPFile, ContextMenu
 from binarycrate.controls import codemirror, StudentForm
-from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode, style_to_dict, get_vnode_by_id
+from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode, style_to_dict, get_vnode_by_id, get_vnode_by_css_class, get_matching_vnodes
 import cavorite.bootstrap.modals
 from binarycrate.editor import HANDLE_NONE, HANDLE_TOPLEFT, HANDLE_TOPRIGHT, HANDLE_BOTTOMLEFT, HANDLE_BOTTOMRIGHT
 from binarycrate.editor import get_form_item_property, FormItemPropType
@@ -398,8 +398,21 @@ class TestEditor(object):
         assert root_folder.get_display_title() == '/'
         assert folder.get_display_title() == 'folder'
         
+        virtual_node = node._build_virtual_dom()
+        #add_folder_link = get_matching_vnode(virtual_node, lambda vnode: get_vnode_by_css_class(vnode, 'fa fa-1x fa-folder-o'))
 
-        #node.add_new_folder_handler(Mock())
+        editor.js.globals.window.alert = Mock()
+        hello_world.on_click(Mock())
+        #add_folder_link.get_attribs()['onclick'](Mock())
+        node.display_new_file_modal(Mock())
+
+        editor.js.globals.window.alert.assert_called_with('Error: You must select a folder to insert this file in')
+
+        editor.js.globals.window.alert = Mock()
+        root_folder.on_click(Mock())
+        node.display_new_file_modal(Mock())
+
+        editor.js.globals.window.alert.assert_not_called()
 
         def mock_element_iterator_callback(vnode):
             if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'newFile':
@@ -578,8 +591,21 @@ class TestEditor(object):
         assert root_folder.get_display_title() == '/'
         assert folder.get_display_title() == 'folder'
         
+        virtual_node = node._build_virtual_dom()
+        #add_folder_link = get_matching_vnode(virtual_node, lambda vnode: get_vnode_by_css_class(vnode, 'fa fa-1x fa-folder-o'))
 
-        #node.add_new_folder_handler(Mock())
+        editor.js.globals.window.alert = Mock()
+        hello_world.on_click(Mock())
+        #add_folder_link.get_attribs()['onclick'](Mock())
+        node.display_new_folder_modal(Mock())
+
+        editor.js.globals.window.alert.assert_called_with('Error: You must select a folder to insert this folder in')
+
+        editor.js.globals.window.alert = Mock()
+        root_folder.on_click(Mock())
+        node.display_new_folder_modal(Mock())
+
+        editor.js.globals.window.alert.assert_not_called()
 
         def mock_element_iterator_callback(vnode):
             if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'newFolder':
@@ -603,6 +629,7 @@ class TestEditor(object):
 
         def setup_mock_modal_callback(node, file_name):
             if isinstance(node, js.MockElement) and node.getAttribute('id') == 'txtFolderName':
+                print('setup_mock_modal_callback settings node file_name to=', file_name)
                 node.value = file_name
 
         js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, 'folder2'))
@@ -617,7 +644,7 @@ class TestEditor(object):
                 #print('setup_mock_modal_callback_was_added node=', node)
                 child = node.children.item(0)
                 if isinstance(child, js.MockTextNode):
-                    #print('setup_mock_modal_callback_was_added child=', str(child))
+                    print('setup_mock_modal_callback_was_added child=', str(child))
                     if  str(child) == folder_name:
                         result['new_folder_found'] = True
 
@@ -1682,6 +1709,174 @@ class TestContextMenu(object):
         vnode_rect = get_matching_vnode(rendered, lambda vnode: is_nvode_rect(vnode))
         assert vnode_rect.get_attribs()['fill'] == 'none'
 
+    def test_multiple_new_buttons_have_unique_names(self, monkeypatch):
+        monkeypatch.setattr(Router, 'ResetHashChange', Mock())
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(codemirror, 'js', js)
+
+        callbacks.initialise_global_callbacks()
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        body = js.globals.document.body
+        error_404_page = c("div", [c("p", "No match 404 error"),
+                                   c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
+        view = editor.EditorView()
+        r = Router({r'^$': view},
+                    error_404_page, body)
+        r.route()
+
+        view.mount_redraw = Mock()
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+    print('Hello folder i={}'.format(i))
+"""
+
+        response = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': '[]',
+                        'parent_id': None,
+                        'is_default': False,
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False, 
+                        'content': '', 
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'form_items': '[]',
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
+                       },
+                     ]
+                    }
+        view.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)),
+                                              response)
+        view.selected_de = [de for de in editor.project['directory_entry'] if de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'][0]
+
+        view.mount_redraw = Mock()
+        Router.router.ResetHashChange.reset_mock()
+        view.contextmenu_preview(Mock(pageX=10, pageY=10))
+
+        Router.router.ResetHashChange.reset_mock()
+        view.mount_redraw.reset_mock()
+        js.return_get_element_by_id = {'preview': Mock(getBoundingClientRect=Mock(return_value=Mock(left=0, top=0)))}
+        view.new_button(Mock(clientX=10, clientY=20))
+        view.new_button(Mock(clientX=20, clientY=30))
+
+        button = view.selected_de['form_items'][0]
+
+        def is_nvode_button(vnode, button_title):
+            if hasattr(vnode, 'tag') is False:
+                return None
+            if vnode.tag != 'button':
+                return None
+            l = vnode.get_children()
+            if len(l) != 1:
+                return None
+            child = l[0]
+            if type(child) == t and child.text == button_title:
+                return vnode
+            else:
+                return None
+
+        vnode_buttons = get_matching_vnodes(view, lambda vnode: is_nvode_button(vnode, 'Button'))
+        assert len(vnode_buttons) == 2
+
+        assert len(view.selected_de['form_items']) == 2
+
+        for fi in view.selected_de['form_items']:
+            assert fi['type'] == 'button'
+
+        assert {fi['name'] for fi in view.selected_de['form_items']} == {'button1', 'button2'}
+
+        button2_fi = [fi for fi in view.selected_de['form_items'] if fi['name'] == 'button2'][0]
+
+        view.mount_redraw = Mock()
+        Router.router.ResetHashChange.reset_mock()
+        vnode_button = vnode_buttons[1]
+        vnode_button.get_attribs()['oncontextmenu'](Mock())
+
+        name_index = 2
+        assert 'Change name' ==  view.context_menu.menu_items[name_index][0]
+        assert callable(view.context_menu.menu_items[name_index][1])
+        view.mount_redraw.assert_called()
+        Router.router.ResetHashChange.assert_called()
+        view.context_menu.menu_items[name_index][1](Mock())
+
+        #assert False
+
+        result = dict()
+
+        def mock_element_iterator_callback(vnode):
+            if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'changeProperty':
+
+                def mock_element_iterator_callback2(vnode):
+                    if hasattr(vnode, 'tag'):
+                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                            result['changeProperty_OK_handler'] = vnode.get_attribs()['onclick']
+                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtValue":
+                            result['default_value'] = vnode.get_attribs().get('value', '')
+                IterateVirtualDOM(vnode, mock_element_iterator_callback2)
+
+        view.mount_redraw = Mock()
+
+        virtual_node = view._build_virtual_dom()
+        IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
+
+        assert result['default_value'] == 'button2'        
+
+        # Call the modal handler
+        rendered_modal = view._render(None)
+        cavorite.bootstrap.modals.js.return_get_element_by_id = {'changeProperty': rendered_modal}
+
+        def setup_mock_modal_callback(node, control_name):
+            if isinstance(node, js.MockElement) and node.getAttribute('id') == 'txtValue':
+                node.value = control_name
+
+        js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, 'button1'))
+
+        #print('test_editor result[changeProperty_OK_handler]=', result['changeProperty_OK_handler'])
+        editor.js.globals.window.alert = Mock()
+        result['changeProperty_OK_handler'](Mock())
+
+        editor.js.globals.window.alert.assert_called_with('Error: Another control with that name already exists')
+        assert {fi['name'] for fi in view.selected_de['form_items']} == {'button1', 'button2'}
 
 class TestFormItems(object):
     def gen_check_form_item_generic_properties(self, form_item_type):
@@ -1713,7 +1908,6 @@ class TestFormItems(object):
         assert get_form_item_property('line')['stroke'] == FormItemPropType.COLOR
 
     def test_form_item_button_properties(self):
-
         self.gen_check_form_item_generic_properties('button')
         assert get_form_item_property('button')['caption'] == FormItemPropType.STRING
         self.gen_check_form_item_generic_properties('label')
@@ -1728,6 +1922,54 @@ class TestFormItems(object):
         assert get_form_item_property('image')['src'] == FormItemPropType.STRING
         self.gen_check_form_item_generic_properties('checkbox')
         assert get_form_item_property('checkbox')['value'] == FormItemPropType.BOOLEAN
+
+    def test_form_items_name(self):
+        response = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': [],
+                        'parent_id': None,
+                        'is_default': False,
+                       },
+                     ]
+                   }
+        editor.project = response
+
+        view = editor.EditorView()
+        view.selected_de = response['directory_entry'][0]
+        assert view.get_next_name('button') == 'button1'
+
+        response = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': [],
+                        'parent_id': None,
+                        'is_default': False,
+                       },
+                     ]
+                   }
+        editor.project = response
+        view.selected_de = response['directory_entry'][0]
+
+        response['directory_entry'][0]['form_items'] = [{'name': 'button1'}]
+        assert view.get_next_name('button') == 'button2'
+
 
 class TestRunningAProgram(object):
     def test_files_are_loaded_into_virtual_file_system(self, monkeypatch):
@@ -2002,5 +2244,101 @@ print('Hello folder i={}'.format(i))
 
         assert len(view.form_stack) == 1
         assert isinstance(view.form_stack[-1].button1, dict)
+
+        view.form_stack[-1].on_historygraph_download_complete = Mock()
+        view.form_stack[-1].on_historygraph_download_complete.assert_not_called()
+        view.on_historygraph_download_complete()
+        view.form_stack[-1].on_historygraph_download_complete.assert_called_once()
+
+    def test_running_program_without_default_file_causes_an_error(self, monkeypatch):
+        monkeypatch.setattr(Router, 'ResetHashChange', Mock())
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(codemirror, 'js', js)
+
+        callbacks.initialise_global_callbacks()
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        body = js.globals.document.body
+        error_404_page = c("div", [c("p", "No match 404 error"),
+                                   c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
+        view = editor.EditorView()
+        r = Router({r'^$': view},
+                    error_404_page, body)
+        r.route()
+        view.mount_redraw = Mock()
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+print('Hello folder i={}'.format(i))
+"""
+        editor.project = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': [],
+                        'parent_id': None,
+                        'is_default': False,
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]'),
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False, 
+                        'content': '', 
+                        'form_items': [],
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'form_items': [],
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
+                       },
+                     ]
+                    }
+
+        assert len(view.form_stack) == 0
+
+        class TestForm1(StudentForm):
+            file_location = '/lib/pypyjs/lib_pypy/hello_world.py'
+
+        form_classes = [TestForm1]
+        view.get_default_module_form_classes = Mock(return_value=form_classes)
+        view.write_program_to_virtual_file_system = Mock()
+        editor.js.globals.window.alert = Mock()
+        view.run_project(Mock())
+
+
+        editor.js.globals.window.alert.assert_called_with('Error: You must select one of the files as the default to run')
+
+        #assert len(view.form_stack) == 1
+        #assert isinstance(view.form_stack[-1].button1, dict)
 
 
