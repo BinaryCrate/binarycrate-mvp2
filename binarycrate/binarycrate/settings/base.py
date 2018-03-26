@@ -3,6 +3,8 @@ from __future__ import absolute_import, unicode_literals
 import sys
 import tempfile
 
+from .build_number import BUILD_NUMBER
+
 """
 Django settings for binarycrate project.
 

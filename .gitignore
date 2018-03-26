@@ -109,4 +109,5 @@ screenshot.png
 
 binarycrate/binarycrate/settings/__init__.py
 binarycrate/binarycrate/settings/production.py
+front-end/binarycrate/build_number.py
 

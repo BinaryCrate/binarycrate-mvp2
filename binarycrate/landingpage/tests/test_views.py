@@ -6,6 +6,7 @@ from django.test.client import RequestFactory
 from django.core.urlresolvers import resolve, reverse
 from accounts.factories import UserFactory
 from accounts.models import User
+from django.conf import settings
 
 
 class LandingPageTestCase(TestCase):
@@ -23,5 +24,6 @@ class LandingPageTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         response.render()
         self.assertIn(b"pypyjs", response.content)
+        self.assertIn(settings.BUILD_NUMBER, response.content)
 
 

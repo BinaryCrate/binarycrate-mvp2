@@ -1,4 +1,4 @@
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, unicode_literals, print_function
 try:
     import js
 except ImportError:
@@ -7,6 +7,7 @@ from cavorite import c, t, Router, callbacks, timeouts, ajaxget
 from .dashboard import dashboard_view
 from .editor import editor_view
 from .controls import codemirror
+from .build_number import BUILD_NUMBER
 
 def start():
     callbacks.initialise_global_callbacks()
