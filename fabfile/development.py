@@ -76,6 +76,7 @@ def frontend_test(testname=None):
     else:
         testcommand = ""
     with lcd('.'):
+        local('cp binarycrate/binarycrate/settings/build_number.py front-end/binarycrate/build_number.py')
         local('docker run --tty '
               '--interactive --volume "${PWD}":/opt/project '
               #'--volume "/home/mark/cavorite":/opt/project/cavorite '
