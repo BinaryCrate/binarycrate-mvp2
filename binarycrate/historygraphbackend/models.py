@@ -18,6 +18,7 @@ class HistoryEdge(models.Model):
     propertyname = models.CharField(max_length=250, blank=True)
     propertyvalue = models.CharField(max_length=250, blank=True)
     propertytype = models.CharField(max_length=250, blank=True)
+    nonce = models.CharField(max_length=250, blank=True)
 
     objects = querysets.HistoryEdgeQuerySet.as_manager()
 
