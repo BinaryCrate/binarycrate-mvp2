@@ -1,0 +1,42 @@
+from __future__ import absolute_import, unicode_literals, print_function
+from binarycrate.controls import StudentForm
+from binarycrate import historygraphfrontend
+from historygraph import Document
+from historygraph import fields
+
+class Score(Document):
+    score = fields.IntCounter()
+
+historygraphfrontend.documentcollection.register(Score)
+
+class Aa(StudentForm):
+    file_location = __file__
+
+    def get_score(self):
+        dc = historygraphfrontend.documentcollection
+        scores = dc.get_by_class(Score)
+        if len(scores) == 0:
+            score = Score(None)
+            dc.add_document_object(score)
+            historygraphfrontend.post_document_collection()
+            return score
+        else:
+            return scores[0]
+
+    def bn_increment_onclick(self, e):
+        score = self.get_score()
+        score.score.add(1)
+        self.lbl_total['caption'] = '{}'.format(score.score.get())
+        historygraphfrontend.post_document_collection()
+
+    def bn_decrement_onclick(self, e):
+        score = self.get_score()
+        score.score.add(-1)
+        self.lbl_total['caption'] = '{}'.format(score.score.get())
+        historygraphfrontend.post_document_collection()
+
+    def on_historygraph_download_complete(self):
+        score = self.get_score()
+        self.lbl_total['caption'] = '{}'.format(score.score.get())
+
+historygraphfrontend.download_document_collection()

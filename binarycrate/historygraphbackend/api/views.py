@@ -43,7 +43,8 @@ class HistoryGraphView(APIView):
                 str(edge.propertyownerid),
                 str(edge.propertyname), 
                 str(edge.propertyvalue),
-                str(edge.propertytype)) for edge in edges]
+                str(edge.propertytype),
+                str(edge.nonce)) for edge in edges]
         return Response({'history': history, 'immutableobjects': []})
 
     def post(self, request, documentcollectionid, format=None):
@@ -62,7 +63,8 @@ class HistoryGraphView(APIView):
                 'propertyownerid': t[6],
                 'propertyname': t[7],
                 'propertyvalue': t[8],
-                'propertytype': t[9], 'documentcollectionid': documentcollectionid} for t in historyedges if HistoryEdge.objects.by_endnodeid(t[3]).count() == 0]
+                'propertytype': t[9], 
+                'nonce': t[10], 'documentcollectionid': documentcollectionid} for t in historyedges if HistoryEdge.objects.by_endnodeid(t[3]).count() == 0]
         #print('HistoryGraphView post received historyedges2=', historyedges2)
         serializer = HistoryGraphSerializer(data=historyedges2, many=True)
         if serializer.is_valid():

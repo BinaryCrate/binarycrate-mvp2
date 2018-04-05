@@ -1,0 +1,9 @@
+from __future__ import absolute_import, unicode_literals, print_function
+
+print('Hello from aa')
+
+print('bb says')
+
+import bb
+for x in range(5):
+    print('My name is {}'.format(bb.get_name()))

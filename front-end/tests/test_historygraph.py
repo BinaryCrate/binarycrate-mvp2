@@ -2,7 +2,8 @@
 from __future__ import absolute_import, unicode_literals, print_function
 from binarycrate import historygraphfrontend
 import uuid
-from historygraph import DocumentCollection, Document, FieldIntCounter
+from historygraph import DocumentCollection, Document
+from historygraph import fields
 import cavorite_tests.fakejs as js
 from cavorite import ajaxget
 from mock import Mock
@@ -10,7 +11,7 @@ import json
 
 
 class Score(Document):
-    current_count = FieldIntCounter()
+    current_count = fields.IntCounter()
 
 
 class TestHistoryGraph(object):
@@ -29,7 +30,7 @@ class TestHistoryGraph(object):
         historygraphfrontend.initialise_document_collection(project_id, mock_download_commplete_callback)
         assert isinstance(historygraphfrontend.documentcollection, DocumentCollection)
         assert historygraphfrontend.documentcollection.id == project_id
-        historygraphfrontend.documentcollection.Register(Score)
+        historygraphfrontend.documentcollection.register(Score)
 
         js.globals.cavorite_ajaxGet = Mock()
         historygraphfrontend.download_document_collection()
@@ -45,7 +46,7 @@ class TestHistoryGraph(object):
         assert historygraphfrontend.documentcollection_download_ready == True
 
         score = Score(None)
-        historygraphfrontend.documentcollection.AddDocumentObject(score)
+        historygraphfrontend.documentcollection.add_document_object(score)
         assert score.current_count.get() == 0
         score.current_count.add(1)
         assert score.current_count.get() == 1
@@ -61,7 +62,7 @@ class TestHistoryGraph(object):
         assert len(json.loads(dc_edges['history'])) == 1
 
         historygraphfrontend.initialise_document_collection(project_id, None)
-        historygraphfrontend.documentcollection.Register(Score)
+        historygraphfrontend.documentcollection.register(Score)
         js.globals.cavorite_ajaxGet = Mock()
         historygraphfrontend.download_document_collection()
         js.globals.cavorite_ajaxGet.assert_called_with('/api/historygraph/' + str(project_id) + '/', str(dummy_uuid()))
@@ -69,7 +70,7 @@ class TestHistoryGraph(object):
         historygraphfrontend.historygraph_ajaxget_handler(Mock(status=200, responseText=json.dumps(dc_edges2)),
                                               dc_edges2)
 
-        scores = historygraphfrontend.documentcollection.GetByClass(Score)
+        scores = historygraphfrontend.documentcollection.get_by_class(Score)
 
         assert len(scores) == 1
         assert scores[0].id == score.id
@@ -83,7 +84,7 @@ class TestHistoryGraph(object):
         historygraphfrontend.historygraph_ajaxget_handler(Mock(status=200, responseText=json.dumps(dc_edges2)),
                                               dc_edges2)
 
-        scores = historygraphfrontend.documentcollection.GetByClass(Score)
+        scores = historygraphfrontend.documentcollection.get_by_class(Score)
 
         assert len(scores) == 1
         assert scores[0].id == score.id

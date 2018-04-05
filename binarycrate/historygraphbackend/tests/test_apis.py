@@ -160,7 +160,8 @@ class HistoryGraphGetTestCase(APITestCase):
                  'F4',
                  'G4',
                  'H4',
-                 'I4'),
+                 'I4',
+                 'J4'),
                 ('A5',
                  'B5',
                  'C5',
@@ -170,7 +171,8 @@ class HistoryGraphGetTestCase(APITestCase):
                  'F5',
                  'G5',
                  'H5',
-                 'I5')]
+                 'I5',
+                 'J5')]
         data = {'history': json.dumps(historyedges), 'immutableobjects': json.dumps([])}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -251,7 +253,8 @@ class HistoryGraphGetTestCase(APITestCase):
                  'F4',
                  'G4',
                  'H4',
-                 'I4'),
+                 'I4',
+                 'J4'),
                 ('A4',
                  'B4',
                  'C4',
@@ -261,7 +264,8 @@ class HistoryGraphGetTestCase(APITestCase):
                  'F4',
                  'G4',
                  'H4',
-                 'I4')]
+                 'I4',
+                 'J4')]
         data = {'history': json.dumps(historyedges), 'immutableobjects': json.dumps([])}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

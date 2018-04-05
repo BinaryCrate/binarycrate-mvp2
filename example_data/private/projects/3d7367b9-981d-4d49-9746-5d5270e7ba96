@@ -1,0 +1,6 @@
+from __future__ import unicode_literals, absolute_import, print_function
+from binarycrate.controls import window_prompt as input
+
+s = input('Enter your name')
+
+print('You entered {}'.format(s))
