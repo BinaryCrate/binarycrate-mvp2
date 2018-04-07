@@ -130,6 +130,30 @@ class ProjectMustLogin(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(str(self.project_id) in response.content)
 
+    def test_put_project_detail_must_login(self):
+        """
+        Ensure a user can only change their  projects
+        """
+        self.assertEqual(Project.objects.count(), 1)
+        url = reverse('api:project-detail', kwargs={'pk':str(self.project_id)})
+        data = { 'id': str(self.project_id), 'name': 'Test 1a', 'type': 0,
+                 'public': False}
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(Project.objects.count(), 1)
+        self.assertEqual(Project.objects.first().name, 'Test 1')
+
+    def test_delete_project_detail_must_login(self):
+        """
+        Ensure we can delete individual projects
+        """
+        self.assertEqual(Project.objects.count(), 1)
+        url = reverse('api:project-detail', kwargs={'pk':str(self.project_id)})
+        data = { }
+        response = self.client.delete(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(Project.objects.count(), 1)
+        self.assertEqual(Project.objects.first().name, 'Test 1')
 
 class ProjectCannotAccessOtherUserTestCase(APITestCase):
     def setUp(self):
@@ -232,6 +256,29 @@ class ProjectCannotAccessOtherUserTestCase(APITestCase):
                           'is_default': False,
                          }),
                          })
+
+    def test_put_project_detail_cannot_change_another_users_project(self):
+        """
+        Ensure a user can only change their  projects
+        """
+        self.assertEqual(Project.objects.count(), 2)
+        url = reverse('api:project-detail', kwargs={'pk':str(self.project_id1)})
+        data = { 'id': str(self.project_id1), 'name': 'Test 1a', 'type': 0,
+                 'public': False}
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual({'Test 1', 'Test 2'}, {p.name for p in Project.objects.all()})
+
+    def test_delete_project_detail_cannot_delete_another_users_project(self):
+        """
+        Ensure we can delete individual projects
+        """
+        self.assertEqual(Project.objects.count(), 2)
+        url = reverse('api:project-detail', kwargs={'pk':str(self.project_id1)})
+        data = { }
+        response = self.client.delete(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual({'Test 1', 'Test 2'}, {p.name for p in Project.objects.all()})
 
 class ProjectCanSaveTestCase(APITestCase):
     def setUp(self):

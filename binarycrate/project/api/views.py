@@ -68,12 +68,16 @@ class ProjectDetail(APIView):
 
     def delete(self, request,pk, format=None):
         project = self.get_object(pk)
+        if project.owner != request.user:
+            raise PermissionDenied()
         project.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
     def put(self, request, pk, format=None):
         project = self.get_object(pk)
+        if project.owner != request.user:
+            raise PermissionDenied()
         serializer = ProjectPostSerializer(project, data=request.data)
         if serializer.is_valid():
             serializer.save()
