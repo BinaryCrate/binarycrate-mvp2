@@ -73,7 +73,6 @@ class ProjectDetail(APIView):
         project.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
     def put(self, request, pk, format=None):
         project = self.get_object(pk)
         if project.owner != request.user:
@@ -83,6 +82,7 @@ class ProjectDetail(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class DirectoryEntryDetail(APIView):
     permission_classes = (permissions.IsAuthenticated, )
@@ -119,10 +119,6 @@ class DirectoryEntryDetail(APIView):
             response_data['form_items'] = de.form_items
             return Response(response_data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def perform_update(self, serializer):
-        instance = serializer.save()
-        #print('perform_update instance._content=', instance._content)
 
     def delete(self, request, pk, format=None):
         de = self.get_object(pk)
