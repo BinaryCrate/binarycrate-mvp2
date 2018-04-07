@@ -21,7 +21,7 @@ class ProjectListTestCase(APITestCase):
         self.project_id = uuid.uuid4()
         u = UserFactory()
         de = DirectoryEntry.objects.create(name='', is_file=False)
-        Project.objects.create(id=self.project_id, name='Test 1', type=0, public=True,
+        Project.objects.create(id=self.project_id, name='Test 1', type=0, public=False,
                                root_folder=de, owner=u)
         self.client.force_authenticate(user=u)
 
@@ -38,7 +38,7 @@ class ProjectListTestCase(APITestCase):
         self.assertEqual(response.data[0]['id'], str(self.project_id))
         self.assertEqual(response.data[0]['name'], 'Test 1')
         self.assertEqual(response.data[0]['type'], 0)
-        self.assertEqual(response.data[0]['public'], True)
+        self.assertEqual(response.data[0]['public'], False)
 
 
     def test_project_detail(self):
@@ -50,18 +50,16 @@ class ProjectListTestCase(APITestCase):
         data = { }
         response = self.client.get(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        #self.assertEqual(response.data, {'id': str(self.project_id), 'name': 'Test 1', 'type': 0,
-        #                                 'public': True})
         self.assertEqual(response.data['id'], str(self.project_id))
         self.assertEqual(response.data['name'], 'Test 1')
         self.assertEqual(response.data['type'], 0)
-        self.assertEqual(response.data['public'], True)
+        self.assertEqual(response.data['public'], False)
 
     def test_project_post_creates_project(self):
         self.assertEqual(Project.objects.count(), 1)
         url = reverse('api:project-list')
         project_id = str(uuid.uuid4())
-        data = {'name':'Test 2', 'type':0, 'public':True }
+        data = {'name':'Test 2', 'type':0, 'public':False }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Project.objects.count(), 2)
@@ -73,7 +71,7 @@ class ProjectListTestCase(APITestCase):
         self.assertEqual(Project.objects.count(), 1)
         url = reverse('api:project-detail', kwargs={'pk':str(self.project_id)})
         data = { 'id': str(self.project_id), 'name': 'Test 1a', 'type': 0,
-                 'public': True}
+                 'public': False}
         response = self.client.put(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Project.objects.count(), 1)
@@ -98,7 +96,7 @@ class ProjectMustLogin(APITestCase):
         self.project_id = uuid.uuid4()
         u = UserFactory()
         de = DirectoryEntry.objects.create(name='', is_file=False)
-        Project.objects.create(id=self.project_id, name='Test 1', type=0, public=True,
+        Project.objects.create(id=self.project_id, name='Test 1', type=0, public=False,
                                root_folder=de, owner=u)
 
     def test_list_projects(self):
@@ -127,10 +125,11 @@ class ProjectMustLogin(APITestCase):
     def test_project_post_must_login(self):
         url = reverse('api:project-list')
         project_id = str(uuid.uuid4())
-        data = { 'id': project_id, 'name':'Test 2', 'type':0, 'public':True }
+        data = { 'id': project_id, 'name':'Test 2', 'type':0, 'public':False }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(str(self.project_id) in response.content)
+
 
 class ProjectCannotAccessOtherUserTestCase(APITestCase):
     def setUp(self):
@@ -139,10 +138,10 @@ class ProjectCannotAccessOtherUserTestCase(APITestCase):
         self.user1 = UserFactory(username='user1@binarycrate.com',email='user1@binarycrate.com')
         self.user2 = UserFactory(username='user2@binarycrate.com',email='user2@binarycrate.com')
         de1 = DirectoryEntry.objects.create(name='', is_file=False)
-        Project.objects.create(id=self.project_id1, name='Test 1', type=0, public=True,
+        Project.objects.create(id=self.project_id1, name='Test 1', type=0, public=False,
                                root_folder=de1, owner=self.user1)
         self.de_rootfolder = DirectoryEntry.objects.create(name='', is_file=False)
-        Project.objects.create(id=self.project_id2, name='Test 2', type=0, public=True,
+        Project.objects.create(id=self.project_id2, name='Test 2', type=0, public=False,
                                root_folder=self.de_rootfolder, owner=self.user2)
         self.de_hello_world = DirectoryEntry.objects.create(parent=self.de_rootfolder, name='hello_world.py', is_file=True)
         self.de_hello_world.content = "print('Hello world')"
@@ -171,7 +170,7 @@ class ProjectCannotAccessOtherUserTestCase(APITestCase):
         self.assertEqual(response.data[0]['id'], str(self.project_id2))
         self.assertEqual(response.data[0]['name'], 'Test 2')
         self.assertEqual(response.data[0]['type'], 0)
-        self.assertEqual(response.data[0]['public'], True)
+        self.assertEqual(response.data[0]['public'], False)
 
 
     def test_project_detail_cannot_access_other_users_projects(self):
@@ -197,7 +196,7 @@ class ProjectCannotAccessOtherUserTestCase(APITestCase):
         self.assertEqual(response.data['id'], str(self.project_id2))
         self.assertEqual(response.data['name'], 'Test 2')
         self.assertEqual(response.data['type'], 0)
-        self.assertEqual(response.data['public'], True)
+        self.assertEqual(response.data['public'], False)
         processed_directory_entries = {convert(d) for d in response.data['directory_entry']}
         self.assertEqual(processed_directory_entries, {
                          convert({'id': str(self.de_rootfolder.id),
@@ -241,10 +240,10 @@ class ProjectCanSaveTestCase(APITestCase):
         self.user1 = UserFactory(username='user1@binarycrate.com',email='user1@binarycrate.com')
         self.user2 = UserFactory(username='user2@binarycrate.com',email='user2@binarycrate.com')
         de1 = DirectoryEntry.objects.create(name='', is_file=False)
-        Project.objects.create(id=self.project_id1, name='Test 1', type=0, public=True,
+        Project.objects.create(id=self.project_id1, name='Test 1', type=0, public=False,
                                root_folder=de1, owner=self.user1)
         self.de_rootfolder = DirectoryEntry.objects.create(name='', is_file=False)
-        Project.objects.create(id=self.project_id2, name='Test 2', type=0, public=True,
+        Project.objects.create(id=self.project_id2, name='Test 2', type=0, public=False,
                                root_folder=self.de_rootfolder, owner=self.user2)
         self.de_hello_world = DirectoryEntry.objects.create(parent=self.de_rootfolder, name='hello_world.py', is_file=True)
         self.de_hello_world.content = "print('Hello world')"
@@ -302,3 +301,111 @@ class ProjectCanSaveTestCase(APITestCase):
         #print('response.content=', response.content)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(DirectoryEntry.objects.filter(name='hello_world.py').count(), 0)
+
+class PublicAccessOtherUserTestCase(APITestCase):
+    def setUp(self):
+        self.project_id1 = uuid.uuid4()
+        self.project_id2 = uuid.uuid4()
+        self.user1 = UserFactory(username='user1@binarycrate.com',email='user1@binarycrate.com')
+        self.user2 = UserFactory(username='user2@binarycrate.com',email='user2@binarycrate.com')
+        de1 = DirectoryEntry.objects.create(name='', is_file=False)
+        Project.objects.create(id=self.project_id1, name='Test 1', type=0, public=True,
+                               root_folder=de1, owner=self.user1)
+        self.de_rootfolder = DirectoryEntry.objects.create(name='', is_file=False)
+        Project.objects.create(id=self.project_id2, name='Test 2', type=0, public=False,
+                               root_folder=self.de_rootfolder, owner=self.user2)
+        self.de_hello_world = DirectoryEntry.objects.create(parent=self.de_rootfolder, name='hello_world.py', is_file=True)
+        self.de_hello_world.content = "print('Hello world')"
+        self.de_hello_world.is_default = True
+        self.de_hello_world.save()
+        self.de_folder = DirectoryEntry.objects.create(parent=self.de_rootfolder, name='folder', is_file=False)
+        self.de_hello_folder = DirectoryEntry.objects.create(parent=self.de_folder, name='hello_folder.py', is_file=True)
+        self.de_hello_folder.content = \
+"""for i in range(3):
+    print('Hello folder i={}'.format(i))
+"""
+        self.de_hello_folder.save()
+
+        self.client.force_authenticate(user=self.user2)
+
+    def test_list_projects(self):
+        """
+        Ensure we can list the projects. Even though a project is public another should not be able
+        to see to in their list
+        """
+        self.assertEqual(Project.objects.count(), 2)
+        url = reverse('api:project-list')
+        data = { }
+        response = self.client.get(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], str(self.project_id2))
+        self.assertEqual(response.data[0]['name'], 'Test 2')
+        self.assertEqual(response.data[0]['type'], 0)
+        self.assertEqual(response.data[0]['public'], False)
+
+
+    def test_project_detail_can_access_other_users_projects(self):
+        """
+        Ensure we can access public projects if we know the pk
+        """
+        self.assertEqual(Project.objects.count(), 2)
+        url = reverse('api:project-detail', kwargs={'pk':str(self.project_id1)})
+        data = { }
+        response = self.client.get(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], str(self.project_id1))
+        self.assertEqual(response.data['name'], 'Test 1')
+        self.assertEqual(response.data['type'], 0)
+        self.assertEqual(response.data['public'], True)
+
+    def test_project_detail_can_access_my_projects(self):
+        """
+        Ensure we can view individual projects
+        """
+        self.assertEqual(Project.objects.count(), 2)
+        url = reverse('api:project-detail', kwargs={'pk':str(self.project_id2)})
+        data = { }
+        response = self.client.get(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], str(self.project_id2))
+        self.assertEqual(response.data['name'], 'Test 2')
+        self.assertEqual(response.data['type'], 0)
+        self.assertEqual(response.data['public'], False)
+        processed_directory_entries = {convert(d) for d in response.data['directory_entry']}
+        self.assertEqual(processed_directory_entries, {
+                         convert({'id': str(self.de_rootfolder.id),
+                          'name': self.de_rootfolder.name,
+                          'is_file': self.de_rootfolder.is_file,
+                          'content': '',
+                          'form_items': '[]',
+                          'parent_id': None,
+                          'is_default': False,
+                         }),
+                         convert({'id': str(self.de_hello_world.id),
+                          'name': self.de_hello_world.name,
+                          'is_file': self.de_hello_world.is_file,
+                          'content': self.de_hello_world.content,
+                          'form_items': '[]',
+                          'parent_id': str(self.de_rootfolder.id),
+                          'is_default': True,
+                         }),
+                         convert({'id': str(self.de_folder.id),
+                          'name': self.de_folder.name,
+                          'is_file': self.de_folder.is_file,
+                          'content': '',
+                          'form_items': '[]',
+                          'parent_id': str(self.de_rootfolder.id),
+                          'is_default': False,
+                         }),
+                         convert({'id': str(self.de_hello_folder.id),
+                          'name': self.de_hello_folder.name,
+                          'is_file': self.de_hello_folder.is_file,
+                          'content': self.de_hello_folder.content,
+                          'form_items': '[]',
+                          'parent_id': str(self.de_folder.id),
+                          'is_default': False,
+                         }),
+                         })
+
+

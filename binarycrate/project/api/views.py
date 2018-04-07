@@ -61,7 +61,7 @@ class ProjectDetail(APIView):
 
     def get(self, request, pk, format=None):
         project = self.get_object(pk)
-        if project.owner != request.user:
+        if not project.public and project.owner != request.user:
             raise PermissionDenied()
         serializer = ProjectGetSerializer(project)
         return Response(serializer.data)
