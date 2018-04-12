@@ -39,6 +39,7 @@ def run(**kwargs):
             abort(red('Could not start chrome. Have you run '
                       '\'setup_chrome\'?'))
 
+        local('cp binarycrate/binarycrate/settings/build_number.py front-end/binarycrate/build_number.py')
         local('docker run --tty '
               '--interactive '
               '--publish=8000:8000 '
