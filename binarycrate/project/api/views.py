@@ -17,6 +17,7 @@ from rest_framework import status
 from rest_framework.mixins import UpdateModelMixin
 import copy
 from django.http import Http404
+from .permissions import IsReadOnlyOrAuthenticated
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -50,7 +51,7 @@ class ProjectDetail(APIView):
     """
     Retrieve, update or delete a snippet instance.
     """
-    permission_classes = (permissions.IsAuthenticated, )
+    permission_classes = (IsReadOnlyOrAuthenticated, )
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
 
     def get_object(self, pk):

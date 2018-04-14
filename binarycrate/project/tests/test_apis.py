@@ -489,7 +489,8 @@ class PublicAccessNotLoggedInUserTestCase(APITestCase):
         data = { }
         response = self.client.get(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertFalse(str(self.project_id) in response.content)
+        self.assertFalse(str(self.project_id1) in response.content)
+        self.assertFalse(str(self.project_id2) in response.content)
 
 
     def test_project_detail_can_access_other_users_projects(self):
@@ -506,7 +507,7 @@ class PublicAccessNotLoggedInUserTestCase(APITestCase):
         self.assertEqual(response.data['type'], 0)
         self.assertEqual(response.data['public'], True)
 
-    def test_project_detail_can_access_my_projects(self):
+    def test_project_detail_can_access_public_projects(self):
         """
         Ensure we can view individual projects
         """
@@ -518,7 +519,7 @@ class PublicAccessNotLoggedInUserTestCase(APITestCase):
         self.assertEqual(response.data['id'], str(self.project_id2))
         self.assertEqual(response.data['name'], 'Test 2')
         self.assertEqual(response.data['type'], 0)
-        self.assertEqual(response.data['public'], False)
+        self.assertEqual(response.data['public'], True)
         processed_directory_entries = {convert(d) for d in response.data['directory_entry']}
         self.assertEqual(processed_directory_entries, {
                          convert({'id': str(self.de_rootfolder.id),
