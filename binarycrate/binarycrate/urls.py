@@ -31,6 +31,8 @@ urlpatterns = [
     # API
     url(r'^api/', include('api.urls')),
 
+    # Shared projects
+    url(r'^share/', include('share.urls')),
 ]
 
 #Should be If settings.DEBUG:

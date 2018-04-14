@@ -25,5 +25,7 @@ class LandingPageTestCase(TestCase):
         response.render()
         self.assertIn(b"pypyjs", response.content)
         self.assertIn(settings.BUILD_NUMBER, response.content)
+        # Check we are loading the correct boot file
+        self.assertIn('bootbc.py', response.content)
 
 

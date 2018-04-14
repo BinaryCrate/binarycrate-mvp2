@@ -51,7 +51,7 @@
     <!-- Custom scripts for all pages-->
     {#<script src="static/js/sb-admin.min.js"></script>#}
 </head>
-<body class="fixed-nav sticky-footer bg-dark" id="page-top">
+<body class="fixed-nav sticky-footer bg-dark" id="page-top" {% block bodyattributes %}{% endblock %}>
 <!-- Build number = {{ build_number }} -->
 <div>
     <h1>Binary Crate</h1>
@@ -109,8 +109,8 @@ $(function () {
         clearInterval(pseudo_status);
         pypyjs.stdout.reset();
 
-        pypyjs.stdout("load 'bootbc.py'...");
-        $.get( "static/front-end/bootbc.py", function( data ) {
+        pypyjs.stdout("load '{{ boot_file }}'...");
+        $.get( "static/front-end/{{ boot_file }}", function( data ) {
             console_exec( data );
         }).done(function() {
             status_printout("OK\n");
