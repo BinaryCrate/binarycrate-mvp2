@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'historygraphbackend',
     'landingpage',
     'project',
+    'share',
 ]
 
 MIDDLEWARE = [
