@@ -22,6 +22,7 @@ import os
 from binarycrate.controls import StudentForm
 import inspect
 from binarycrate import historygraphfrontend
+import binarycrate
 
 
 HANDLE_NONE = 0
@@ -177,7 +178,7 @@ def drop_down_submenu(title, icon_class, members):
     ])
 
 def test_click_handler(e):
-    js.globals.window.alert('Hello click handler')
+    js.globals.window.alert('Hello click handler build number {}'.format(binarycrate.BUILD_NUMBER))
     e.stopPropagation()
     e.preventDefault()
     

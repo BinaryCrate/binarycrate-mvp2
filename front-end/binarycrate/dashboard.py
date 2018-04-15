@@ -14,6 +14,8 @@ from cavorite.ajaxget import ajaxget, ajaxpost, ajaxput, ajaxdelete
 from cavorite import timeouts
 import json
 from . import editor
+import traceback
+import sys
 
 
 projects = []
@@ -28,13 +30,59 @@ class Project(div):
     def projectdropdownitem(self, title, data_target, project):
         source = None
         def modaltrigger(e):
-            print('projectdropdownitem modaltrigger called')
-            self.dv.selected_project = project
-            self.redraw_function()
-            jquery = js.globals['$']
-            jquery(data_target).modal()
-            Router.router.ResetHashChange()
-        source = li([a({'data-toggle': "modal", 'data-target': data_target, 'href': get_current_hash(), 'onclick': modaltrigger}, [t(title), ]), ])
+            try:
+                print('projectdropdownitem modaltrigger called')
+                self.dv.selected_project = project
+                self.redraw_function()
+                jquery = js.globals['$']
+                jquery(data_target).modal()
+                Router.router.ResetHashChange()
+            except Exception as err:
+                try:
+                    exc_info = sys.exc_info()
+
+                    # do you usefull stuff here
+                    # (potentially raising an exception)
+                    try:
+                        raise TypeError("Again !?!")
+                    except:
+                        pass
+                    # end of useful stuff
+
+
+                finally:
+                    # Display the *original* exception
+                    #traceback.print_exception(*exc_info)
+                    (exc_type, exc_value, exc_traceback) = exc_info
+                    print('Inner exception exc_type=',exc_type)
+                    print('Inner exception exc_value=',exc_value)
+                    print('Inner exception exc_traceback=',exc_traceback)
+                    print('Inner exception extract_tb=',traceback.extract_tb(exc_traceback))
+                    del exc_info
+
+
+        try:
+            source = li([a({'data-toggle': "modal", 'data-target': data_target, 'href': get_current_hash(), 'onclick': modaltrigger}, [t(title), ]), ])
+        except Exception as err:
+            try:
+                exc_info = sys.exc_info()
+
+                # do you usefull stuff here
+                # (potentially raising an exception)
+                try:
+                    raise TypeError("Again !?!")
+                except:
+                    pass
+                # end of useful stuff
+
+
+            finally:
+                # Display the *original* exception
+                traceback.print_exception(*exc_info)
+                del exc_info
+
+                print('Outer exception')
+
         return source
 
     def get_children(self):
