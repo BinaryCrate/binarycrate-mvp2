@@ -152,6 +152,20 @@ SITE_ID = 1
 
 ACCOUNT_USER_MODEL_USERNAME_FIELD = 'email'
 
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USERNAME_REQUIRED = False
+
+ACCOUNT_ADAPTER = 'accounts.adapters.BCAdapter'
+
+ACCOUNT_LOGOUT_ON_GET = True
+
+#TODO: Needs to be correctly set up in production
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+ACCOUNT_EMAIL_VERIFICATION = "none"
+
 # Project files
 
 if 'pytest' in sys.modules:
