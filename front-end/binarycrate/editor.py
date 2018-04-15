@@ -23,6 +23,7 @@ from binarycrate.controls import StudentForm
 import inspect
 from binarycrate import historygraphfrontend
 import binarycrate
+from .urllib import urlencode
 
 
 HANDLE_NONE = 0
@@ -366,10 +367,8 @@ class EditorView(BCChrome):
     def projects_api_ajax_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             global project
-            print('projects_api_ajax_result_handler project=', project)
             new_project = json.loads(str(xmlhttp.responseText))
             if project  != new_project:
-                print('projects_api_ajax_result_handler project!=new_project')
                 project = new_project
                 project['deleted_directory_entries'] = list()
                 for de in project['directory_entry']:
@@ -1095,18 +1094,38 @@ class EditorView(BCChrome):
         def get_current_form_item_color_blue():
             return get_current_form_item_color('blue')
 
+        share_url = str(js.globals.window.location.origin) + "/share/" + project.get('id', '') + "/"
+        facebook_iframe_src = 'https://www.facebook.com/plugins/share_button.php?' + \
+                              urlencode({'href': share_url,
+                                         'layout':'button',
+                                         'size':'small',
+                                         'mobile_iframe':'true',
+                                         'width':'59',
+                                         'height':'20'})
+
         return      [
                       Modal("shareProj", "Share Project", [
                         form([
                           div({'class': 'form-group'}, [
-                            label({'class':"col-form-label", 'for':"formGroupExampleInput"}, 'Title'),
-                            html_input({'type': "text", 'class':"form-control", 'id':"formGroupExampleInput", 'placeholder':"http://bc.com/o82Ssdms/"}),
+                            label({'class':"col-form-label", 'for':"formGroupExampleInput"}, 'Web Link'),
+                            html_input({'type': "text", 'class':"form-control", 'id':"formGroupExampleInput",
+                                         'value':share_url,
+                                         'readonly':'readonly'}),
                           ]),
                           div({'class': 'form-group'}, [
-                            label({'for':"exampleFormControlTextarea1"}, 'Share On:'),
-                            i({'class': 'fa fa-facebook', 'aria-hidden': 'true'}),
-                            i({'class': 'fa fa-twitter', 'aria-hidden': 'true'}),
-                            i({'class': 'fa fa-envelope-o', 'aria-hidden': 'true'}),
+                            #label({'for':"exampleFormControlTextarea1"}, 'Share On:'),
+                            p('Share On:'),
+                            #i({'class': 'fa fa-facebook', 'aria-hidden': 'true'}),
+                            #i({'class': 'fa fa-twitter', 'aria-hidden': 'true'}),
+                            #i({'class': 'fa fa-envelope-o', 'aria-hidden': 'true'}),
+                            iframe({'src':facebook_iframe_src + "&appId",
+                                    'width':"59",
+                                    'height':"20",
+                                    'style':"border:none;overflow:hidden",
+                                    'scrolling':"no",
+                                    'frameborder':"0",
+                                    'allowTransparency':"true",
+                                    'allow':"encrypted-media"}),
                           ]),
                         ]),
                       ], None),
