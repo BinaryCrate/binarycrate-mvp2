@@ -114,7 +114,10 @@ class BCPFile(li):
         super(BCPFile,self).__init__({'class': 'file'})
 
     def get_children(self):
-        a_attribs = {'href': js.globals.window.location.href, 'onclick': self.on_click}
+        href = str(js.globals.window.location.href)
+        if href.find('#') < 0:
+            href = '#'
+        a_attribs = {'href': href, 'onclick': self.on_click}
         if self.get_is_active():
             a_attribs.update({'class': 'file-active'})
         return [
@@ -362,8 +365,10 @@ class EditorView(BCChrome):
     def projects_api_ajax_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             global project
+            print('projects_api_ajax_result_handler project=', project)
             new_project = json.loads(str(xmlhttp.responseText))
-            if project != new_project:
+            if not 'id' in project or project['id'] != new_project['id']:
+                print('projects_api_ajax_result_handler project!=new_project')
                 project = new_project
                 project['deleted_directory_entries'] = list()
                 for de in project['directory_entry']:
@@ -1160,6 +1165,7 @@ class EditorView(BCChrome):
         self.program_is_running = False
         self.form_stack = list()
         self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code', 'class': 'col-md-5 CodeMirror'}, [t(self.get_selected_de_content)], change_handler=self.code_mirror_change)
+        #TODO: Option arguments should be kwargs
         super(EditorView, self).__init__(
                     None,
                     None,
