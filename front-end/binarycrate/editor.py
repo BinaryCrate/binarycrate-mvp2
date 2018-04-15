@@ -368,7 +368,7 @@ class EditorView(BCChrome):
             global project
             print('projects_api_ajax_result_handler project=', project)
             new_project = json.loads(str(xmlhttp.responseText))
-            if not 'id' in project or project['id'] != new_project['id']:
+            if project  != new_project:
                 print('projects_api_ajax_result_handler project!=new_project')
                 project = new_project
                 project['deleted_directory_entries'] = list()
