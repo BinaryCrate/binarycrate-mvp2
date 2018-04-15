@@ -385,6 +385,9 @@ class EditorView(BCChrome):
         self.context_menu = None
         super(EditorView, self).mount(element)
 
+    def get_project(self):
+        return project
+
     def query_project(self):
         global project
         if len(project) == 0:
@@ -410,21 +413,23 @@ class EditorView(BCChrome):
 
             return  BCProjectTree(get_as_tree(None))
 
+    def get_new_file_folder_icons(self):
+        return [
+                  a({'href': get_current_hash()}, [
+                    span({'class': 'fa fa-1x fa-file-code-o', 'onclick': self.display_new_file_modal}),
+                  ]),
+                  a({'href': get_current_hash()}, [
+                    span({'class': 'fa fa-1x fa-folder-o', 'onclick': self.display_new_folder_modal}),
+                  ]),
+                ]        
+
     def get_central_content(self):
         return    c("div", {'class': "container-fluid code-area", 'style': 'padding-left: 1px; padding-top:1px height:100%;'}, [
                     div({'class': 'row row-wrapper'}, [
                       div({'class': "project-fnf col-ms-2"}, [
                         div({'class': 'top-tree'}, [
                           p({'style': 'display:inline'}, 'Files'),
-                          #a({'data-toggle': "modal", 'data-target': '#newFile', 'href': get_current_hash(), 'onclick': self.newFile_ok}, [
-                          a({'href': get_current_hash()}, [
-                            span({'class': 'fa fa-1x fa-file-code-o', 'onclick': self.display_new_file_modal}),
-                          ]),
-                          #a({'data-toggle': "modal", 'data-target': '#newFolder', 'href': get_current_hash(), 'onclick': self.newFolder_ok}, [
-                          a({'href': get_current_hash()}, [
-                            span({'class': 'fa fa-1x fa-folder-o', 'onclick': self.display_new_folder_modal}),
-                          ]),
-                        ]),
+                        ] + self.get_new_file_folder_icons()),
                         self.get_project_tree(),
                       ]),
                       article({'class': 'col-md-12 row', 'id': 'editor'}, [
@@ -1152,6 +1157,9 @@ class EditorView(BCChrome):
                       ], self.changeProperty_ok),
                     ]
 
+    def get_code_mirror_read_only(self):
+        return False
+
     def __init__(self, *args, **kwargs):
         #print('EditorView __init__')
         self.selected_de = None
@@ -1164,7 +1172,11 @@ class EditorView(BCChrome):
         self.selected_handler = HANDLE_NONE
         self.program_is_running = False
         self.form_stack = list()
-        self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code', 'class': 'col-md-5 CodeMirror'}, [t(self.get_selected_de_content)], change_handler=self.code_mirror_change)
+        self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code',
+                                                   'class': 'col-md-5 CodeMirror'},
+                                                  [t(self.get_selected_de_content)],
+                                                  change_handler=self.code_mirror_change,
+                                                  read_only=self.get_code_mirror_read_only())
         #TODO: Option arguments should be kwargs
         super(EditorView, self).__init__(
                     None,

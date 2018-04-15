@@ -15,13 +15,6 @@ global_on_tab = None
 def initialise_codemirror_callbacks():
     @js.Function
     def change_callback_handler(a, b):
-        #print('change_callback_handler2 called a=',a)
-        #print('change_callback_handler2 called b=',b)
-        #print('change_callback_handler2 called type(a)=',type(a))
-        #print('change_callback_handler2 called type(b)=',type(b))
-        #print('change_callback_handler2 called dir(a)=',dir(a))
-        #print('change_callback_handler2 called dir(b)=',dir(b))
-        #print('change_callback_handler2 called a=global_editor',a == global_editor)
         callbacks.global_callbacks['onchange'][str(global_textarea.getAttribute('_cavorite_id'))](global_editor)
 
     global global_change_callback_handler
@@ -46,26 +39,20 @@ def initialise_codemirror_callbacks():
 
 
 class CodeMirrorHandlerVNode(textarea):
-    def __init__(self, attribs=None, children=None, change_handler=None, **kwargs):
-        #print('CodeMirrorHandlerVNode __init__ self=', self)
+    def __init__(self, attribs=None, children=None, change_handler=None, read_only=False, **kwargs):
         attribs = copy.copy(attribs)
         attribs.update({'onchange': self.onchange_codemirror})
         self.change_handler = change_handler
         self.editor = None
         self.waiting_for_timeout = False
+        self.read_only = read_only
         super(CodeMirrorHandlerVNode, self).__init__(attribs, children, **kwargs)
 
     def was_mounted(self):
         super(CodeMirrorHandlerVNode, self).was_mounted()
         should_init = True
-        #print('CodeMirrorHandlerVNode was_mounted called should_init=',should_init)
-        #if self.editor is not None:
-        #print('CodeMirrorHandlerVNode contains=', js.globals.document.getElementsByClassName('CodeMirror').length)
         should_init = js.globals.document.getElementsByClassName('CodeMirror').length < 2
         if should_init:
-        #if  self.waiting_for_timeout == False:
-        #    self.waiting_for_timeout = True
-        #    timeouts.set_timeout(self.codemirror_init, 1)
             textarea = js.globals.document.getElementById("code")
             self.editor = js.globals.CodeMirror.fromTextArea(textarea, {
                 'lineNumbers': True,
@@ -73,13 +60,10 @@ class CodeMirrorHandlerVNode(textarea):
                 'mode': 'python',
                 'indentUnit': 4,
                 'viewportMargin': js.globals.Infinity,
+                'readOnly': self.read_only,
               })
             self.editor.addKeyMap({'Tab': global_on_tab,})
 
-            #@js.Function
-            #def change_callback_handler(a, b):
-            #    #print('change_callback_handler called')
-            #    callbacks.global_callbacks['onchange'][str(textarea.getAttribute('_cavorite_id'))](self.editor)
             assert global_change_callback_handler, 'CodeMirror global_change_callback_handler not set'
             self.editor.on('change', global_change_callback_handler)
 
