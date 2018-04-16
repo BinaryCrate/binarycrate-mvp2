@@ -101,7 +101,6 @@ class BCChrome(div):
                ]
 
     def logout_clicked(self, e, form_values):
-        print('logout_clicked called')
         js.globals.window.location.href = '/accounts/logout'
 
     def get_children(self):
