@@ -100,6 +100,10 @@ class BCChrome(div):
                  ]),
                ]
 
+    def logout_clicked(self, e, form_values):
+        print('logout_clicked called')
+        js.globals.window.location.href = '/accounts/logout'
+
     def get_children(self):
         return [ 
                 nav({'class': "navbar navbar-expand-lg navbar-dark bg-dark fixed-top", 'id': 'mainNav'}, [
@@ -128,6 +132,6 @@ class BCChrome(div):
                 ]),
                 Modal("logoutModal", "Logout", [
                   div("Select \"Logout\" below if you are ready to end your current session."),
-                ], None),
+                ], self.logout_clicked),
               ] + self.get_modals() + self.get_context_menu_list()
 
