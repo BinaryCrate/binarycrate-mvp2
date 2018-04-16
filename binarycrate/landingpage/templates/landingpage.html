@@ -51,14 +51,18 @@
     <!-- Custom scripts for all pages-->
     {#<script src="/static/js/sb-admin.min.js"></script>#}
 </head>
-<body class="fixed-nav sticky-footer bg-dark" id="page-top" {% block bodyattributes %}{% endblock %}>
+<body class="fixed-nav sticky-footer" id="page-top" {% block bodyattributes %}{% endblock %}>
 <!-- Build number = {{ build_number }} -->
-<div>
-    <h1>Binary Crate</h1>
-    <noscript><h3>Please enable JavaScript for using Binary Create</h3></noscript>
-    <pre id="output"></pre>
-    <hr />
-</div>
+  <div class="loading-screen">
+    <div class="container-fluid">
+      <div class="loader-items">
+        <!-- Loading square for squar.red network -->
+        <span class="loader"><span class="loader-inner"></span></span>
+        <h3>Loading..</h3>
+      </div>
+    </div>
+  </div>
+
 <script src="/static/pypyjs-release/lib/Promise.min.js" type="text/javascript" charset="utf-8" onerror="JavaScript:alert('Error loading file ['+this.src+'] !');"></script>
 <script src="/static/pypyjs-release/lib/FunctionPromise.js" type="text/javascript" charset="utf-8" onerror="JavaScript:alert('Error loading file ['+this.src+'] !');"></script>
 <script src="/static/pypyjs-release/lib/pypyjs.js" type="text/javascript" charset="utf-8" onerror="JavaScript:alert('Error loading file ['+this.src+'] !');"></script>
@@ -79,7 +83,7 @@ function console_exec(code) {
 }
 document.print_to_secondary_output = false;
 $(function () {
-    out = $("#output");
+    //out = $("#output");
 
     function python_output(data) {
         console.log(data);
@@ -96,8 +100,7 @@ $(function () {
     }
 
     function status_printout(data) {
-        out.append(data);
-        out.scrollTop(out.prop("scrollHeight")); // scoll down
+        console.log(data);
     };
 
     // Display a helpful message and twiddle thumbs as it loads.
