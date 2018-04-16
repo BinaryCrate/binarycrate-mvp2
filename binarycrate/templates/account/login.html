@@ -1,0 +1,73 @@
+{% extends "account/base.html" %}
+
+{# This file overrides the default django allauth login page. Some values were just copied from the rendered output. Eg the social media links #}
+
+{% load i18n %}
+{% load account socialaccount %}
+
+{% block extra_head %}
+{{ block.super }}
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <title>Binary Crate - Learn, Code, Share</title>
+  <!-- Bootstrap core CSS-->
+  <link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom fonts for this template-->
+  <link href="/static/font-awesome/css/font-awesome.css" rel="stylesheet" type="text/css">
+  <!-- Custom styles for this template-->
+  <link href="/static/css/sb-admin.css" type="text/css" rel="stylesheet">
+  <!-- <link href="/static/css/bc-custom.css" type="text/css" rel="stylesheet">  -->
+  <!-- Code Mirror CSS -->
+  <link rel=stylesheet href="/static/doc/docs.css">
+  <link rel=stylesheet href=/static/lib/codemirror.css>
+  <link href="/static/css/bc-custom.css" type="text/css" rel="stylesheet">
+  <script src=/static/lib/codemirror.js></script>
+  <script src=/static/mode/xml/xml.js></script>
+  <script src=/static/mode/javascript/javascript.js></script>
+  <script src=/static/mode/css/css.js></script>
+  <script src=/static/mode/htmlmixed/htmlmixed.js></script>
+  <script src=/static/mode/python/python.js></script>
+  <!-- Bootstrap core JavaScript-->
+  <script src="/static/jquery/jquery.min.js"></script>
+  <script src="/static/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- Core plugin JavaScript-->
+  <script src="/static/jquery-easing/jquery.easing.min.js"></script>
+{% endblock %}
+
+{% block head_title %}{% trans "Sign In" %}{% endblock %}
+
+{% block body %}
+<body class="bg_gradient content-wrapper">
+    <div class="container">
+        <div class="card card-login mx-auto mt-5">
+            <div class="card-header">Login</div>
+            <div class="card-body">
+                <form method="POST" action="{% url 'account_login' %}">
+                    {% csrf_token %}
+                    <div class="form-group"><label for="exampleInputEmail1">Email</label><input name='login' class="form-control" id="exampleInputEmail1" type="email" aria-describedby="emailHelp" placeholder="Enter email"></div>
+                    <div class="form-group"><label for="exampleInputPassword1">Password</label><input name='password' class="form-control" id="exampleInputPassword1" type="password" placeholder="Password"></div>
+                    <div class="form-group">
+                        <div class="form-check"><label class="id_remember2">Remember Me</label><input name='remember' id='id_remember2' class="form-check-input" type="checkbox"></div>
+                    </div><button class="btn btn-primary btn-block" type="submit">Login</button>{#<a class="btn btn-primary btn-block" href="index.html">Login</a>#}
+                {% if redirect_field_value %}
+                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                {% endif %}
+                </form>
+                <div class="text-center"><a class="d-block small mt-3" href="/accounts/signup/">Sign Up</a><a class="d-block small" href="{% url 'account_reset_password' %}">Forgot Password?</a></div>
+                <div class="form-group">
+                  <div class="form-group text-center">
+                    <div class="form-group social__signup"><div class="strike"><span>or</span></div></div>
+                    <a class="btn col-sm-2 my-1 mx-1 social" href="/accounts/facebook/login/?process=login&next=%2F" tabindex="1" id="facebook" data-toggle="tooltip" data-placement="top" title="Login with Facebook"><i class="fa fa-facebook"></i><span class="d-inline-block d-sm-none">Facebook</span></a>
+                    <a class="btn col-sm-2 my-1 mx-1 social" href="/accounts/google/login/?process=login&next=%2F" tabindex="2" id="google" data-toggle="tooltip" data-placement="top" title="Login with Google"><i class="fa fa-google"></i><span class="d-inline-block d-sm-none">Google</span></a>
+                    <a class="btn col-sm-2 my-1 mx-1 social" href="/accounts/github/login/?process=login&next=%2F" tabindex="3" id="github" data-toggle="tooltip" data-placement="top" title="Login with GitHub"><i class="fa fa-github"></i><span class="d-inline-block d-sm-none">GitHub</span></a><small class="form-text text-muted" id="emailHelp">We'll not post without your permission.</small>
+                  </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+{% endblock %}
