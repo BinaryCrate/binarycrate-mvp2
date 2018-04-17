@@ -1,0 +1,90 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+
+{% block extra_head %}
+{{ block.super }}
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <title>Binary Crate - Sign Up</title>
+  <!-- Bootstrap core CSS-->
+  <link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom fonts for this template-->
+  <link href="/static/font-awesome/css/font-awesome.css" rel="stylesheet" type="text/css">
+  <!-- Custom styles for this template-->
+  <link href="/static/css/sb-admin.css" type="text/css" rel="stylesheet">
+  <!-- <link href="/static/css/bc-custom.css" type="text/css" rel="stylesheet">  -->
+  <!-- Code Mirror CSS -->
+  <link rel=stylesheet href="/static/doc/docs.css">
+  <link rel=stylesheet href=/static/lib/codemirror.css>
+  <link href="/static/css/bc-custom.css" type="text/css" rel="stylesheet">
+  <script src=/static/lib/codemirror.js></script>
+  <script src=/static/mode/xml/xml.js></script>
+  <script src=/static/mode/javascript/javascript.js></script>
+  <script src=/static/mode/css/css.js></script>
+  <script src=/static/mode/htmlmixed/htmlmixed.js></script>
+  <script src=/static/mode/python/python.js></script>
+  <!-- Bootstrap core JavaScript-->
+  <script src="/static/jquery/jquery.min.js"></script>
+  <script src="/static/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- Core plugin JavaScript-->
+  <script src="/static/jquery-easing/jquery.easing.min.js"></script>
+{% endblock %}
+
+{% block head_title %}{% trans "Signup" %}{% endblock %}
+
+{% block body %}
+<body class="bg_gradient content-wrapper">
+    <div class="container">
+        <div class="card card-register mx-auto mt-5">
+            <div class="card-header">Register an Account</div>
+            <div class="card-body">
+                <form method="post" action="{% url 'account_signup' %}">
+                    {% csrf_token %}
+                    {% comment %}
+                    <div class="form-group">
+                        <div class="form-row">
+                            <div class="col-md-6"><label for="InputName">First name</label><input class="form-control" id="exampleInputName" type="text" aria-describedby="nameHelp" placeholder="Enter first name"></div>
+                            <div class="col-md-6"><label for="InputLastName">Last name</label><input class="form-control" id="exampleInputLastName" type="text" aria-describedby="nameHelp" placeholder="Enter last name"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="Username">Username</label><input class="form-control" id="Username" type="email"  placeholder="Enter Username">
+                    </div>
+                    {% endcomment %}
+                    <div class="form-group">
+                      <label for="emailaddress">Email address</label><input class="form-control" id="exampleInputEmail1" type="email" aria-describedby="emailHelp" placeholder="Enter email" name="email">
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <div class="col-md-6"><label for="password">Password</label><input class="form-control" id="exampleInputPassword1" type="password" placeholder="Password" name="password1"></div>
+                            <div class="col-md-6"><label for="passwordConfirm">Confirm password</label><input class="form-control" id="exampleConfirmPassword" type="password" placeholder="Confirm password" name="password2"></div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                    {# <a class="btn btn-primary btn-block" href="login.html">Register</a> #}
+                    <button class="btn btn-primary btn-block" type="submit">Register</button>
+
+                    {% comment %}
+                    <div class="form-group">
+                      <div class="form-group text-center">
+                        <div class="form-group social__signup"><div class="strike"><span>or</span></div></div>
+                        <button class="btn col-sm-2 my-1 mx-1 social" href="#" tabindex="1" id="facebook" data-toggle="tooltip" data-placement="top" title="Login with Facebook"><i class="fa fa-facebook"></i><span class="d-inline-block d-sm-none">Facebook</span></button>
+                        <button class="btn col-sm-2 my-1 mx-1 social" href="#" tabindex="2" id="twitter" data-toggle="tooltip" data-placement="top" title="Login with Twitter"><i class="fa fa-twitter"></i><span class="d-inline-block d-sm-none">Twitter</span></button>
+                        <button class="btn col-sm-2 my-1 mx-1 social" href="#" tabindex="3" id="google" data-toggle="tooltip" data-placement="top" title="Login with Google"><i class="fa fa-google"></i><span class="d-inline-block d-sm-none">Google</span></button>
+                        <button class="btn col-sm-2 my-1 mx-1 social" href="#" tabindex="4" id="github" data-toggle="tooltip" data-placement="top" title="Login with GitHub"><i class="fa fa-github"></i><span class="d-inline-block d-sm-none">GitHub</span></button><small class="form-text text-muted" id="emailHelp">We'll not post without your permission.</small>
+                      </div>
+                    </div>
+                    {% endcomment %}
+                    </form>
+                <div class="text-center"><a class="d-block small mt-3" href="/accounts/login/">Login Page</a><a class="d-block small" href="{% url 'account_reset_password' %}">Forgot Password?</a></div>
+            </div>
+        </div>
+</body>
+
+{% endblock %}
+
