@@ -23,6 +23,7 @@ from binarycrate.controls import StudentForm
 import inspect
 from binarycrate import historygraphfrontend
 import binarycrate
+from .urllib import urlencode
 
 
 HANDLE_NONE = 0
@@ -115,7 +116,10 @@ class BCPFile(li):
         super(BCPFile,self).__init__({'class': 'file'})
 
     def get_children(self):
-        a_attribs = {'href': js.globals.window.location.href, 'onclick': self.on_click}
+        href = str(js.globals.window.location.href)
+        if href.find('#') < 0:
+            href = '#'
+        a_attribs = {'href': href, 'onclick': self.on_click}
         if self.get_is_active():
             a_attribs.update({'class': 'file-active'})
         return [
@@ -364,7 +368,7 @@ class EditorView(BCChrome):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             global project
             new_project = json.loads(str(xmlhttp.responseText))
-            if project != new_project:
+            if project  != new_project:
                 project = new_project
                 project['deleted_directory_entries'] = list()
                 for de in project['directory_entry']:
@@ -380,6 +384,9 @@ class EditorView(BCChrome):
         project = {}
         self.context_menu = None
         super(EditorView, self).mount(element)
+
+    def get_project(self):
+        return project
 
     def query_project(self):
         global project
@@ -406,21 +413,23 @@ class EditorView(BCChrome):
 
             return  BCProjectTree(get_as_tree(None))
 
+    def get_new_file_folder_icons(self):
+        return [
+                  a({'href': get_current_hash()}, [
+                    span({'class': 'fa fa-1x fa-file-code-o', 'onclick': self.display_new_file_modal}),
+                  ]),
+                  a({'href': get_current_hash()}, [
+                    span({'class': 'fa fa-1x fa-folder-o', 'onclick': self.display_new_folder_modal}),
+                  ]),
+                ]        
+
     def get_central_content(self):
         return    c("div", {'class': "container-fluid code-area", 'style': 'padding-left: 1px; padding-top:1px height:100%;'}, [
                     div({'class': 'row row-wrapper'}, [
                       div({'class': "project-fnf col-ms-2"}, [
                         div({'class': 'top-tree'}, [
                           p({'style': 'display:inline'}, 'Files'),
-                          #a({'data-toggle': "modal", 'data-target': '#newFile', 'href': get_current_hash(), 'onclick': self.newFile_ok}, [
-                          a({'href': get_current_hash()}, [
-                            span({'class': 'fa fa-1x fa-file-code-o', 'onclick': self.display_new_file_modal}),
-                          ]),
-                          #a({'data-toggle': "modal", 'data-target': '#newFolder', 'href': get_current_hash(), 'onclick': self.newFolder_ok}, [
-                          a({'href': get_current_hash()}, [
-                            span({'class': 'fa fa-1x fa-folder-o', 'onclick': self.display_new_folder_modal}),
-                          ]),
-                        ]),
+                        ] + self.get_new_file_folder_icons()),
                         self.get_project_tree(),
                       ]),
                       article({'class': 'col-md-12 row', 'id': 'editor'}, [
@@ -1085,18 +1094,38 @@ class EditorView(BCChrome):
         def get_current_form_item_color_blue():
             return get_current_form_item_color('blue')
 
+        share_url = str(js.globals.window.location.origin) + "/share/" + project.get('id', '') + "/"
+        facebook_iframe_src = 'https://www.facebook.com/plugins/share_button.php?' + \
+                              urlencode({'href': share_url,
+                                         'layout':'button',
+                                         'size':'small',
+                                         'mobile_iframe':'true',
+                                         'width':'59',
+                                         'height':'20'})
+
         return      [
                       Modal("shareProj", "Share Project", [
                         form([
                           div({'class': 'form-group'}, [
-                            label({'class':"col-form-label", 'for':"formGroupExampleInput"}, 'Title'),
-                            html_input({'type': "text", 'class':"form-control", 'id':"formGroupExampleInput", 'placeholder':"http://bc.com/o82Ssdms/"}),
+                            label({'class':"col-form-label", 'for':"formGroupExampleInput"}, 'Web Link'),
+                            html_input({'type': "text", 'class':"form-control", 'id':"formGroupExampleInput",
+                                         'value':share_url,
+                                         'readonly':'readonly'}),
                           ]),
                           div({'class': 'form-group'}, [
-                            label({'for':"exampleFormControlTextarea1"}, 'Share On:'),
-                            i({'class': 'fa fa-facebook', 'aria-hidden': 'true'}),
-                            i({'class': 'fa fa-twitter', 'aria-hidden': 'true'}),
-                            i({'class': 'fa fa-envelope-o', 'aria-hidden': 'true'}),
+                            #label({'for':"exampleFormControlTextarea1"}, 'Share On:'),
+                            p('Share On:'),
+                            #i({'class': 'fa fa-facebook', 'aria-hidden': 'true'}),
+                            #i({'class': 'fa fa-twitter', 'aria-hidden': 'true'}),
+                            #i({'class': 'fa fa-envelope-o', 'aria-hidden': 'true'}),
+                            iframe({'src':facebook_iframe_src + "&appId",
+                                    'width':"59",
+                                    'height':"20",
+                                    'style':"border:none;overflow:hidden",
+                                    'scrolling':"no",
+                                    'frameborder':"0",
+                                    'allowTransparency':"true",
+                                    'allow':"encrypted-media"}),
                           ]),
                         ]),
                       ], None),
@@ -1148,6 +1177,9 @@ class EditorView(BCChrome):
                       ], self.changeProperty_ok),
                     ]
 
+    def get_code_mirror_read_only(self):
+        return False
+
     def __init__(self, *args, **kwargs):
         #print('EditorView __init__')
         self.selected_de = None
@@ -1160,7 +1192,12 @@ class EditorView(BCChrome):
         self.selected_handler = HANDLE_NONE
         self.program_is_running = False
         self.form_stack = list()
-        self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code', 'class': 'col-md-5 CodeMirror'}, [t(self.get_selected_de_content)], change_handler=self.code_mirror_change)
+        self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code',
+                                                   'class': 'col-md-5 CodeMirror'},
+                                                  [t(self.get_selected_de_content)],
+                                                  change_handler=self.code_mirror_change,
+                                                  read_only=self.get_code_mirror_read_only())
+        #TODO: Option arguments should be kwargs
         super(EditorView, self).__init__(
                     None,
                     None,

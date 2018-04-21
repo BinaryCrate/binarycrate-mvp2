@@ -40,6 +40,9 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.facebook',
+    'allauth.socialaccount.providers.github',
 
     'mptt',
 
@@ -51,6 +54,7 @@ INSTALLED_APPS = [
     'historygraphbackend',
     'landingpage',
     'project',
+    'share',
 ]
 
 MIDDLEWARE = [
@@ -68,14 +72,19 @@ ROOT_URLCONF = 'binarycrate.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        #'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+            ],
+            'loaders': [
+                ('django.template.loaders.cached.Loader',
+                 ['django.template.loaders.filesystem.Loader',
+                  'django.template.loaders.app_directories.Loader'])
             ],
         },
     },
@@ -150,6 +159,51 @@ AUTHENTICATION_BACKENDS = (
 SITE_ID = 1
 
 ACCOUNT_USER_MODEL_USERNAME_FIELD = 'email'
+
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USERNAME_REQUIRED = False
+
+ACCOUNT_ADAPTER = 'accounts.adapters.BCAdapter'
+
+ACCOUNT_LOGOUT_ON_GET = True
+
+SOCIALACCOUNT_PROVIDERS = {
+    'github': {
+        'SCOPE': [
+            'user',
+            'repo',
+            'read:org',
+        ],
+    },
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
+    },
+    'facebook': {
+        'METHOD': 'oauth2',
+        'SCOPE': ['email'],
+        'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
+        'INIT_PARAMS': {'cookie': True},
+        'FIELDS': [
+            'id',
+            'email',
+            'name',
+            'first_name',
+            'last_name',
+        ],
+        'EXCHANGE_TOKEN': True,
+        'VERSION': 'v2.12',
+    }
+}
+
+ACCOUNT_EMAIL_VERIFICATION = "none"
 
 # Project files
 

@@ -75,6 +75,34 @@ class BCChrome(div):
         else:
             return [context_menu]
 
+    def get_sidebar_nav_items(self):
+        return [
+                 navitem('Dashboard', 'fa-dashboard', '#!'),
+                 navitem('Editor', 'fa-code', '#!editor'),
+                 navitem('Classroom', 'fa-laptop', '#!classroom'),
+                 navsubmenu('Settings', 'exampleAccordion', 'collapseComponents', [
+                   navsubmenuitem('Navbar', '#!navbar'),
+                   navsubmenuitem('Cards', '#!cards'),
+                 ])
+               ]
+
+    def get_logout_link(self):
+        #TODO: It makes no logical sense for this function to be seperate from get_sidebar_nav_items
+        # Find a way to roll them together
+        return [           
+                 ul({'class': 'navbar-nav ml-auto'}, [
+                   li({'class': 'nav-item'}, [
+                     ModalTrigger({'class':"nav-link"}, [
+                       i({'class': "fa fa-fw fa-sign-out"}),
+                       t("Logout"),
+                     ], "#logoutModal"),
+                   ]),
+                 ]),
+               ]
+
+    def logout_clicked(self, e, form_values):
+        js.globals.window.location.href = '/accounts/logout'
+
     def get_children(self):
         return [ 
                 nav({'class': "navbar navbar-expand-lg navbar-dark bg-dark fixed-top", 'id': 'mainNav'}, [
@@ -89,25 +117,9 @@ class BCChrome(div):
                     span({'class': "navbar-toggler-icon"}),
                   ]),
                   div({'class':"collapse navbar-collapse", 'id':"navbarResponsive"}, [
-                    ul({'class':"navbar-nav navbar-sidenav", 'id':"exampleAccordion"}, [
-                      navitem('Dashboard', 'fa-dashboard', '#!'),
-                      navitem('Editor', 'fa-code', '#!editor'),
-                      navitem('Classroom', 'fa-laptop', '#!classroom'),
-                      navsubmenu('Settings', 'exampleAccordion', 'collapseComponents', [
-                        navsubmenuitem('Navbar', '#!navbar'),
-                        navsubmenuitem('Cards', '#!cards'),
-                      ])
-                    ]),
+                    ul({'class':"navbar-nav navbar-sidenav", 'id':"exampleAccordion"}, self.get_sidebar_nav_items()),
                     ul({'class': 'navbar-nav mr-auto'}, self.get_top_navbar_items()),
-                    ul({'class': 'navbar-nav ml-auto'}, [
-                      li({'class': 'nav-item'}, [
-                        ModalTrigger({'class':"nav-link"}, [
-                          i({'class': "fa fa-fw fa-sign-out"}),
-                          t("Logout"),
-                        ], "#logoutModal"),
-                      ]),
-                    ]),
-                  ]),
+                  ] + self.get_logout_link()),
                 ]),
                 div({'class': "content-wrapper", 'style': {'padding-top': '1px'}}, [self.get_central_content()]),
                 footer({'class': "sticky-footer"}, [
@@ -119,6 +131,6 @@ class BCChrome(div):
                 ]),
                 Modal("logoutModal", "Logout", [
                   div("Select \"Logout\" below if you are ready to end your current session."),
-                ], None),
+                ], self.logout_clicked),
               ] + self.get_modals() + self.get_context_menu_list()
 

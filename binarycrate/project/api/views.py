@@ -17,6 +17,7 @@ from rest_framework import status
 from rest_framework.mixins import UpdateModelMixin
 import copy
 from django.http import Http404
+from .permissions import IsReadOnlyOrAuthenticated
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -50,7 +51,7 @@ class ProjectDetail(APIView):
     """
     Retrieve, update or delete a snippet instance.
     """
-    permission_classes = (permissions.IsAuthenticated, )
+    permission_classes = (IsReadOnlyOrAuthenticated, )
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
 
     def get_object(self, pk):
@@ -61,24 +62,28 @@ class ProjectDetail(APIView):
 
     def get(self, request, pk, format=None):
         project = self.get_object(pk)
-        if project.owner != request.user:
+        if not project.public and project.owner != request.user:
             raise PermissionDenied()
         serializer = ProjectGetSerializer(project)
         return Response(serializer.data)
 
     def delete(self, request,pk, format=None):
         project = self.get_object(pk)
+        if project.owner != request.user:
+            raise PermissionDenied()
         project.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
     def put(self, request, pk, format=None):
         project = self.get_object(pk)
+        if project.owner != request.user:
+            raise PermissionDenied()
         serializer = ProjectPostSerializer(project, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class DirectoryEntryDetail(APIView):
     permission_classes = (permissions.IsAuthenticated, )
@@ -115,10 +120,6 @@ class DirectoryEntryDetail(APIView):
             response_data['form_items'] = de.form_items
             return Response(response_data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def perform_update(self, serializer):
-        instance = serializer.save()
-        #print('perform_update instance._content=', instance._content)
 
     def delete(self, request, pk, format=None):
         de = self.get_object(pk)

@@ -149,8 +149,8 @@ iframe {
 }
 
 .code-output{
-    border: 1px solid black;
-    border-left: 0px;
+  border: 1px solid black;
+  border-left: 0px;
   flex:3;
 }
 .code-area{
@@ -183,6 +183,7 @@ ____________________________________________________________________________ */
   min-height: 120px;
   max-height: 120px;
   overflow-y: scroll;
+
 }
 
 /* Code Area
@@ -212,6 +213,13 @@ ____________________________________________________________________________*/
     margin: 0px;
 }
 
+/* Projct Title
+____________________________________________________________________________ */
+.project-title{
+  margin: 0;
+  font-size: 1.5em;
+  color: #fff;
+}
 
 /* Tree Structure
 ____________________________________________________________________________*/
@@ -367,17 +375,6 @@ ____________________________________________________________________________*/
 
 .loader-items {
     color: #fff;
-
-}
-
-.loading-screen {
-    margin: 0 auto;
-    text-align: center;
-    background-color: #50E3C2;
-    display: grid;
-    height: 100vh;
-    margin: 0;
-    place-items: center;
 
 }
 
@@ -580,8 +577,9 @@ ____________________________________________________________________________*/
 .student-list {
   list-style: none;
   padding:0px;
-  height: 100%;
-  overflow: hidden;
+  height: 620px;
+  overflow: scroll;
+  margin-bottom: 0px;
 }
 
 .studentList .col-md-2{
@@ -591,6 +589,19 @@ ____________________________________________________________________________*/
 .studentList{
   border-right: 1px solid #eee;
   padding-left: 0px;
+  padding-right: 0px;
+}
+.student::-webkit-scrollbar {
+    width: 1em;
+}
+
+.student::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+}
+
+.student::-webkit-scrollbar-thumb {
+  background-color: darkgrey;
+  outline: 1px solid slategrey;
 }
 
 .studentHeader{
@@ -611,6 +622,10 @@ ____________________________________________________________________________*/
 }
 .studentAdd{
   margin-right: 5px;
+}
+
+.studentSearchBtn{
+  padding-right: 10px;
 }
 
 
@@ -727,8 +742,7 @@ ____________________________________________________________________________ */
     #sidenavToggler {
         visibility: hidden;
     }
-}
-/* Mark's customisations */
+}/* Mark's customisations */
 
 .nav-link-text {
   margin-left: 5px;
@@ -787,3 +801,19 @@ a.context-menu__link:visited {
 .logMessage {
     color: white;
 }
+
+.loading-screen {
+    margin: 0 auto;
+    text-align: center;
+    background-color: #50E3C2;
+    display: grid;
+    height: 100vh;
+    margin: 0;
+    place-items: center;
+    margin-top:-56px;
+}
+
+a.social-media-login-link {
+  color: white;
+}
+
