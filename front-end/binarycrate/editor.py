@@ -1012,30 +1012,42 @@ class EditorView(BCChrome):
         self.mount_redraw()
         Router.router.ResetHashChange()
 
+    def upload_images(self, e):
+        print('upload images called')
+        self.upload_modal_open = True
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
+    def close_upload_modal(self, e):
+        self.upload_modal_open = False
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
     def get_top_navbar_items(self):
         return [
                       drop_down_menu('File', [
-                        drop_down_item('Run', 'fa-caret-right', self.run_project),
+                        #drop_down_item('Run', 'fa-caret-right', self.run_project),
                         drop_down_item('Save Project', '', self.save_project),
                         drop_down_item('Delete File/Folder', '', self.delete_selected_de),
                         drop_down_item('Set Default', '', self.set_current_file_as_default),
-                        drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
-                        drop_down_item('Square', 'fa-square', None),
-                        drop_down_item('Something else here', 'fa-btc', None),
-                        drop_down_submenu('Recent documents', 'fa-caret-right', [
-                          drop_down_item('Hello.py', '', None),
-                          drop_down_item('World.py', '', None),
-                        ])
+                        drop_down_item('Upload images...', '', self.upload_images),
+                        #drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
+                        #drop_down_item('Square', 'fa-square', None),
+                        #drop_down_item('Something else here', 'fa-btc', None),
+                        #drop_down_submenu('Recent documents', 'fa-caret-right', [
+                        #  drop_down_item('Hello.py', '', None),
+                        #  drop_down_item('World.py', '', None),
+                        #])
                       ]),
-                      drop_down_menu('Edit', [
-                        drop_down_item('Triangle', 'fa-caret-up', None),
-                        drop_down_item('Square', 'fa-square', None),
-                        drop_down_item('Something else here', 'fa-btc', None),
-                      ]),
+                      #drop_down_menu('Edit', [
+                      #  drop_down_item('Triangle', 'fa-caret-up', None),
+                      #  drop_down_item('Square', 'fa-square', None),
+                      #  drop_down_item('Something else here', 'fa-btc', None),
+                      #]),
                       drop_down_menu('Debug', [
                         drop_down_item('Run', 'fa-caret-right', self.run_project),
-                        drop_down_item('Square', 'fa-square', None),
-                        drop_down_item('Something else here', 'fa-btc', None),
+                        #drop_down_item('Square', 'fa-square', None),
+                        #drop_down_item('Something else here', 'fa-btc', None),
                       ]),
                       li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
                         form({'action': '#'}, [
@@ -1175,7 +1187,14 @@ class EditorView(BCChrome):
                           ]),
                         ]),
                       ], self.changeProperty_ok),
-                    ]
+                    ] + \
+                    ([
+                      div({'onclick': self.close_upload_modal, 'class': 'upload-files-modal-container'}, [
+                        div({'class': 'upload-files-modal-content'}, [
+                          html_button({'onclick': self.close_upload_modal}, 'Close'),
+                        ]),
+                      ]),
+                     ] if self.upload_modal_open else [])
 
     def get_code_mirror_read_only(self):
         return False
@@ -1197,6 +1216,7 @@ class EditorView(BCChrome):
                                                   [t(self.get_selected_de_content)],
                                                   change_handler=self.code_mirror_change,
                                                   read_only=self.get_code_mirror_read_only())
+        self.upload_modal_open = False
         #TODO: Option arguments should be kwargs
         super(EditorView, self).__init__(
                     None,
