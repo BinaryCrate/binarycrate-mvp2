@@ -18,7 +18,4 @@ class BCAdapter(DefaultAccountAdapter):
         user.email = request.POST['email']
         user.username = request.POST['email']
 
-        print('populate_username request.POST=',request.POST)
-        print('populate_username email=',email, ' user.email=', user.email)
-
 
