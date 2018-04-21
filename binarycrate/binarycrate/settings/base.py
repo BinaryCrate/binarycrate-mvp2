@@ -212,3 +212,7 @@ if 'pytest' in sys.modules:
 else:
     PROJECT_FILES_ROOT = os.path.join(BASE_DIR, 'private/projects')
 
+# Email
+
+DEFAULT_FROM_EMAIL = 'noreply@dev.binarycrate.com'
+
