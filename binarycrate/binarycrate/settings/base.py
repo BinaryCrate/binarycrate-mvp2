@@ -204,7 +204,7 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 #TODO: Needs to be correctly set up in production
-#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
