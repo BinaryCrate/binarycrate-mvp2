@@ -37,3 +37,22 @@ class TestModels(APITestCase):
         assert de.form_items == de2.form_items
         assert de.is_default == de2.is_default
 
+
+class TestImageModel(APITestCase):
+    def test_image_saving_saves_the_file(self):
+        project = Project.objects.create(id=self.project_id, name='Test 1', type=0, public=False,
+                       root_folder=de, owner=u)
+        image = Image.objects.create(name='apple.jpg', project=project)
+
+        with open(os.join(settings.BASE_URL, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
+            image.save_file(f)
+
+        with open(settings.PROJECT_FILES_ROOT + '/images-' + str(de.id) + '/Natural-red-apple.jpg', 'rb') as saved_file:
+            with open(os.join(settings.BASE_URL, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as original_file:
+                saved_content = saved_file.read()
+                original_content = original_file.read()
+
+                assert saved_content == original_content
+        
+
+

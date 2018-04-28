@@ -49,3 +49,20 @@ class Project(models.Model):
         return self.root_folder.get_descendants(include_self=True)
 
     
+class Image(models.Model):
+    # Represents an image uploaded by a user
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True)
+    name = models.CharField(max_length=1000)
+    project = models.ForeignKey(Project, related_name='images')
+
+    def save_file(self, f):
+        # f = a file handle or compatible object which we will read in from to save the file to disk or an S3 bucket
+        assert False
+
+    def get_url(self):
+        # Returns an URL that the file can be downloaded from. Could be a local url or a S3 bucket URL
+        # In production the Nginx web server will be redirected to download this file
+        return ''
+
+
+        
