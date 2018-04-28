@@ -45,13 +45,29 @@ class CodeMirrorHandlerVNode(textarea):
         self.change_handler = change_handler
         self.editor = None
         self.waiting_for_timeout = False
-        self.read_only = read_only
+        self.read_only = True#read_only
+        self.selected_de_id = ''
         super(CodeMirrorHandlerVNode, self).__init__(attribs, children, **kwargs)
 
     def was_mounted(self):
+        print('CodeMirror was mounted is called')
         super(CodeMirrorHandlerVNode, self).was_mounted()
-        should_init = True
+        should_init = False
+        selected_de_id = self.get_lazy_eval_attribs()['data-selected-de-id']
+        print('was_mounted selected_de_id=',selected_de_id,' self.selected_de_id=',self.selected_de_id)
+        if self.selected_de_id != selected_de_id:
+            code_mirrors = js.globals.document.getElementsByClassName('CodeMirror')
+            print('was_mounted code_mirrors.length=',code_mirrors.length)
+            for i in xrange(code_mirrors.length):
+                cm = code_mirrors.item(i)
+                print('was_mounted _cavorite_id=', cm.getAttribute('_cavorite_id'))
+                if not cm.getAttribute('_cavorite_id'):
+                    print('deleting codemirror')
+                    cm.parentNode.removeChild(cm);
+            self.selected_de_id = selected_de_id
         should_init = js.globals.document.getElementsByClassName('CodeMirror').length < 2
+        should_init = False
+        print('was_mounted should_init=', should_init)
         if should_init:
             textarea = js.globals.document.getElementById("code")
             self.editor = js.globals.CodeMirror.fromTextArea(textarea, {
@@ -71,7 +87,7 @@ class CodeMirrorHandlerVNode(textarea):
             global_editor = self.editor
             global global_textarea
             global_textarea = textarea
-            #self.onchange_codemirror(None)
+            self.onchange_codemirror(None)
 
     """
     def codemirror_init(self):

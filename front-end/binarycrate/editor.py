@@ -136,11 +136,13 @@ class BCPFile(li):
         return self.editor_view.selected_de == self.de
 
     def on_click(self, e):
+        print('BCPFile onclick started')
         self.editor_view.selected_de = self.de
         self.editor_view.selected_file_de = self.de
         self.editor_view.selected_item = ''
         self.editor_view.mount_redraw()
         Router.router.ResetHashChange()
+        print('BCPFile onclick ended')
 
 
 def sub_menu_handler(e):
@@ -940,15 +942,23 @@ class EditorView(BCChrome):
             })
 
     def get_selected_de_content(self):
+        print('get_selected_de_content called self.selected_file_de=', self.selected_file_de)
         if self.selected_file_de is None:
             return ''
         else:
             return self.selected_file_de['content']
 
+    def get_selected_de_id(self):
+        if self.selected_file_de is None:
+            return ''
+        else:
+            return self.selected_file_de['id']
+
     def code_mirror_change(self, content):
-        #print('code_mirror_change called')
+        print('code_mirror_change called')
         if self.selected_file_de is not None:
             if self.selected_file_de['content'] != str(content):
+                print('Updating content')
                 self.selected_file_de['content'] = str(content)
                 #self.mount_redraw()
                 #Router.router.ResetHashChange()
@@ -1019,6 +1029,7 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
 
     def close_upload_modal(self, e):
+        print('close_upload_moda called')
         self.upload_modal_open = False
         self.mount_redraw()
         Router.router.ResetHashChange()
@@ -1115,6 +1126,7 @@ class EditorView(BCChrome):
                                          'width':'59',
                                          'height':'20'})
 
+        print('get_modals called self.upload_modal_open=', self.upload_modal_open)
         return      [
                       Modal("shareProj", "Share Project", [
                         form([
@@ -1212,7 +1224,8 @@ class EditorView(BCChrome):
         self.program_is_running = False
         self.form_stack = list()
         self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code',
-                                                   'class': 'col-md-5 CodeMirror'},
+                                                   'class': 'col-md-5 CodeMirror',
+                                                   'data-selected-de-id': self.get_selected_de_id},
                                                   [t(self.get_selected_de_content)],
                                                   change_handler=self.code_mirror_change,
                                                   read_only=self.get_code_mirror_read_only())
