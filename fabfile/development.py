@@ -128,8 +128,8 @@ def setup_chrome():
 @task
 def create_symlinks():
     print(yellow('Creating symlinks...'))
-    with lcd('./binarycrate/binarycrate/settings'):
-        local('rm -rf ./__init__.py')
-        local('ln -s ./development.py ./__init__.py')
+    print(yellow('Running docker process...'))
+    with lcd('.'):
+        local('docker run --tty --interactive --volume "${PWD}":/opt/project --entrypoint="/opt/project/run-create-symlinks" --publish=8000:8000 "${PWD##*/}"')
 
 
