@@ -212,6 +212,11 @@ if 'pytest' in sys.modules:
 else:
     PROJECT_FILES_ROOT = os.path.join(BASE_DIR, 'private/projects')
 
+if 'pytest' in sys.modules:
+    IMAGE_FILES_ROOT = tempfile.mkdtemp()
+else:
+    IMAGE_FILES_ROOT = os.path.join(BASE_DIR, 'private/images')
+
 # Email
 
 DEFAULT_FROM_EMAIL = 'noreply@dev.binarycrate.com'

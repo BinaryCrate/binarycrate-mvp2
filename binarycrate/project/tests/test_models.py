@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals, print_function
 from rest_framework.test import APITestCase
-from project.models import Project, DirectoryEntry
+from project.models import Project, DirectoryEntry, Image
 import uuid
 import tempfile
 import shutil
 import os
 from django.conf import settings
+from accounts.factories import UserFactory
 
 
 class TestModels(APITestCase):
@@ -40,15 +41,17 @@ class TestModels(APITestCase):
 
 class TestImageModel(APITestCase):
     def test_image_saving_saves_the_file(self):
-        project = Project.objects.create(id=self.project_id, name='Test 1', type=0, public=False,
+        u = UserFactory()
+        de = DirectoryEntry.objects.create(name='', is_file=False)
+        project = Project.objects.create(name='Test 1', type=0, public=False,
                        root_folder=de, owner=u)
-        image = Image.objects.create(name='apple.jpg', project=project)
+        image = Image.objects.create(name='Natural-red-apple.jpg', project=project)
 
-        with open(os.join(settings.BASE_URL, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
+        with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
             image.save_file(f)
 
-        with open(settings.PROJECT_FILES_ROOT + '/images-' + str(de.id) + '/Natural-red-apple.jpg', 'rb') as saved_file:
-            with open(os.join(settings.BASE_URL, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as original_file:
+        with open(settings.PROJECT_FILES_ROOT + '/images-' + str(project.id) + '/Natural-red-apple.jpg', 'rb') as saved_file:
+            with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as original_file:
                 saved_content = saved_file.read()
                 original_content = original_file.read()
 
