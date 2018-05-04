@@ -66,7 +66,7 @@ class Image(models.Model):
     def get_url(self):
         # Returns an URL that the file can be downloaded from. Could be a local url or a S3 bucket URL
         # In production the Nginx web server will be redirected to download this file
-        return ''
+        return '/images/images-' + str(self.project.id) + '/{0}'.format(self.name)
 
 
         

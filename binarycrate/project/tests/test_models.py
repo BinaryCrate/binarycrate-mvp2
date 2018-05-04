@@ -56,6 +56,8 @@ class TestImageModel(APITestCase):
                 original_content = original_file.read()
 
                 assert saved_content == original_content
+
+        assert image.get_url() == '/images/images-' + str(project.id) + '/Natural-red-apple.jpg'
         
 
 
