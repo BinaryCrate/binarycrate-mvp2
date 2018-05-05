@@ -7,6 +7,8 @@ from project.models import Project, DirectoryEntry
 import uuid
 from accounts.factories import UserFactory
 from rest_framework.test import APIClient
+import os
+from django.conf import settings
 
 
 # TODO: This (DirectoryEntryDict) appears to be balloonian code - it should be deleted
@@ -557,4 +559,25 @@ class PublicAccessNotLoggedInUserTestCase(APITestCase):
                          }),
                          })
 
+class ProjectImageTestCase(APITestCase):
+    def setUp(self):
+        self.project_id = uuid.uuid4()
+        u = UserFactory()
+        de = DirectoryEntry.objects.create(name='', is_file=False)
+        self.project = Project.objects.create(id=self.project_id, name='Test 1', type=0, public=False,
+                               root_folder=de, owner=u)
+        self.client.force_authenticate(user=u)
+
+    def test_upload_image(self):
+        with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
+            response = self.client.post('/api/projects/image/', {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
+                                          'file_data': f}, format='multipart')
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        with open(settings.PROJECT_FILES_ROOT + '/images-' + str(self.project.id) + '/Natural-red-apple.jpg', 'rb') as saved_file:
+            with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as original_file:
+                saved_content = saved_file.read()
+                original_content = original_file.read()
+
+                assert saved_content == original_content
 

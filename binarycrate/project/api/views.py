@@ -2,7 +2,8 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from ..models import Project
-from .serializers import ProjectGetSerializer, ProjectPostSerializer, DirectoryEntrySerializer
+from .serializers import (ProjectGetSerializer, ProjectPostSerializer,
+                          DirectoryEntrySerializer, ImagePostSerializer)
 from rest_framework import mixins
 from rest_framework import generics
 from rest_framework import permissions
@@ -115,7 +116,7 @@ class DirectoryEntryDetail(APIView):
                 de.parent = DirectoryEntry.objects.get(id=request.data['parent_id'])
             de.save()
             #print('DirectoryEntryDetail de=', de)
-            response_data = copy.copy(serializer.data)
+            response_data = copy.copy(serializer.validated_data)
             response_data['content'] = de.content
             response_data['form_items'] = de.form_items
             return Response(response_data)
@@ -125,3 +126,16 @@ class DirectoryEntryDetail(APIView):
         de = self.get_object(pk)
         de.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class ImageUploadView(APIView):
+    #permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = ImagePostSerializer(data=request.data)
+        if serializer.is_valid():
+            image = serializer.save()
+            image.save_file(serializer.validated_data['file_data'])
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={'detail' : 'Invalid data.'})
+
+
