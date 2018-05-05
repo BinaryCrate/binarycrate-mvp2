@@ -594,12 +594,10 @@ class ProjectImageTestCase(APITestCase):
 
                 assert saved_content == original_content
 
-                """
-                response = self.client.get(result['image_url'])
+                response = self.client.get(result['image_url'], follow=True)
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
 
                 assert saved_content == response.content
-                """
 
 
 class ProjectImageNotLoggedInTestCase(APITestCase):

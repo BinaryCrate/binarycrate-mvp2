@@ -35,9 +35,12 @@ urlpatterns = [
     # Shared projects
     url(r'^share/', include('share.urls')),
 
-    # These redirects are hack because django-allauth redirects us to weird places. Fix it to go somewhere reasonable by default
+    #TODO: These redirects are hacked in because django-allauth redirects us to weird places. Fix it to go somewhere reasonable by default
     url(r'^accounts/profile', RedirectView.as_view(url='/', permanent=False)),
     url(r'^accounts/signup/None', RedirectView.as_view(url='/', permanent=False)),
+
+    # Image downloads
+    url(r'^images/', include('project.image_urls')),
 ]
 
 #Should be If settings.DEBUG:

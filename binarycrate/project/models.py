@@ -59,9 +59,13 @@ class Image(models.Model):
 
     def save_file(self, f):
         # f = a file handle or compatible object which we will read in from to save the file to disk or an S3 bucket
-        filename = 'images-' + str(self.project.id) + '/{0}'.format(self.name)
+        filename = self.get_file_name()
         project_media_storage.delete(filename)
         project_media_storage.save(filename, f)
+
+    def get_file_name(self):
+        # Returns the name of the file
+        return 'images-' + str(self.project.id) + '/{0}'.format(self.name)
 
     def get_url(self):
         # Returns an URL that the file can be downloaded from. Could be a local url or a S3 bucket URL
