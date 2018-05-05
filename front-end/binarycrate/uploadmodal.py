@@ -12,21 +12,25 @@ import json
 class UploadedImage(div):
     def __init__(self, image):
         self.image = image
-        super(UploadedImage, self).__init__({'style': {'width':'150px', 
+        super(UploadedImage, self).__init__({'style': {'width':'165px', 
                                                        'height': '150px',
                                                        #'border': '1px solid red'
                                                        'overflow': 'hidden',
+                                                       'display': 'inline-block',
                                                        }})
 
     def get_children(self):
         return [
                  img({'src': self.image['image_url'],
-                      'style': {'width': '130px',
-                                'height': '105px',
+                      'style': {'width': '145px',
+                                'height': '95px',
                                 'margin': '10px',
                                 }
                       }), 
-                 p({'style': {'font-size': '12px'}}, self.image['name'])
+                 p({'style': {'font-size': '12px',
+                              'margin': '4px'
+                             }
+                   }, self.image['name'])
                ]
 
 
@@ -50,14 +54,14 @@ class UploadModal(object):
                 self.image_list_callback_handler)
 
     def on_submit_upload(self, e):
-        def dummy_result_handler(xmlhttp, response):
-            print('dummy_result_handler called')
+        def ajaxpost_result_handler(xmlhttp, response):
+            self.query_images()
 
         e.preventDefault()
         file_upload_element = js.globals.document.getElementById('image-upload-form-control')
         f = file_upload_element.files[0]
         form_data = {'name': f.name, 'project': self.ownerview.get_project()['id'], 'file_data': f}
-        ajaxpost('/api/projects/image/', form_data, dummy_result_handler)
+        ajaxpost('/api/projects/image/', form_data, ajaxpost_result_handler)
         self.ownerview.mount_redraw()
         Router.router.ResetHashChange()
 
