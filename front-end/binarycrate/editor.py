@@ -24,6 +24,7 @@ import inspect
 from binarycrate import historygraphfrontend
 import binarycrate
 from .urllib import urlencode
+from .uploadmodal import UploadModal
 
 
 HANDLE_NONE = 0
@@ -1014,12 +1015,12 @@ class EditorView(BCChrome):
 
     def upload_images(self, e):
         print('upload images called')
-        self.upload_modal_open = True
+        self.upload_modal = UploadModal(self)
         self.mount_redraw()
         Router.router.ResetHashChange()
 
     def close_upload_modal(self, e):
-        self.upload_modal_open = False
+        self.upload_modal = False
         self.mount_redraw()
         Router.router.ResetHashChange()
 
@@ -1188,13 +1189,7 @@ class EditorView(BCChrome):
                         ]),
                       ], self.changeProperty_ok),
                     ] + \
-                    ([
-                      div({'onclick': self.close_upload_modal, 'class': 'upload-files-modal-container'}, [
-                        div({'class': 'upload-files-modal-content'}, [
-                          html_button({'onclick': self.close_upload_modal}, 'Close'),
-                        ]),
-                      ]),
-                     ] if self.upload_modal_open else [])
+                    (self.upload_modal.get_modal_vnodes() if self.upload_modal else [])
 
     def get_code_mirror_read_only(self):
         return False
@@ -1216,7 +1211,7 @@ class EditorView(BCChrome):
                                                   [t(self.get_selected_de_content)],
                                                   change_handler=self.code_mirror_change,
                                                   read_only=self.get_code_mirror_read_only())
-        self.upload_modal_open = False
+        self.upload_modal = None
         #TODO: Option arguments should be kwargs
         super(EditorView, self).__init__(
                     None,

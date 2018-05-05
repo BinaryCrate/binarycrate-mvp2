@@ -9,6 +9,8 @@ from django.http import HttpResponse
 
 
 def download_image(request, project, image_name):
+    #TODO: This is file for development but in product we need a way of sending
+    # files that will not occupy UWSGI worker time like this does
     try:
         project = Project.objects.get(pk=project)
     except Project.DoesNotExist:
