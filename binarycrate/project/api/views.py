@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals, print_function
 
-from ..models import Project
+from ..models import Project, Image
 from .serializers import (ProjectGetSerializer, ProjectPostSerializer,
-                          DirectoryEntrySerializer, ImagePostSerializer)
+                          DirectoryEntrySerializer, ImagePostSerializer,
+                          ImageGetSerializer)
 from rest_framework import mixins
 from rest_framework import generics
 from rest_framework import permissions
@@ -141,4 +142,24 @@ class ImageUploadView(APIView):
             return Response(status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST, data={'detail' : 'Invalid data.'})
 
+class ImageListView(APIView):
+    """
+    List all images belong to a project
+    """
+    permission_classes = (IsReadOnlyOrAuthenticated, )
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+
+    def get_object(self, project):
+        try:
+            return Project.objects.get(pk=project)
+        except Project.DoesNotExist:
+            raise Http404
+
+    def get(self, request, project, format=None):
+        project = self.get_object(project)
+        images = Image.objects.filter(project=project)
+        if not project.public and project.owner != request.user:
+            raise PermissionDenied()
+        serializer = ImageGetSerializer(images, many=True)
+        return Response(serializer.data)
 

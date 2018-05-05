@@ -69,4 +69,7 @@ class Image(models.Model):
         return '/images/images-' + str(self.project.id) + '/{0}'.format(self.name)
 
 
+    @property
+    def image_url(self):
+        return self.get_url()
         

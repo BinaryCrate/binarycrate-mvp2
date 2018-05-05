@@ -3,7 +3,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from project.models import Project, DirectoryEntry
+from project.models import Project, DirectoryEntry, Image
 import uuid
 from accounts.factories import UserFactory
 from rest_framework.test import APIClient
@@ -569,10 +569,23 @@ class ProjectImageTestCase(APITestCase):
         self.client.force_authenticate(user=u)
 
     def test_upload_image(self):
+        # Upload the file and test we don't get an error
+        assert Image.objects.all().count() == 0        
         with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
-            response = self.client.post('/api/projects/image/', {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
+            response = self.client.post(reverse('api:image-upload'), {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
                                           'file_data': f}, format='multipart')
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            assert Image.objects.all().count() == 1
+
+        url = reverse('api:image-list', kwargs={'project':str(self.project_id)})
+        data = { }
+        response = self.client.get(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = response.data
+        assert len(results) == 1
+        result = results[0]
+        assert result['name'] == 'Natural-red-apple.jpg'
+        assert result['image_url'] == '/images/images-' + str(self.project.id) + '/Natural-red-apple.jpg'
 
         with open(settings.PROJECT_FILES_ROOT + '/images-' + str(self.project.id) + '/Natural-red-apple.jpg', 'rb') as saved_file:
             with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as original_file:
@@ -580,6 +593,13 @@ class ProjectImageTestCase(APITestCase):
                 original_content = original_file.read()
 
                 assert saved_content == original_content
+
+                """
+                response = self.client.get(result['image_url'])
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+                assert saved_content == response.content
+                """
 
 
 class ProjectImageNotLoggedInTestCase(APITestCase):
@@ -591,10 +611,13 @@ class ProjectImageNotLoggedInTestCase(APITestCase):
                                root_folder=de, owner=u)
 
     def test_upload_image(self):
+        # Test we get an error if not logged in and the uplaod fails
+        assert Image.objects.all().count() == 0
         with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
             response = self.client.post('/api/projects/image/', {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
                                           'file_data': f}, format='multipart')
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+            assert Image.objects.all().count() == 0
 
 class ProjectImageOtherUserTestCase(APITestCase):
     def setUp(self):
@@ -607,8 +630,11 @@ class ProjectImageOtherUserTestCase(APITestCase):
         self.client.force_authenticate(user=u2)
 
     def test_upload_image(self):
+        # Test we get an error if logged in as a different user
+        assert Image.objects.all().count() == 0
         with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
             response = self.client.post('/api/projects/image/', {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
                                           'file_data': f}, format='multipart')
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+            assert Image.objects.all().count() == 0
 
