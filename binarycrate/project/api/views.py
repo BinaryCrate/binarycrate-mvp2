@@ -130,6 +130,7 @@ class DirectoryEntryDetail(APIView):
 
 class ImageUploadView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
 
     def post(self, request, *args, **kwargs):
         serializer = ImagePostSerializer(data=request.data)

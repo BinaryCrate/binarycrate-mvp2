@@ -828,6 +828,12 @@ a.social-media-login-link {
   z-index:10000;
 }
 
+/*
+.upload-files-modal-container * {
+  border: 1px solid red;
+}
+*/
+
 .upload-files-modal-content {
   background: #fff;
   padding: 40px;
