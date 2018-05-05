@@ -128,11 +128,14 @@ class DirectoryEntryDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class ImageUploadView(APIView):
-    #permission_classes = (IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
         serializer = ImagePostSerializer(data=request.data)
         if serializer.is_valid():
+            project = serializer.validated_data['project']
+            if project.owner != request.user:
+                raise PermissionDenied()
             image = serializer.save()
             image.save_file(serializer.validated_data['file_data'])
             return Response(status=status.HTTP_201_CREATED)

@@ -581,3 +581,34 @@ class ProjectImageTestCase(APITestCase):
 
                 assert saved_content == original_content
 
+
+class ProjectImageNotLoggedInTestCase(APITestCase):
+    def setUp(self):
+        self.project_id = uuid.uuid4()
+        u = UserFactory()
+        de = DirectoryEntry.objects.create(name='', is_file=False)
+        self.project = Project.objects.create(id=self.project_id, name='Test 1', type=0, public=False,
+                               root_folder=de, owner=u)
+
+    def test_upload_image(self):
+        with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
+            response = self.client.post('/api/projects/image/', {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
+                                          'file_data': f}, format='multipart')
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+class ProjectImageOtherUserTestCase(APITestCase):
+    def setUp(self):
+        self.project_id = uuid.uuid4()
+        u = UserFactory(username='user1@binarycrate.com',email='user1@binarycrate.com')
+        u2 = UserFactory(username='user2@binarycrate.com',email='user2@binarycrate.com')
+        de = DirectoryEntry.objects.create(name='', is_file=False)
+        self.project = Project.objects.create(id=self.project_id, name='Test 1', type=0, public=False,
+                               root_folder=de, owner=u)
+        self.client.force_authenticate(user=u2)
+
+    def test_upload_image(self):
+        with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
+            response = self.client.post('/api/projects/image/', {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
+                                          'file_data': f}, format='multipart')
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
