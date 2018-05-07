@@ -56,7 +56,7 @@ def run(**kwargs):
 def migrate():
     print(yellow('Running docker process...'))
     with lcd('.'):
-        local('docker run --tty --interactive --volume "${PWD}":/opt/project --publish=8000:8000 "${PWD##*/}" migrate')
+        local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --publish=8000:8000 "' + project_name + '" migrate')
 
 @task
 def test(testname=None):
@@ -66,7 +66,7 @@ def test(testname=None):
     else:
         testcommand = ""
     with lcd('.'):
-        local('docker run --tty --interactive --volume "${PWD}":/opt/project --entrypoint="pytest" "${PWD##*/}"' + testcommand)
+        local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --entrypoint="pytest" "' + project_name + '"' + testcommand)
 
 @task
 def frontend_test(testname=None):
@@ -77,22 +77,22 @@ def frontend_test(testname=None):
         testcommand = ""
     with lcd('.'):
         local('docker run --tty '
-              '--interactive --volume "${PWD}":/opt/project '
+              '--interactive --volume "' + local_pwd + '":/opt/project '
               #'--volume "/home/mark/cavorite":/opt/project/cavorite '
               '--entrypoint="/opt/project/run-frontend-tests" '
-              '"${PWD##*/}"' + testcommand)
+              '"' + project_name + '"' + testcommand)
 
 @task
 def makemigrations():
     print(yellow('Running docker process...'))
     with lcd('.'):
-        local('docker run --tty --interactive --volume "${PWD}":/opt/project --publish=8000:8000 "${PWD##*/}" makemigrations')
+        local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --publish=8000:8000 "' + project_name + '" makemigrations')
 
 @task
 def bash():
     print(yellow('Running docker process...'))
     with lcd('.'):
-        local('docker run --tty --interactive --volume "${PWD}":/opt/project --entrypoint="bash" --publish=8000:8000 "${PWD##*/}"')
+        local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --entrypoint="bash" --publish=8000:8000 "' + project_name + '"')
 
 @task
 def setup():
@@ -121,4 +121,10 @@ def setup_chrome():
                 abort(red('Could not setup chrome. Have you run '
                           '\'setup_network\'?'))
 
+@task
+def create_symlinks():
+    print(yellow('Creating symlinks...'))
+    print(yellow('Running docker process...'))
+    with lcd('.'):
+        local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --entrypoint="/opt/project/run-create-symlinks" --publish=8000:8000 "' + project_name + '"')
 
