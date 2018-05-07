@@ -1,6 +1,7 @@
 from fabric.api import abort, lcd, local, task, warn_only
 from fabric.colors import green, red, yellow
 from sys import platform
+from shutil import copyfile
 import os
 
 local_pwd = os.path.realpath(
@@ -39,6 +40,7 @@ def run(**kwargs):
             abort(red('Could not start chrome. Have you run '
                       '\'setup_chrome\'?'))
 
+        copyfile('binarycrate/binarycrate/settings/build_number.py', 'front-end/binarycrate/build_number.py')
         local('docker run --tty '
               '--interactive '
               '--publish=8000:8000 '
@@ -76,7 +78,7 @@ def frontend_test(testname=None):
     else:
         testcommand = ""
     with lcd('.'):
-        local('cp binarycrate/binarycrate/settings/build_number.py front-end/binarycrate/build_number.py')
+        copyfile('binarycrate/binarycrate/settings/build_number.py', 'front-end/binarycrate/build_number.py')
         local('docker run --tty '
               '--interactive --volume "' + local_pwd + '":/opt/project '
               #'--volume "/home/mark/cavorite":/opt/project/cavorite '
@@ -126,14 +128,7 @@ def setup_chrome():
 @task
 def create_symlinks():
     print(yellow('Creating symlinks...'))
-<<<<<<< HEAD
-    with lcd('./binarycrate/binarycrate/settings'):
-        local('rm -rf ./__init__.py')
-        local('ln -s ./development.py ./__init__.py')
-
-
-=======
     print(yellow('Running docker process...'))
     with lcd('.'):
         local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --entrypoint="/opt/project/run-create-symlinks" --publish=8000:8000 "' + project_name + '"')
->>>>>>> ccc010a... Removed dependancy on Unix command line formats
+
