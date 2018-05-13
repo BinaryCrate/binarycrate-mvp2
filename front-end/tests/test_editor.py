@@ -24,7 +24,7 @@ class TestEditor(object):
         assert type(node) == BCPFile
         assert len(node.get_children()) == 1
         first_child = node.get_children()[0]
-        assert first_child.tag.lower() == 'a'
+        assert first_child.get_tag_name().lower() == 'a'
         assert len(first_child.get_children()) == 1
         text_node = first_child.get_children()[0]
         assert type(text_node) == t
@@ -204,13 +204,13 @@ class TestEditor(object):
         assert node.selected_de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'
         assert 'file-active' in hello_world.get_attribs().get('class', '')
         a_hello_world = hello_world.get_children()[0]
-        assert a_hello_world.tag == 'a'
+        assert a_hello_world.get_tag_name() == 'a'
         assert 'file-active' in a_hello_world.get_attribs().get('class', '')
         label_folder = folder.get_children()[0]
-        assert label_folder.tag == 'label'
+        assert label_folder.get_tag_name() == 'label'
         assert 'file-active' not in label_folder.get_attribs().get('class', '')
         checkbox_folder = folder.get_children()[1]
-        assert checkbox_folder.tag == 'input'
+        assert checkbox_folder.get_tag_name() == 'input'
         assert 'checked' not in checkbox_folder.get_attribs()
 
         folder.on_click(None)
@@ -220,13 +220,13 @@ class TestEditor(object):
         assert node.selected_de['id'] == 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
         assert 'file-active' not in hello_world.get_attribs().get('class', '')
         a_hello_world = hello_world.get_children()[0]
-        assert a_hello_world.tag == 'a'
+        assert a_hello_world.get_tag_name() == 'a'
         assert 'file-active' not in a_hello_world.get_attribs().get('class', '')
         label_folder = folder.get_children()[0]
-        assert label_folder.tag == 'label'
+        assert label_folder.get_tag_name() == 'label'
         assert 'file-active' in label_folder.get_attribs().get('class', '')
         checkbox_folder = folder.get_children()[1]
-        assert checkbox_folder.tag == 'input'
+        assert checkbox_folder.get_tag_name() == 'input'
         assert 'checked' in checkbox_folder.get_attribs()
         
         hello_world.on_click(None)
@@ -235,13 +235,13 @@ class TestEditor(object):
         assert node.selected_de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'
         assert 'file-active' in hello_world.get_attribs().get('class', '')
         a_hello_world = hello_world.get_children()[0]
-        assert a_hello_world.tag == 'a'
+        assert a_hello_world.get_tag_name() == 'a'
         assert 'file-active' in a_hello_world.get_attribs().get('class', '')
         label_folder = folder.get_children()[0]
-        assert label_folder.tag == 'label'
+        assert label_folder.get_tag_name() == 'label'
         assert 'file-active' not in label_folder.get_attribs().get('class', '')
         checkbox_folder = folder.get_children()[1]
-        assert checkbox_folder.tag == 'input'
+        assert checkbox_folder.get_tag_name() == 'input'
         assert 'checked' in checkbox_folder.get_attribs()
 
         js.return_get_element_by_id = {'preview': Mock(getBoundingClientRect=Mock(return_value=Mock(left=0, top=0)))}
@@ -418,10 +418,10 @@ class TestEditor(object):
             if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'newFile':
 
                 def mock_element_iterator_callback2(vnode):
-                    if hasattr(vnode, 'tag'):
-                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                    if hasattr(vnode, 'get_tag_name'):
+                        if vnode.get_tag_name() == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
                             result['newFile_OK_handler'] = vnode.get_attribs()['onclick']
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtFileName":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtFileName":
                             node.value = ''
                 IterateVirtualDOM(vnode, mock_element_iterator_callback2)
 
@@ -611,10 +611,10 @@ class TestEditor(object):
             if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'newFolder':
 
                 def mock_element_iterator_callback2(vnode):
-                    if hasattr(vnode, 'tag'):
-                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                    if hasattr(vnode, 'get_tag_name'):
+                        if vnode.get_tag_name() == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
                             result['newFolder_OK_handler'] = vnode.get_attribs()['onclick']
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtFolderName":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtFolderName":
                             node.value = ''
                 IterateVirtualDOM(vnode, mock_element_iterator_callback2)
 
@@ -1026,9 +1026,9 @@ class TestContextMenu(object):
         assert button['name'] == 'button1'
 
         def is_nvode_button(vnode):
-            if hasattr(vnode, 'tag') is False:
+            if hasattr(vnode, 'get_tag_name') is False:
                 return None
-            if vnode.tag != 'button':
+            if vnode.get_tag_name() != 'button':
                 return None
             l = vnode.get_children()
             if len(l) != 1:
@@ -1294,9 +1294,9 @@ class TestContextMenu(object):
         button = view.selected_de['form_items'][0]
 
         def is_nvode_button(vnode, button_title):
-            if hasattr(vnode, 'tag') is False:
+            if hasattr(vnode, 'get_tag_name') is False:
                 return None
-            if vnode.tag != 'button':
+            if vnode.get_tag_name() != 'button':
                 return None
             l = vnode.get_children()
             if len(l) != 1:
@@ -1325,10 +1325,10 @@ class TestContextMenu(object):
             if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'changeProperty':
 
                 def mock_element_iterator_callback2(vnode):
-                    if hasattr(vnode, 'tag'):
-                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                    if hasattr(vnode, 'get_tag_name'):
+                        if vnode.get_tag_name() == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
                             result['changeProperty_OK_handler'] = vnode.get_attribs()['onclick']
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtValue":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtValue":
                             result['default_value'] = vnode.get_attribs().get('value', '')
                 IterateVirtualDOM(vnode, mock_element_iterator_callback2)
 
@@ -1456,9 +1456,9 @@ class TestContextMenu(object):
         checkbox = view.selected_de['form_items'][0]
 
         def is_nvode_checkbox(vnode):
-            if hasattr(vnode, 'tag') is False:
+            if hasattr(vnode, 'get_tag_name') is False:
                 return None
-            if vnode.tag != 'input':
+            if vnode.get_tag_name() != 'input':
                 return None
             if vnode.get_attribs().get('type', '') != 'checkbox':
                 return None
@@ -1488,10 +1488,10 @@ class TestContextMenu(object):
                 #print('mock_element_iterator_callback changeBooleanProperty found')
 
                 def mock_element_iterator_callback2(vnode):
-                    if hasattr(vnode, 'tag'):
-                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                    if hasattr(vnode, 'get_tag_name'):
+                        if vnode.get_tag_name() == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
                             result['changePropertyBoolean_OK_handler'] = vnode.get_attribs()['onclick']
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "chkValue":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "chkValue":
                             #print('mock_element_iterator_callback  vnode.checked=',vnode.get_attribs().get('checked', ''))
                             result['default_value'] = vnode.get_attribs().get('checked', '') == 'checked'
                 IterateVirtualDOM(vnode, mock_element_iterator_callback2)
@@ -1613,9 +1613,9 @@ class TestContextMenu(object):
         checkbox = view.selected_de['form_items'][0]
 
         def is_nvode_rect(vnode):
-            if hasattr(vnode, 'tag') is False:
+            if hasattr(vnode, 'get_tag_name') is False:
                 return None
-            if vnode.tag != 'rect':
+            if vnode.get_tag_name() != 'rect':
                 return None
             #if vnode.get_attribs().get('type', '') != 'checkbox':
             #    return None
@@ -1647,16 +1647,16 @@ class TestContextMenu(object):
                 #print('mock_element_iterator_callback changeBooleanProperty found')
 
                 def mock_element_iterator_callback2(vnode):
-                    if hasattr(vnode, 'tag'):
-                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                    if hasattr(vnode, 'get_tag_name'):
+                        if vnode.get_tag_name() == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
                             result['changePropertyColor_OK_handler'] = vnode.get_attribs()['onclick']
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "chkEmpty":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "chkEmpty":
                             result['color_empty'] = vnode.get_attribs().get('checked', '') == 'checked'
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtRed":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtRed":
                             result['color_red'] = vnode.get_attribs().get('value', '')
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtGreen":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtGreen":
                             result['color_green'] = vnode.get_attribs().get('value', '')
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtBlue":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtBlue":
                             result['color_blue'] = vnode.get_attribs().get('value', '')
                 IterateVirtualDOM(vnode, mock_element_iterator_callback2)
 
@@ -1802,9 +1802,9 @@ class TestContextMenu(object):
         button = view.selected_de['form_items'][0]
 
         def is_nvode_button(vnode, button_title):
-            if hasattr(vnode, 'tag') is False:
+            if hasattr(vnode, 'get_tag_name') is False:
                 return None
-            if vnode.tag != 'button':
+            if vnode.get_tag_name() != 'button':
                 return None
             l = vnode.get_children()
             if len(l) != 1:
@@ -1847,10 +1847,10 @@ class TestContextMenu(object):
             if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'changeProperty':
 
                 def mock_element_iterator_callback2(vnode):
-                    if hasattr(vnode, 'tag'):
-                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                    if hasattr(vnode, 'get_tag_name'):
+                        if vnode.get_tag_name() == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
                             result['changeProperty_OK_handler'] = vnode.get_attribs()['onclick']
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtValue":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtValue":
                             result['default_value'] = vnode.get_attribs().get('value', '')
                 IterateVirtualDOM(vnode, mock_element_iterator_callback2)
 
