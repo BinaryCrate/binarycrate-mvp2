@@ -577,8 +577,11 @@ class EditorView(BCChrome):
 
     def display_property_change_modal(self, e, form_item, prop_name):
         #print('display_property_change_modal called form_item[name]=', form_item['name'])
+        #print('display_property_change_modal prop_name=', prop_name)
+        #print('display_property_change_modal get_form_item_property(form_item[\'type\'])=', get_form_item_property(form_item['type']))
         self.current_prop_name = prop_name
         prop_type = get_form_item_property(form_item['type'])[prop_name]
+        #print('display_property_change_modal prop_type=', prop_type)
         self.context_menu = None
         def display_modal():
             jquery = js.globals['$']
@@ -597,7 +600,11 @@ class EditorView(BCChrome):
     def contextmenu_control(self, form_item_id, e):
         posx, posy = self.xy_from_e(e)
         form_item = [form_item for form_item in self.selected_de['form_items'] if form_item_id == form_item['id']][0]
-        change_items = tuple(sorted([('Change {}'.format(prop_name), lambda e, prop_name=prop_name: self.display_property_change_modal(e, form_item, prop_name)) for prop_name in get_form_item_property(form_item['type'])],
+        #print('form_item=', form_item)
+        #print('dir(form_item)=', dir(form_item))
+        #print('get_form_item_property(form_item[\'type\'])=', get_form_item_property(form_item['type']))
+        change_items = tuple(sorted([('Change {}'.format(prop_name), 
+                                      lambda e, prop_name=prop_name: self.display_property_change_modal(e, form_item, prop_name)) for prop_name in get_form_item_property(form_item['type'])],
                                     key=itemgetter(0)))
         self.context_menu = ContextMenu(posx, posy, change_items + (
                                         ('Delete', lambda e: self.delete_selected_form_item(form_item_id, e)),
@@ -637,7 +644,7 @@ class EditorView(BCChrome):
                     #control = html_input({'type': "text", 'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
                 elif form_item['type'] == 'image':
                     control_class = img
-                    attribs_extra = { }           
+                    attribs_extra = {'src': 'text' }           
                 elif form_item['type'] == 'label':
                     control_class = p
                     attribs_extra = { }           
@@ -847,6 +854,7 @@ class EditorView(BCChrome):
              'width': 200,
              'height': 200,
              'name': self.get_next_name('image'),
+             'src': '',
             })
 
     def new_label(self, e):
@@ -1014,7 +1022,7 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
 
     def upload_images(self, e):
-        print('upload images called')
+        #print('upload images called')
         self.upload_modal = UploadModal(self)
         self.mount_redraw()
         Router.router.ResetHashChange()
@@ -1060,12 +1068,19 @@ class EditorView(BCChrome):
     def get_modals(self):
         #print('EditorView get_modals called')
         def get_current_form_item_prop_val():
+            #print('EditorView get_current_form_item_prop_vals called')
             if self.selected_de is None:
                 return ''
+            #print('1 EditorView get_current_form_item_prop_vals')
             fis = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item]
+            #print('2 EditorView get_current_form_item_prop_vals')
             if len(fis) == 0 or self.current_prop_name == '' or self.current_prop_name is None:
                 return ''
-            return str(fis[0][self.current_prop_name])
+            #print('EditorView self.current_prop_name=', self.current_prop_name)
+            #print('EditorView fis[0]=', fis[0])
+            ret = str(fis[0][self.current_prop_name])
+            #print('EditorView get_current_form_item_prop_vals exited')
+            return ret
         def get_current_form_item_checked():
             #print ('get_current_form_item_checked 1')
             if self.selected_de is None:

@@ -78,7 +78,7 @@ class StudentForm(object):
                 #control = html_input({'type': "text", 'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
             elif form_item['type'] == 'image':
                 control_class = img
-                attribs_extra = { }           
+                attribs_extra = { 'src': 'text' }           
             elif form_item['type'] == 'label':
                 control_class = p
                 attribs_extra = { }           
