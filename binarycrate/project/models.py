@@ -4,6 +4,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 from django.db import models
 import uuid
 from mptt.models import MPTTModel, TreeForeignKey
+from common.utils import ChoiceEnum
 
 class DirectoryEntry(MPTTModel):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
@@ -36,16 +37,17 @@ class DirectoryEntry(MPTTModel):
         self._form_items = '[]'
         super(DirectoryEntry, self).__init__(*args, **kwargs)
 
+class ProjectTypes(ChoiceEnum):
+    python = 0
+    htmlcss = 1
 
 class Project(models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
     name = models.CharField(max_length=1000)
-    type = models.IntegerField()
+    type = models.IntegerField(choices=ProjectTypes.choices())
     root_folder = models.OneToOneField(DirectoryEntry)
     public = models.BooleanField()
     owner = models.ForeignKey('accounts.User')
 
     def get_directory_entries(self):
         return self.root_folder.get_descendants(include_self=True)
-
-    
