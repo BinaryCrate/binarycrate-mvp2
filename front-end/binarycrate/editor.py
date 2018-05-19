@@ -207,6 +207,7 @@ class FormItemPropType(object):
     STRING = 1
     BOOLEAN = 2
     COLOR = 3
+    PRELOADED_IMAGE = 4
 
 def get_form_item_property(form_item_type):
     if form_item_type == 'line':
@@ -228,7 +229,7 @@ def get_form_item_property(form_item_type):
     if form_item_type == 'textbox':
         props.update({'text': FormItemPropType.STRING})
     if form_item_type == 'image':
-        props.update({'src': FormItemPropType.STRING})
+        props.update({'src': FormItemPropType.STRING, 'preloaded_image': FormItemPropType.PRELOADED_IMAGE})
     if form_item_type == 'checkbox':
         props.update({'value': FormItemPropType.BOOLEAN})
     if form_item_type in {'rect', 'circle', 'ellipse', 'hexagon'}:
@@ -589,6 +590,8 @@ class EditorView(BCChrome):
                 jquery('#changePropertyBoolean').modal('show')
             elif prop_type == FormItemPropType.COLOR:
                 jquery('#changePropertyColor').modal('show')
+            elif prop_type == FormItemPropType.PRELOADED_IMAGE:
+                jquery('#changePropertyPreloadedImage').modal('show')
             else:
                 jquery('#changeProperty').modal('show')
         self.mount_redraw()
@@ -644,7 +647,11 @@ class EditorView(BCChrome):
                     #control = html_input({'type': "text", 'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
                 elif form_item['type'] == 'image':
                     control_class = img
-                    attribs_extra = {'src': 'text' }           
+                    preloaded_image = form_item['preloaded_image']
+                    if preloaded_image == '':
+                        attribs_extra = {'src': form_item['src'], 'preloaded_image': '' }
+                    else:
+                        attribs_extra = {'src': '/storage/images-{0}/{1}'.format(project['id'], preloaded_image), 'preloaded_image': preloaded_image }
                 elif form_item['type'] == 'label':
                     control_class = p
                     attribs_extra = { }           
@@ -855,6 +862,7 @@ class EditorView(BCChrome):
              'height': 200,
              'name': self.get_next_name('image'),
              'src': '',
+             'preloaded_image': '',
             })
 
     def new_label(self, e):
@@ -997,6 +1005,7 @@ class EditorView(BCChrome):
         fi = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item][0]
         #print('changeProperty_ok called fi[type]=', fi['type'], ', self.current_prop_name=', self.current_prop_name)
         #print('changeProperty_ok form_values=', form_values)
+        #print('changeProperty_ok called self.current_prop_name=', self.current_prop_name)
         #print('changeProperty_ok called FormItemPropType=', get_form_item_property(fi['type'])[self.current_prop_name])
         if self.current_prop_name == 'name':
             matches = [fi for fi in self.selected_de['form_items'] if fi['id'] != self.selected_item and fi['name'] == str(form_values['txtValue'])]
@@ -1015,8 +1024,14 @@ class EditorView(BCChrome):
             #print('changeProperty_ok form_values=', form_values)
             #print('changeProperty_ok form_values[chkEmpty]=', form_values['chkEmpty'])
             value = 'none' if form_values['chkEmpty'] else 'rgb({},{},{})'.format(form_values['txtRed'], form_values['txtGreen'], form_values['txtBlue'])
+        elif get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.PRELOADED_IMAGE:
+            print('changeProperty_ok type is FormItemPropType.PRELOADED_IMAGE')
+            value = form_values['selChosenImage']
+        else:
+            assert False # Unknown property type
         fi[self.current_prop_name] = value
-        #print('changeProperty_ok self.current_prop_name=', self.current_prop_name, ', form_values[chkValue]', form_values.get('chkValue', None))
+        print('changeProperty_ok self.current_prop_name=', self.current_prop_name, ', form_values[selChosenImage]', form_values.get('selChosenImage', None))
+        print('changeProperty_ok fi[self.current_prop_name]', fi[self.current_prop_name])
         self.current_prop_name = None
         self.mount_redraw()
         Router.router.ResetHashChange()
@@ -1079,7 +1094,7 @@ class EditorView(BCChrome):
             #print('EditorView self.current_prop_name=', self.current_prop_name)
             #print('EditorView fis[0]=', fis[0])
             ret = str(fis[0][self.current_prop_name])
-            #print('EditorView get_current_form_item_prop_vals exited')
+            #print('EditorView get_current_form_item_prop_vals exited ret=', ret)
             return ret
         def get_current_form_item_checked():
             #print ('get_current_form_item_checked 1')
@@ -1200,6 +1215,14 @@ class EditorView(BCChrome):
                             html_input(merge_dicts({'type': "text", 'class':"form-control", 'id':"txtGreen"},  get_current_form_item_color_green())),
                             label({'class':"col-form-label", 'for':"txtBlue"}, 'Blue'),
                             html_input(merge_dicts({'type': "text", 'class':"form-control", 'id':"txtBlue"},  get_current_form_item_color_blue())),
+                          ]),
+                        ]),
+                      ], self.changeProperty_ok),
+                      Modal("changePropertyPreloadedImage", "Change Preloaded Image " + self.current_prop_name if self.current_prop_name else '', [
+                        form([
+                          div({'class': 'form-group'}, [
+                            label({'class':"col-form-label", 'for':"selChosenImage"}, 'Preloaded Image'),
+                            select({'class':"form-control", 'id':"selChosenImage", 'value': get_current_form_item_prop_val()}),
                           ]),
                         ]),
                       ], self.changeProperty_ok),

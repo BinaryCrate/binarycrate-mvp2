@@ -2341,4 +2341,189 @@ print('Hello folder i={}'.format(i))
         #assert len(view.form_stack) == 1
         #assert isinstance(view.form_stack[-1].button1, dict)
 
+    def test_context_menu_can_change_preloaded_image_parameter(self, monkeypatch):
+        monkeypatch.setattr(Router, 'ResetHashChange', Mock())
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(codemirror, 'js', js)
+
+        callbacks.initialise_global_callbacks()
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        body = js.globals.document.body
+        error_404_page = c("div", [c("p", "No match 404 error"),
+                                   c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
+        view = editor.EditorView()
+        r = Router({r'^$': view},
+                    error_404_page, body)
+        r.route()
+
+        view.mount_redraw = Mock()
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+    print('Hello folder i={}'.format(i))
+"""
+
+        response = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': '[]',
+                        'parent_id': None,
+                        'is_default': False,
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False, 
+                        'content': '', 
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'form_items': '[]',
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
+                       },
+                     ]
+                    }
+        view.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)),
+                                              response)
+        view.selected_de = [de for de in editor.project['directory_entry'] if de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'][0]
+
+        view.mount_redraw = Mock()
+        Router.router.ResetHashChange.reset_mock()
+        view.contextmenu_preview(Mock(pageX=10, pageY=10))
+
+        Router.router.ResetHashChange.reset_mock()
+        view.mount_redraw.reset_mock()
+        js.return_get_element_by_id = {'preview': Mock(getBoundingClientRect=Mock(return_value=Mock(left=0, top=0)))}
+        view.new_image(Mock(clientX=10, clientY=20))
+
+        checkbox = view.selected_de['form_items'][0]
+
+        def is_nvode_image(vnode):
+            if hasattr(vnode, 'tag') is False:
+                return None
+            if vnode.tag != 'img':
+                return None
+            #if vnode.get_attribs().get('type', '') != 'checkbox':
+            #    return None
+            #print('vnode called tag=input type=checkbox form_item=', vnode.get_attribs().get('form_item', ''))
+            #if vnode.get_attribs().get('form_item', '') != 'True':
+            #    return None
+            return vnode
+
+        vnode_image = get_matching_vnode(view, lambda vnode: is_nvode_image(vnode))
+
+        view.mount_redraw = Mock()
+        Router.router.ResetHashChange.reset_mock()
+        vnode_image.get_attribs()['oncontextmenu'](Mock())
+
+        fill_index = 2
+        #print('menu items=', [view.context_menu.menu_items[i][0] for i in range(len(view.context_menu.menu_items))])
+        assert 'Change preloaded_image' ==  view.context_menu.menu_items[fill_index][0]
+        assert callable(view.context_menu.menu_items[fill_index][1])
+        view.mount_redraw.assert_called()
+        Router.router.ResetHashChange.assert_called()
+        view.context_menu.menu_items[fill_index][1](Mock())
+
+        result = dict()
+
+        def mock_element_iterator_callback(vnode):
+            #if hasattr(vnode, 'get_attribs'):
+            #    print('mock_element_iterator_callback called vnodeid=', vnode.get_attribs().get('id'))
+            if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'changePropertyPreloadedImage':
+                #print('mock_element_iterator_callback changeBooleanProperty found')
+
+                def mock_element_iterator_callback2(vnode):
+                    if hasattr(vnode, 'tag'):
+                        #print('mock_element_iterator_callback2 vnode.tag=', vnode.tag)
+                        #print('mock_element_iterator_callback2 vnode.get_attribs().get(\'id\')=', vnode.get_attribs().get('id'))
+                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                            result['changePropertyPreloadedImage_OK_handler'] = vnode.get_attribs()['onclick']
+                        if vnode.tag == 'select' and vnode.get_attribs().get('id') == "selChosenImage":
+                            result['chosen_image'] = vnode.get_attribs().get('value', '')
+                IterateVirtualDOM(vnode, mock_element_iterator_callback2)
+
+        view.mount_redraw = Mock()
+
+        virtual_node = view._build_virtual_dom()
+        IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
+
+        assert result['chosen_image'] == ''
+
+        # Call the modal handler
+        rendered_modal = view._render(None)
+        cavorite.bootstrap.modals.js.return_get_element_by_id = {'changePropertyPreloadedImage': rendered_modal}
+
+        def setup_mock_modal_callback(node, choice):
+            if isinstance(node, js.MockElement) and node.getAttribute('id') == 'selChosenImage':
+                #print('setup_mock_modal_callback setting selChosenImage=', choice)
+                # Verify that the select element contains options from the server
+                assert node.options.length == 2
+                assert node.options[0].value == 'space-rocket.jpg'
+                assert node.options[0].children[0] == 'space-rocket.jpg'
+                assert node.options[1].value == 'my-image.jpg'
+                assert node.options[1].children[0] == 'my-image.jpg'
+                node.value = choice
+
+        js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, 'my-image.jpg'))
+
+        result['changePropertyPreloadedImage_OK_handler'](Mock())
+
+        rendered = view._build_virtual_dom()
+
+        vnode_image = get_matching_vnode(rendered, lambda vnode: is_nvode_image(vnode))
+        assert vnode_image.get_attribs()['preloaded_image'] == 'my-image.jpg'
+        assert vnode_image.get_attribs()['src'] == '/storage/images-4b352f3a-752f-4769-8537-880be4e99ce0/my-image.jpg'
+
+        vnode_image.get_attribs()['oncontextmenu'](Mock())
+        fill_index = 2
+        #print('menu items=', [view.context_menu.menu_items[i][0] for i in range(len(view.context_menu.menu_items))])
+        assert 'Change preloaded_image' ==  view.context_menu.menu_items[fill_index][0]
+        assert callable(view.context_menu.menu_items[fill_index][1])
+        view.mount_redraw.assert_called()
+        Router.router.ResetHashChange.assert_called()
+        view.context_menu.menu_items[fill_index][1](Mock())
+
+        js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, ''))
+
+        result['changePropertyPreloadedImage_OK_handler'](Mock())
+
+        rendered = view._build_virtual_dom()
+
+        vnode_rect = get_matching_vnode(rendered, lambda vnode: is_nvode_image(vnode))
+        assert vnode_rect.get_attribs()['preloaded_image'] == ''
+        assert vnode_rect.get_attribs()['src'] == ''
 
