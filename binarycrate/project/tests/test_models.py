@@ -7,6 +7,7 @@ import tempfile
 import shutil
 import os
 from django.conf import settings
+import pytest
 
 #added additional imports from test apis
 from django.urls import reverse
@@ -64,3 +65,20 @@ class TestWebpageProject(APITestCase):
 
             self.assertEqual(Project.objects.count(), 1)
             self.assertEqual(Project.objects.all().first().type, 1)
+
+class TestWebpageFiles(APITestCase):
+    def test_files_created_in_root(self):
+            self.project_id = uuid.uuid4()
+            u = UserFactory()
+            de = DirectoryEntry.objects.create(name='', is_file=False)
+            p = Project.objects.create(id=self.project_id, name='Test Webpage', type=ProjectTypes.webpage.value, public=False,
+                                   root_folder=de, owner=u)
+
+            self.assertEqual(Project.objects.count(), 1)
+            self.assertEqual(Project.objects.all().first().type, 1)
+
+            if(Project.objects.all().first().type == 1):
+                p.create_files()
+
+            self.assertEqual(set(p.get_directory_entries().values_list('name', flat=True)),
+            {u'', u'scripts.js', u'index.html', u'styles.css'})

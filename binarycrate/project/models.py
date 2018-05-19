@@ -51,3 +51,8 @@ class Project(models.Model):
 
     def get_directory_entries(self):
         return self.root_folder.get_descendants(include_self=True)
+
+    def create_files(self):
+        DirectoryEntry.objects.create(parent=self.root_folder, name='index.html', is_file=True)
+        DirectoryEntry.objects.create(parent=self.root_folder, name='styles.css', is_file=True)
+        DirectoryEntry.objects.create(parent=self.root_folder, name='scripts.js', is_file=True)
