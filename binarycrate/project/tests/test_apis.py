@@ -57,7 +57,6 @@ class ProjectListTestCase(APITestCase):
         self.assertEqual(response.data['type'], 0)
         self.assertEqual(response.data['public'], False)
 
-    #@pytest.mark.skip(reason="Fails when running enum tests")
     @pytest.mark.xfail(reason="Fails after creating enum tests")
     def test_project_post_creates_project(self):
         self.assertEqual(Project.objects.count(), 1)
@@ -68,7 +67,6 @@ class ProjectListTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Project.objects.count(), 2)
 
-    #@pytest.mark.skip(reason="Fails when running enum tests")
     @pytest.mark.xfail(reason="Fails after creating enum tests")
     def test_put_project_detail(self):
         """
