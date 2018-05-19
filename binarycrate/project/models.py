@@ -39,7 +39,7 @@ class DirectoryEntry(MPTTModel):
 
 class ProjectTypes(ChoiceEnum):
     python = 0
-    htmlcss = 1
+    webpage = 1
 
 class Project(models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
