@@ -36,6 +36,9 @@ class DirectoryEntry(MPTTModel):
         self._form_items = '[]'
         super(DirectoryEntry, self).__init__(*args, **kwargs)
 
+class ProjectTypes(ChoiceEnum):
+    python = 0
+    webpage = 1
 
 class Project(models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
