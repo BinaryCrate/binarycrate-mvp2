@@ -636,3 +636,4 @@ class ProjectImageOtherUserTestCase(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
             assert Image.objects.all().count() == 0
 
+

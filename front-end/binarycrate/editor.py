@@ -367,6 +367,7 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
 
     def projects_api_ajax_result_handler(self, xmlhttp, response):
+        print('projects_api_ajax_result_handler called')
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             global project
             new_project = json.loads(str(xmlhttp.responseText))
@@ -576,6 +577,13 @@ class EditorView(BCChrome):
         e.stopPropagation()
         e.preventDefault()
 
+    def images_api_ajax_result_handler(self, xmlhttp, response):
+        print('images_api_ajax_result_handle status=', xmlhttp.status)
+        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+            self.images = json.loads(str(xmlhttp.responseText))
+            self.mount_redraw()
+            Router.router.ResetHashChange()
+
     def display_property_change_modal(self, e, form_item, prop_name):
         #print('display_property_change_modal called form_item[name]=', form_item['name'])
         #print('display_property_change_modal prop_name=', prop_name)
@@ -598,7 +606,22 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
         #e.stopPropagation()
         #e.preventDefault()
-        timeouts.set_timeout(display_modal, 1)
+        print('display_property_change_modal prop_type=', prop_type)
+
+        def images_handler2(xmlhttp, response):
+            print('images halndler2')
+            #self.images_api_ajax_result_handler(xmlhttp, response)
+            if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+                self.images = json.loads(str(xmlhttp.responseText))
+                self.mount_redraw()
+                Router.router.ResetHashChange()
+                timeouts.set_timeout(display_modal, 1)
+
+        if prop_type == FormItemPropType.PRELOADED_IMAGE:
+            #ajaxget('/api/projects/image-list/' + project['id'] + '/', self.images_api_ajax_result_handler)
+            ajaxget('/api/projects/image-list/' + project['id'] + '/', images_handler2)
+        else:
+            timeouts.set_timeout(display_modal, 1)
 
     def contextmenu_control(self, form_item_id, e):
         posx, posy = self.xy_from_e(e)
@@ -1222,7 +1245,9 @@ class EditorView(BCChrome):
                         form([
                           div({'class': 'form-group'}, [
                             label({'class':"col-form-label", 'for':"selChosenImage"}, 'Preloaded Image'),
-                            select({'class':"form-control", 'id':"selChosenImage", 'value': get_current_form_item_prop_val()}),
+                            select({'class':"form-control", 'id':"selChosenImage", 'value': get_current_form_item_prop_val()},
+                              [option({'value': image['name']}, image['name']) for image in self.images]
+                              ),
                           ]),
                         ]),
                       ], self.changeProperty_ok),
@@ -1231,6 +1256,12 @@ class EditorView(BCChrome):
 
     def get_code_mirror_read_only(self):
         return False
+
+    def images_api_ajax_result_handler(self, xmlhttp, response):
+        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+            self.images = json.loads(str(xmlhttp.responseText))
+            self.mount_redraw()
+            Router.router.ResetHashChange()
 
     def __init__(self, *args, **kwargs):
         #print('EditorView __init__')
@@ -1250,6 +1281,7 @@ class EditorView(BCChrome):
                                                   change_handler=self.code_mirror_change,
                                                   read_only=self.get_code_mirror_read_only())
         self.upload_modal = None
+        self.images = []
         #TODO: Option arguments should be kwargs
         super(EditorView, self).__init__(
                     None,

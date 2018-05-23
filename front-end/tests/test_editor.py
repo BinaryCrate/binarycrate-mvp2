@@ -2417,8 +2417,13 @@ print('Hello folder i={}'.format(i))
                        },
                      ]
                     }
+
+        response_images = [{'name': 'space-rocket.jpg'}, {'name': 'my-image.jpg'}]
+
         view.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)),
                                               response)
+        view.images_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response_images)),
+                                              response_images)
         view.selected_de = [de for de in editor.project['directory_entry'] if de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'][0]
 
         view.mount_redraw = Mock()
@@ -2492,10 +2497,10 @@ print('Hello folder i={}'.format(i))
                 #print('setup_mock_modal_callback setting selChosenImage=', choice)
                 # Verify that the select element contains options from the server
                 assert node.options.length == 2
-                assert node.options[0].value == 'space-rocket.jpg'
-                assert node.options[0].children[0] == 'space-rocket.jpg'
-                assert node.options[1].value == 'my-image.jpg'
-                assert node.options[1].children[0] == 'my-image.jpg'
+                assert node.options.item(0).getAttribute('value') == 'space-rocket.jpg'
+                assert node.options.item(0).children.item(0)._text == 'space-rocket.jpg'
+                assert node.options.item(1).getAttribute('value') == 'my-image.jpg'
+                assert node.options.item(1).children.item(0)._text == 'my-image.jpg'
                 node.value = choice
 
         js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, 'my-image.jpg'))
