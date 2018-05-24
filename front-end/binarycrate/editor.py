@@ -674,7 +674,7 @@ class EditorView(BCChrome):
                     if preloaded_image == '':
                         attribs_extra = {'src': form_item['src'], 'preloaded_image': '' }
                     else:
-                        attribs_extra = {'src': '/storage/images-{0}/{1}'.format(project['id'], preloaded_image), 'preloaded_image': preloaded_image }
+                        attribs_extra = {'src': '/images/images-{0}/{1}'.format(project['id'], preloaded_image), 'preloaded_image': preloaded_image }
                 elif form_item['type'] == 'label':
                     control_class = p
                     attribs_extra = { }           

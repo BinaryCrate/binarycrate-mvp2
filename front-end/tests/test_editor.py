@@ -2511,7 +2511,7 @@ print('Hello folder i={}'.format(i))
 
         vnode_image = get_matching_vnode(rendered, lambda vnode: is_nvode_image(vnode))
         assert vnode_image.get_attribs()['preloaded_image'] == 'my-image.jpg'
-        assert vnode_image.get_attribs()['src'] == '/storage/images-4b352f3a-752f-4769-8537-880be4e99ce0/my-image.jpg'
+        assert vnode_image.get_attribs()['src'] == '/images/images-4b352f3a-752f-4769-8537-880be4e99ce0/my-image.jpg'
 
         vnode_image.get_attribs()['oncontextmenu'](Mock())
         fill_index = 2
