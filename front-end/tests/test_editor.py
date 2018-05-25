@@ -2418,7 +2418,8 @@ print('Hello folder i={}'.format(i))
                      ]
                     }
 
-        response_images = [{'name': 'space-rocket.jpg'}, {'name': 'my-image.jpg'}]
+        response_images = [{'id': '4a88ff77-5969-40b8-a1da-8fefc5477f44', 'name': 'space-rocket.jpg'},
+                           {'id': '4ee4576a-c5f8-450b-bf8f-3a77f87632f3', 'name': 'my-image.jpg'}]
 
         view.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)),
                                               response)
@@ -2497,20 +2498,20 @@ print('Hello folder i={}'.format(i))
                 #print('setup_mock_modal_callback setting selChosenImage=', choice)
                 # Verify that the select element contains options from the server
                 assert node.options.length == 2
-                assert node.options.item(0).getAttribute('value') == 'space-rocket.jpg'
+                assert node.options.item(0).getAttribute('value') == '4a88ff77-5969-40b8-a1da-8fefc5477f44'
                 assert node.options.item(0).children.item(0)._text == 'space-rocket.jpg'
-                assert node.options.item(1).getAttribute('value') == 'my-image.jpg'
+                assert node.options.item(1).getAttribute('value') == '4ee4576a-c5f8-450b-bf8f-3a77f87632f3'
                 assert node.options.item(1).children.item(0)._text == 'my-image.jpg'
                 node.value = choice
 
-        js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, 'my-image.jpg'))
+        js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, '4ee4576a-c5f8-450b-bf8f-3a77f87632f3'))
 
         result['changePropertyPreloadedImage_OK_handler'](Mock())
 
         rendered = view._build_virtual_dom()
 
         vnode_image = get_matching_vnode(rendered, lambda vnode: is_nvode_image(vnode))
-        assert vnode_image.get_attribs()['preloaded_image'] == 'my-image.jpg'
+        assert vnode_image.get_attribs()['preloaded_image'] == '4ee4576a-c5f8-450b-bf8f-3a77f87632f3'
         assert vnode_image.get_attribs()['src'] == '/images/images-4b352f3a-752f-4769-8537-880be4e99ce0/my-image.jpg'
 
         vnode_image.get_attribs()['oncontextmenu'](Mock())

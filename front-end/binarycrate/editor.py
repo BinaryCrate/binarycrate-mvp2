@@ -671,10 +671,11 @@ class EditorView(BCChrome):
                 elif form_item['type'] == 'image':
                     control_class = img
                     preloaded_image = form_item['preloaded_image']
+                    print('get_selected_de_form_controls preloaded_image=', preloaded_image)
                     if preloaded_image == '':
                         attribs_extra = {'src': form_item['src'], 'preloaded_image': '' }
                     else:
-                        attribs_extra = {'src': '/images/images-{0}/{1}'.format(project['id'], preloaded_image), 'preloaded_image': preloaded_image }
+                        attribs_extra = {'src': '/images/images-{0}/{1}'.format(project['id'], filter(lambda image: image['id'] == preloaded_image, self.images)[0]['name']), 'preloaded_image': preloaded_image }
                 elif form_item['type'] == 'label':
                     control_class = p
                     attribs_extra = { }           
@@ -1246,7 +1247,7 @@ class EditorView(BCChrome):
                           div({'class': 'form-group'}, [
                             label({'class':"col-form-label", 'for':"selChosenImage"}, 'Preloaded Image'),
                             select({'class':"form-control", 'id':"selChosenImage", 'value': get_current_form_item_prop_val()},
-                              [option({'value': image['name']}, image['name']) for image in self.images]
+                              [option({'value': image['id']}, image['name']) for image in self.images]
                               ),
                           ]),
                         ]),
