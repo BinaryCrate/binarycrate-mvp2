@@ -958,7 +958,7 @@ class EditorView(BCChrome):
         parent_de = root_folder if self.selected_de is None else self.selected_de
         new_de = {'id': str(uuid.uuid4()), 
                    'name': str(form_values['txtFileName']),
-                   'content': '',
+                   'content': 'from __future__ import unicode_literals, absolute_import, print_function\n',
                    'is_file': True, 
                    'form_items': [],
                    'parent_id': parent_de['id'],
