@@ -911,7 +911,7 @@ class EditorView(BCChrome):
             {'type': 'ellipse',
              'width': 150,
              'height': 150,
-             'name': 'ellipse1',
+             'name': 'ellipse1', #TODO: Get the name correctly
              'stroke_width': 5,
              'stroke': 'rgb(0,0,0)',
              'fill': 'none',
@@ -922,7 +922,7 @@ class EditorView(BCChrome):
             {'type': 'line',
              'width': 150,
              'height': 150,
-             'name': 'line1',
+             'name': 'line1', #TODO: Get the name correctly
              'stroke_width': 5,
              'stroke': 'rgb(0,0,0)',
              'fill': 'none',
@@ -933,7 +933,7 @@ class EditorView(BCChrome):
             {'type': 'hexagon',
              'width': 150,
              'height': 150,
-             'name': 'listbox1',
+             'name': 'listbox1', #TODO: Get the name correctly
              'stroke_width': 5,
              'stroke': 'rgb(0,0,0)',
              'fill': 'none',
@@ -956,9 +956,20 @@ class EditorView(BCChrome):
     def newFile_ok(self, e, form_values):
         root_folder = [de for de in project['directory_entry'] if de['parent_id'] is None][0]
         parent_de = root_folder if self.selected_de is None else self.selected_de
+        file_name = str(form_values['txtFileName'])
+        class_name = file_name[:file_name.find('.')]
+        class_name = class_name[0].upper() + class_name[1:]
+        content = 'from __future__ import unicode_literals, absolute_import, print_function\n'
+        print("""str(form_values['selFileType'])=""", str(form_values['selFileType']))
+        if str(form_values['selFileType']) == 'graphical-py-file':
+            content += """from binarycrate.controls import StudentForm
+
+class """ + class_name + """(StudentForm):
+    file_location = __file__
+"""
         new_de = {'id': str(uuid.uuid4()), 
-                   'name': str(form_values['txtFileName']),
-                   'content': 'from __future__ import unicode_literals, absolute_import, print_function\n',
+                   'name': file_name,
+                   'content': content,
                    'is_file': True, 
                    'form_items': [],
                    'parent_id': parent_de['id'],
@@ -1134,6 +1145,11 @@ class EditorView(BCChrome):
                           div({'class': 'form-group'}, [
                             label({'class':"col-form-label", 'for':"txtFileName"}, 'File name'),
                             html_input({'type': "text", 'class':"form-control", 'id':"txtFileName", 'placeholder':"New File"}),
+                            label({'class':"col-form-label", 'for':"selFileType"}, 'File type'),
+                            select({'id': 'selFileType', 'class':"form-control"}, [
+                              option({'value': 'plain-py-file', 'class':"form-control"}, 'Plain old Python file'),
+                              option({'value': 'graphical-py-file', 'class':"form-control"}, 'Graphical Binary Crate Python file'),
+                            ]),
                           ]),
                         ]),
                       ], self.newFile_ok),
