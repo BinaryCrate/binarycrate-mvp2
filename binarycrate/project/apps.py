@@ -18,3 +18,7 @@ class ProjectConfig(AppConfig):
             receivers.load_de_content, sender='project.DirectoryEntry',
             dispatch_uid='project.DirectoryEntry.init')
 
+        signals.post_save.connect(
+            receivers.save_project, sender='project.Project',
+            dispatch_uid='project.Project.save')
+

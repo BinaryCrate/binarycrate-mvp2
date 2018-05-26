@@ -32,6 +32,8 @@ class StudentForm(object):
     def get_file_location(self):
         # Returns the file local relative to the module directory
         from binarycrate.editor import python_module_dir
+        print('python_module_dir=', python_module_dir)
+        print('self.file_location=', self.file_location)
         assert self.file_location.startswith(python_module_dir)
         return self.file_location[len(python_module_dir):]
 

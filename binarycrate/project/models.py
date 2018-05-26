@@ -40,6 +40,7 @@ class DirectoryEntry(MPTTModel):
 class ProjectTypes(ChoiceEnum):
     python = 0
     webpage = 1
+    python_with_storage = 2
 
 class Project(models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
@@ -51,3 +52,5 @@ class Project(models.Model):
 
     def get_directory_entries(self):
         return self.root_folder.get_descendants(include_self=True)
+
+
