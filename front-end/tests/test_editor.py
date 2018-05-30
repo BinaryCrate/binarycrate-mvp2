@@ -8,7 +8,7 @@ import uuid
 from mock import Mock
 import json
 from binarycrate.editor import BCProjectTree, BCPFolder, BCPFile, ContextMenu
-from binarycrate.controls import codemirror, StudentForm
+from binarycrate.controls import codemirror, Form
 from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode, style_to_dict, get_vnode_by_id, get_vnode_by_css_class, get_matching_vnodes
 import cavorite.bootstrap.modals
 from binarycrate.editor import HANDLE_NONE, HANDLE_TOPLEFT, HANDLE_TOPRIGHT, HANDLE_BOTTOMLEFT, HANDLE_BOTTOMRIGHT
@@ -2144,13 +2144,13 @@ print('Hello folder i={}'.format(i))
                      ]
                     }
 
-        class TestForm1(StudentForm):
+        class TestForm1(Form):
             file_location = '/lib/pypyjs/lib_pypy/hello_world.py'
 
         t1 = TestForm1(view)
         assert t1.get_file_location() == 'hello_world.py'
 
-        class TestForm2(StudentForm):
+        class TestForm2(Form):
             file_location = '/lib/pypyjs/lib_pypy/folder/hello_folder.py'
 
         t2 = TestForm2(view)
@@ -2239,7 +2239,7 @@ print('Hello folder i={}'.format(i))
 
         assert len(view.form_stack) == 0
 
-        class TestForm1(StudentForm):
+        class TestForm1(Form):
             file_location = '/lib/pypyjs/lib_pypy/hello_world.py'
 
         form_classes = [TestForm1]
@@ -2363,7 +2363,7 @@ historygraphfrontend.download_document_collection()
 
         assert len(view.form_stack) == 0
 
-        #class TestForm1(StudentForm):
+        #class TestForm1(Form):
         #    file_location = '/lib/pypyjs/lib_pypy/hello_world.py'
 
         #form_classes = [TestForm1]
@@ -2554,7 +2554,7 @@ print('Hello folder i={}'.format(i))
 
         assert len(view.form_stack) == 0
 
-        class TestForm1(StudentForm):
+        class TestForm1(Form):
             file_location = '/lib/pypyjs/lib_pypy/hello_world.py'
 
         form_classes = [TestForm1]
@@ -2887,9 +2887,9 @@ class TestNewFileContentPythonProject(object):
 
         print(new_de['content'])
         assert new_de['content'] == """from __future__ import unicode_literals, absolute_import, print_function
-from binarycrate.controls import StudentForm
+from binarycrate.controls import Form
 
-class Travel(StudentForm):
+class Travel(Form):
     file_location = __file__
 """
 

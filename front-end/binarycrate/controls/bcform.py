@@ -5,7 +5,7 @@ import copy
 from cavorite import Router
 
 
-class StudentForm(object):
+class Form(object):
     def get_form_items(self, loc=None, parent_id=None):
         from binarycrate.editor import project
         # Return the form items for this form
@@ -167,7 +167,7 @@ class StudentForm(object):
         return ret
 
     def __init__(self, editorview, *args, **kwargs):
-        super(StudentForm, self).__init__(*args, **kwargs)
+        super(Form, self).__init__(*args, **kwargs)
         self.initialise_form_controls()
         self.editorview = editorview
 
