@@ -17,7 +17,7 @@ cd binarycrate-mvp2
 
 git checkout develop
 
-git submodle update --init --recursive
+git submodule update --init --recursive
 ```
 
 ## Checkout the software Windows
