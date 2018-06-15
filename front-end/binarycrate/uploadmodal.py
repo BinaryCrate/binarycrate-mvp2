@@ -1,33 +1,107 @@
 from __future__ import unicode_literals, absolute_import, print_function
 from cavorite.HTML import *
-from cavorite import c, t, Router, timeouts
+from cavorite import c, t, Router, timeouts, get_current_hash
 try:
     import js
 except ImportError:
     js = None
 from cavorite.ajaxget import ajaxpost, ajaxget
 import json
+import traceback
+import sys
+
+
+class ContextMenu2(div):
+    # An improved context menu which can hopefully take care of collapsing itself
+    def __init__(self, owner, posx, posy, menu_items, *args, **kwargs):
+        self.owner = owner
+        self.menu_items = menu_items
+        self.posx = posx
+        self.posy = posy
+        super(ContextMenu2, self).__init__({'onclick': self.owner.close_context_menu,
+                                           'style': {'position': 'fixed',
+                                                     'left': '0',
+                                                     'top': '0',
+                                                     'height': '100%',
+                                                     'width': '100%',
+                                                     'background-color': 'rgba(0, 0, 0, 0)',
+                                                     'padding': '40px',
+                                                     'z-index':'10001'}}, *args, **kwargs)
+
+    def get_children(self):
+        menu_items = [
+                                li({'class': "context-menu__item"}, [
+                                  a({'href': get_current_hash(), 'class': "context-menu__link", 'onclick': mi[1]}, [
+                                    #i({'class': 'fa fa-eye'}),
+                                    t(mi[0]),
+                                  ]),
+                                ]) for mi in self.menu_items]
+
+        return [
+                 nav({'class': "context-menu", 'style': 'left: {}px; top:{}px'.format(self.posx, self.posy)}, [
+                   ul({'class': 'context-menu__items'}, menu_items),
+                 ])
+               ]
 
 
 class UploadedImage(div):
-    def __init__(self, image):
+    def __init__(self, owner, image):
         self.image = image
-        super(UploadedImage, self).__init__({'style': {'width':'165px', 
+        self.context_menu = None
+        self.owner = owner
+        super(UploadedImage, self).__init__({'oncontextmenu': self.popup_contextmenu,
+                                             'style': {'width':'165px', 
                                                        'height': '150px',
                                                        #'border': '1px solid red'
                                                        'overflow': 'hidden',
                                                        'display': 'inline-block',
                                                        }})
 
+    def xy_from_e(self, e):
+        #TODO: Shared code put in a library
+        if e.pageX or e.pageY:
+            posx = e.pageX
+            posy = e.pageY
+        elif e.clientX or e.clientY:
+            posx = e.clientX + js.globals.document.body.scrollLeft + \
+                               js.globals.document.documentElement.scrollLeft
+            posy = e.clientY + js.globals.document.body.scrollTop + \
+                               js.globals.document.documentElement.scrollTop
+        return posx, posy
+
+    def rename_image(self, e):
+        pass
+
+    def delete_image(self, e):
+        pass
+
+    def popup_contextmenu(self, e):
+        posx, posy = self.xy_from_e(e)
+        self.owner.ownerview.context_menu = ContextMenu2(self, posx, posy, (
+                                        ('Rename Image', self.rename_image), 
+                                        ('Delete Image', self.delete_image),
+                                        ))
+        self.owner.ownerview.mount_redraw()
+        Router.router.ResetHashChange()
+        e.stopPropagation()
+        e.preventDefault()
+
+    def close_context_menu(self, e):
+        self.owner.ownerview.context_menu = None
+        self.owner.ownerview.mount_redraw()
+        Router.router.ResetHashChange()
+                                           
     def get_children(self):
         return [
                  img({'src': self.image['image_url'],
+                      'oncontextmenu': self.popup_contextmenu,
                       'style': {'width': '145px',
                                 'height': '95px',
                                 'margin': '10px',
                                 }
                       }), 
-                 p({'style': {'font-size': '12px',
+                 p({'oncontextmenu': self.popup_contextmenu,
+                    'style': {'font-size': '12px',
                               'margin': '4px'
                              }
                    }, self.image['name'])
@@ -47,7 +121,7 @@ class UploadModal(object):
             Router.router.ResetHashChange()
 
     def get_images_for_display(self):
-        return [UploadedImage(image) for image in self.images]      
+        return [UploadedImage(self, image) for image in self.images]      
 
     def query_images(self):
         ajaxget('/api/projects/image-list/' + self.ownerview.get_project()['id'],
@@ -92,5 +166,10 @@ class UploadModal(object):
                         ]),
                       ]),
                      ]
+
+    def close_context_menu(self, e):
+        self.context_menu = None
+        self.ownerview.mount_redraw()
+        Router.router.ResetHashChange()
 
 

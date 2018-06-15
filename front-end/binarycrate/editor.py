@@ -496,6 +496,7 @@ class EditorView(BCChrome):
         return self.context_menu
 
     def xy_from_e(self, e):
+        #TODO: Shared code put in a library
         if e.pageX or e.pageY:
             posx = e.pageX
             posy = e.pageY
