@@ -46,11 +46,11 @@ Open a console and cs to the binarcrate-mvp2 directory which the code is checked
 Type in
 
 ```
-virtualenv venv 
+virtualenv venv
 
 source venv/bin/activate
 
-pip install --upgrade pip 
+pip install --upgrade pip
 
 pip install --upgrade setuptools urllib3[secure]
 
@@ -69,11 +69,11 @@ These instructions assume you have install Python 2.7 into the c:\python27 folde
 Type in
 
 ```
-c:\python27\scripts\virtualenv venv 
+c:\python27\scripts\virtualenv venv
 
 venv\scripts\activate.bat
 
-pip install --upgrade pip 
+pip install --upgrade pip
 
 pip install --upgrade setuptools urllib3[secure]
 
@@ -160,10 +160,95 @@ To run unit tests for the backend
 fab development.frontend_test
 ```
 
-To run frontend unit tests 
+To run frontend unit tests
 
 ```
 fab development.behave
 ```
 
-To run BDD tests 
+To run BDD tests
+
+
+
+## Wagtail Setup
+
+In requirements.txt you must have `wagtail==1.12.3` and this version only works for `django==1.11.10`.
+
+#### In your settings file, add the following apps to `INSTALLED_APPS`:
+
+```python
+'wagtail.wagtailforms',
+'wagtail.wagtailredirects',
+'wagtail.wagtailembeds',
+'wagtail.wagtailsites',
+'wagtail.wagtailusers',
+'wagtail.wagtailsnippets',
+'wagtail.wagtaildocs',
+'wagtail.wagtailimages',
+'wagtail.wagtailsearch',
+'wagtail.wagtailadmin',
+'wagtail.wagtailcore',
+
+'modelcluster',
+'taggit',
+```
+
+Add the following entries to `MIDDLEWARE_CLASSES`:
+
+```python
+'wagtail.wagtailcore.middleware.SiteMiddleware',
+'wagtail.wagtailredirects.middleware.RedirectMiddleware',
+```
+
+Add a `WAGTAIL_SITE_NAME` - this will be displayed on the main dashboard of the Wagtail admin backend:
+
+```python
+WAGTAIL_SITE_NAME = 'My Example Site'
+```
+
+Now make the following additions to your `urls.py` file:
+
+```python
+
+from wagtail.wagtailadmin import urls as wagtailadmin_urls
+from wagtail.wagtaildocs import urls as wagtaildocs_urls
+from wagtail.wagtailcore import urls as wagtail_urls
+
+urlpatterns = [
+    ...
+    url(r'^cms/', include(wagtailadmin_urls)),
+    url(r'^documents/', include(wagtaildocs_urls)),
+    url(r'^pages/', include(wagtail_urls)),
+    ...
+]
+```
+
+Add media roots to the `base.py`
+
+```python
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = '/static/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+```
+
+and the following to the `urls.py`
+
+```python
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    # ... the rest of your URLconf goes here ...
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+```
+
+You will then to run the following commands
+
+`fab.development.setup`
+`fab.development.build`
+
+To make wagtail apps, its the same process for creating an app with Django. Make sure you run migrations when you want to runserver.
+
+If you have any issues, please contact hasib. 
