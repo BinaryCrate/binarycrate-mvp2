@@ -143,6 +143,24 @@ class ImageUploadView(APIView):
             return Response(status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST, data={'detail' : 'Invalid data.'})
 
+class ImageEditView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+
+    def get_object(self, pk):
+        try:
+            return Image.objects.get(pk=pk)
+        except Image.DoesNotExist:
+            raise Http404
+
+
+    def delete(self, request, pk, *args, **kwargs):
+        image = self.get_object(pk)
+        if image.project.owner != request.user:
+            raise PermissionDenied()
+        image.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 class ImageListView(APIView):
     """
     List all images belong to a project

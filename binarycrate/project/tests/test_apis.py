@@ -599,6 +599,19 @@ class ProjectImageTestCase(APITestCase):
 
                 assert saved_content == response.content
 
+    def test_delete_uploaded_image(self):
+        # Upload the file and test we don't get an error
+        assert Image.objects.all().count() == 0        
+        with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
+            response = self.client.post(reverse('api:image-upload'), {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
+                                          'file_data': f}, format='multipart')
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            assert Image.objects.all().count() == 1
+
+        response = self.client.delete(reverse('api:image-edit', kwargs={'pk': str(Image.objects.first().pk)}), {}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        assert Image.objects.all().count() == 0
+
 
 class ProjectImageNotLoggedInTestCase(APITestCase):
     def setUp(self):
@@ -616,6 +629,14 @@ class ProjectImageNotLoggedInTestCase(APITestCase):
                                           'file_data': f}, format='multipart')
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
             assert Image.objects.all().count() == 0
+
+    def test_delete_image(self):
+        Image.objects.create(project=self.project, name='hello.jpg')
+
+        assert Image.objects.all().count() == 1
+        response = self.client.delete(reverse('api:image-edit', kwargs={'pk': str(Image.objects.first().pk)}), {}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        assert Image.objects.all().count() == 1
 
 class ProjectImageOtherUserTestCase(APITestCase):
     def setUp(self):
@@ -636,4 +657,11 @@ class ProjectImageOtherUserTestCase(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
             assert Image.objects.all().count() == 0
 
+    def test_delete_image(self):
+        Image.objects.create(project=self.project, name='hello.jpg')
+
+        assert Image.objects.all().count() == 1
+        response = self.client.delete(reverse('api:image-edit', kwargs={'pk': str(Image.objects.first().pk)}), {}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        assert Image.objects.all().count() == 1
 

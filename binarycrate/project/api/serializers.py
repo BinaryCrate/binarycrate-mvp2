@@ -49,4 +49,3 @@ class ImageGetSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'image_url')
 
 
-
