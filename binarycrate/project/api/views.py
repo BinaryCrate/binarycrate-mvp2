@@ -169,7 +169,7 @@ class ImageEditView(APIView):
                 raise PermissionDenied()
             image.name = serializer.validated_data['name']
             image.save()
-            return Response(status=status.HTTP_200_OK)
+            return Response(status=status.HTTP_200_OK, data={})
         return Response(status=status.HTTP_400_BAD_REQUEST, data={'detail' : 'Invalid data.'})
 
 class ImageListView(APIView):

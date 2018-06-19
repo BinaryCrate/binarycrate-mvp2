@@ -5,7 +5,7 @@ try:
     import js
 except ImportError:
     js = None
-from cavorite.ajaxget import ajaxpost, ajaxget, ajaxdelete
+from cavorite.ajaxget import ajaxpost, ajaxget, ajaxdelete, ajaxput
 import json
 import traceback
 import sys
@@ -74,7 +74,18 @@ class UploadedImage(div):
         return posx, posy
 
     def rename_image(self, e):
-        pass
+        def put_image_handler(xmlhttp, response):
+            print('put_image_handler called')
+            if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+                print('put_image_handler requery images')
+                self.owner.query_images()
+
+        new_name = js.globals.window.prompt('Enter a new name for image ' + self.image['name'] + '?', self.image['name'])
+        print('rename_image new_name=', new_name)
+        #TODO: Remove this and replace with a more standard example of our popups. The confirm function ends up being called twice for some reason
+        if new_name:
+            print('Sending new name to server')
+            ajaxput('/api/projects/image/' + self.image['id'] + '/', {'name': str(new_name)}, put_image_handler)
 
     def delete_image(self, e):
         global is_delete_confirm_open
