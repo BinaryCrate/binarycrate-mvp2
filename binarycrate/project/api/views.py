@@ -4,7 +4,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 from ..models import Project, Image
 from .serializers import (ProjectGetSerializer, ProjectPostSerializer,
                           DirectoryEntrySerializer, ImagePostSerializer,
-                          ImageGetSerializer)
+                          ImageGetSerializer, ImagePutSerializer)
 from rest_framework import mixins
 from rest_framework import generics
 from rest_framework import permissions
@@ -160,6 +160,17 @@ class ImageEditView(APIView):
             raise PermissionDenied()
         image.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def put(self, request, pk, *args, **kwargs):
+        image = self.get_object(pk)
+        serializer = ImagePutSerializer(data=request.data)
+        if serializer.is_valid():
+            if image.project.owner != request.user:
+                raise PermissionDenied()
+            image.name = serializer.validated_data['name']
+            image.save()
+            return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={'detail' : 'Invalid data.'})
 
 class ImageListView(APIView):
     """

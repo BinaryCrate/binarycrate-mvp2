@@ -48,4 +48,8 @@ class ImageGetSerializer(serializers.ModelSerializer):
         model = Image
         fields = ('id', 'name', 'image_url')
 
+class ImagePutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Image
+        fields = ('name',)
 
