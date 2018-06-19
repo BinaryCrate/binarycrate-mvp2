@@ -9,6 +9,7 @@ from cavorite.ajaxget import ajaxpost, ajaxget, ajaxdelete, ajaxput
 import json
 import traceback
 import sys
+import uuid
 
 
 class ContextMenu2(div):
@@ -43,6 +44,66 @@ class ContextMenu2(div):
                  ])
                ]
 
+
+class ConfirmRenamePopup(div):
+    # This pops up a deletion confirmation dialog over this popup to confirm this
+    def __init__(self, upload_modal, image, *args, **kwargs):
+        self.upload_modal = upload_modal
+        self.image = image
+        self.text_id = str(uuid.uuid4())
+        super(ConfirmRenamePopup, self).__init__({'style': {'position': 'fixed',
+                                                     'left': '0',
+                                                     'top': '0',
+                                                     'height': '100%',
+                                                     'width': '100%',
+                                                     'background-color': 'rgba(0, 0, 0, 0)',
+                                                     'padding': '40px',
+                                                     'z-index':'10002'}}, *args, **kwargs)
+
+    def on_cancel_click(self, e):
+        self.upload_modal.popup = None
+        self.upload_modal.ownerview.mount_redraw()
+        Router.router.ResetHashChange()
+
+    def on_ok_click(self, e):
+        def put_image_handler(xmlhttp, response):
+            print('put_image_handler called')
+            if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+                print('put_image_handler requery images')
+                self.upload_modal.popup = None
+                self.upload_modal.query_images()
+
+        new_name = str(js.globals.document.getElementById(self.text_id).value)
+        print('on_ok_click value=', new_name)
+        ajaxput('/api/projects/image/' + self.image['id'] + '/', {'name': str(new_name)}, put_image_handler)
+        """
+        def delete_image_handler(xmlhttp, response):
+            if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+                self.upload_modal.popup = None
+                self.upload_modal.query_images()
+        ajaxdelete('/api/projects/image/' + self.image['id'] + '/', delete_image_handler)
+        """
+
+    def get_content(self):
+        return \
+          [
+            div({'class': 'popup-modal-container'}, [
+              div({'class': 'popup-modal-content'}, [
+                div([
+                  p('Enter a new name for image ' + self.image['name'] + '?'),
+                  div({'style': {'margin-bottom': '10px'}}, [
+                    html_input({'value': self.image['name'], 'id': self.text_id}),
+                  ]),
+                  div({'style': {'display': 'inline-block', 'float': 'right'}}, [
+                    html_button({'style': {'margin-right': '10px'}, 'onclick': self.on_cancel_click}, 'Cancel'),
+                    html_button({'onclick': self.on_ok_click}, 'OK'),
+                  ]),
+                ]),
+              ]),
+            ]),
+          ]
+          
+        
 
 class ConfirmDeletePopup(div):
     # This pops up a deletion confirmation dialog over this popup to confirm this
@@ -114,6 +175,8 @@ class UploadedImage(div):
         return posx, posy
 
     def rename_image(self, e):
+        self.owner.popup = ConfirmRenamePopup(self.owner, self.image)
+        """
         def put_image_handler(xmlhttp, response):
             print('put_image_handler called')
             if xmlhttp.status >= 200 and xmlhttp.status <= 299:
@@ -126,6 +189,7 @@ class UploadedImage(div):
         if new_name:
             print('Sending new name to server')
             ajaxput('/api/projects/image/' + self.image['id'] + '/', {'name': str(new_name)}, put_image_handler)
+        """
 
     def delete_image(self, e):
         self.owner.popup = ConfirmDeletePopup(self.owner, self.image)
