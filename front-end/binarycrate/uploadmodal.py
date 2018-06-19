@@ -44,8 +44,6 @@ class ContextMenu2(div):
                ]
 
 
-is_delete_confirm_open = False # TODO: Very hacky but for some reason the delete_image method is called twice
-
 class ConfirmDeletePopup(div):
     # This pops up a deletion confirmation dialog over this popup to confirm this
     def __init__(self, upload_modal, image, *args, **kwargs):
@@ -95,8 +93,6 @@ class UploadedImage(div):
         self.image = image
         self.context_menu = None
         self.owner = owner
-        #global is_delete_confirm_open
-        #is_delete_confirm_open = False
         super(UploadedImage, self).__init__({'oncontextmenu': self.popup_contextmenu,
                                              'style': {'width':'165px', 
                                                        'height': '150px',
@@ -133,20 +129,6 @@ class UploadedImage(div):
 
     def delete_image(self, e):
         self.owner.popup = ConfirmDeletePopup(self.owner, self.image)
-        '''
-        global is_delete_confirm_open
-        if is_delete_confirm_open:
-            return
-        is_delete_confirm_open = True
-        def delete_image_handler(xmlhttp, response):
-            if xmlhttp.status >= 200 and xmlhttp.status <= 299:
-                self.owner.query_images()
-
-        if js.globals.window.confirm('Are you sure you want to delete image ' + self.image['name'] + '?'):
-            #TODO: Remove this and replace with a more standard example of our popups. The confirm function ends up being called twice for some reason
-            ajaxdelete('/api/projects/image/' + self.image['id'] + '/', delete_image_handler)
-        is_delete_confirm_open = False
-        '''
 
     def popup_contextmenu(self, e):
         posx, posy = self.xy_from_e(e)
