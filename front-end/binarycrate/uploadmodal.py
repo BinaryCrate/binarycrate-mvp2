@@ -46,6 +46,50 @@ class ContextMenu2(div):
 
 is_delete_confirm_open = False # TODO: Very hacky but for some reason the delete_image method is called twice
 
+class ConfirmDeletePopup(div):
+    # This pops up a deletion confirmation dialog over this popup to confirm this
+    def __init__(self, upload_modal, image, *args, **kwargs):
+        self.upload_modal = upload_modal
+        self.image = image
+        super(ConfirmDeletePopup, self).__init__({'style': {'position': 'fixed',
+                                                     'left': '0',
+                                                     'top': '0',
+                                                     'height': '100%',
+                                                     'width': '100%',
+                                                     'background-color': 'rgba(0, 0, 0, 0)',
+                                                     'padding': '40px',
+                                                     'z-index':'10002'}}, *args, **kwargs)
+
+    def on_cancel_click(self, e):
+        self.upload_modal.popup = None
+        self.upload_modal.ownerview.mount_redraw()
+        Router.router.ResetHashChange()
+
+    def on_ok_click(self, e):
+        def delete_image_handler(xmlhttp, response):
+            if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+                self.upload_modal.popup = None
+                self.upload_modal.query_images()
+        ajaxdelete('/api/projects/image/' + self.image['id'] + '/', delete_image_handler)
+
+    def get_content(self):
+        return \
+          [
+            div({'class': 'popup-modal-container'}, [
+              div({'class': 'popup-modal-content'}, [
+                div([
+                  p('Are you sure you want to delete this image?'),
+                  div({'style': {'display': 'inline-block', 'float': 'right'}}, [
+                    html_button({'style': {'margin-right': '10px'}, 'onclick': self.on_cancel_click}, 'Cancel'),
+                    html_button({'onclick': self.on_ok_click}, 'OK'),
+                  ]),
+                ]),
+              ]),
+            ]),
+          ]
+          
+        
+
 class UploadedImage(div):
     def __init__(self, owner, image):
         self.image = image
@@ -88,6 +132,8 @@ class UploadedImage(div):
             ajaxput('/api/projects/image/' + self.image['id'] + '/', {'name': str(new_name)}, put_image_handler)
 
     def delete_image(self, e):
+        self.owner.popup = ConfirmDeletePopup(self.owner, self.image)
+        '''
         global is_delete_confirm_open
         if is_delete_confirm_open:
             return
@@ -100,6 +146,7 @@ class UploadedImage(div):
             #TODO: Remove this and replace with a more standard example of our popups. The confirm function ends up being called twice for some reason
             ajaxdelete('/api/projects/image/' + self.image['id'] + '/', delete_image_handler)
         is_delete_confirm_open = False
+        '''
 
     def popup_contextmenu(self, e):
         posx, posy = self.xy_from_e(e)
@@ -136,9 +183,11 @@ class UploadedImage(div):
 
 class UploadModal(object):
     def __init__(self, ownerview):
+        print('UploadModal __init__ called')
         self.ownerview = ownerview
         timeouts.set_timeout(lambda : self.query_images(), 1)
         self.images = []
+        self.popup = None
 
     def image_list_callback_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
@@ -166,6 +215,7 @@ class UploadModal(object):
         Router.router.ResetHashChange()
 
     def get_modal_vnodes(self):
+        #print('UploadModal get_modal_vnodes called')
         # Return the vnodes to inject into the Virtual DOM to display the modal
         return       [
                       div({'onclick': self.ownerview.close_upload_modal, 'class': 'upload-files-modal-container'}, [
@@ -191,7 +241,7 @@ class UploadModal(object):
                           ]),
                         ]),
                       ]),
-                     ]
+                     ] + (self.popup.get_content() if self.popup else [])
 
     def close_context_menu(self, e):
         self.context_menu = None
