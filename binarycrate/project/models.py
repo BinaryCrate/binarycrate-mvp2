@@ -65,12 +65,17 @@ class Image(models.Model):
 
     def get_file_name(self):
         # Returns the name of the file
-        return 'images-' + str(self.project.id) + '/{0}'.format(self.name)
+        return 'images-{0}/{1}'.format(self.project.id, self.id)
+
+    def get_file_extension(self):
+        i = self.name.rfind('.')
+        assert i >= 0
+        return self.name[i:]
 
     def get_url(self):
         # Returns an URL that the file can be downloaded from. Could be a local url or a S3 bucket URL
         # In production the Nginx web server will be redirected to download this file
-        return '/images/images-' + str(self.project.id) + '/{0}'.format(self.name)
+        return '/images/images-{0}/{1}{2}'.format(self.project.id, self.id, self.get_file_extension())
 
 
     @property

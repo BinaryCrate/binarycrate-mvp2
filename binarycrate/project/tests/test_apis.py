@@ -585,9 +585,9 @@ class ProjectImageTestCase(APITestCase):
         assert len(results) == 1
         result = results[0]
         assert result['name'] == 'Natural-red-apple.jpg'
-        assert result['image_url'] == '/images/images-' + str(self.project.id) + '/Natural-red-apple.jpg'
+        assert result['image_url'] == '/images/images-{0}/{1}.jpg'.format(self.project.id, result['id'])
 
-        with open(settings.PROJECT_FILES_ROOT + '/images-' + str(self.project.id) + '/Natural-red-apple.jpg', 'rb') as saved_file:
+        with open(settings.PROJECT_FILES_ROOT + '/images-{0}/{1}'.format(self.project.id, result['id']), 'rb') as saved_file:
             with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as original_file:
                 saved_content = saved_file.read()
                 original_content = original_file.read()

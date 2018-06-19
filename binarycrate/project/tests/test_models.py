@@ -50,14 +50,14 @@ class TestImageModel(APITestCase):
         with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
             image.save_file(f)
 
-        with open(settings.PROJECT_FILES_ROOT + '/images-' + str(project.id) + '/Natural-red-apple.jpg', 'rb') as saved_file:
+        with open(settings.PROJECT_FILES_ROOT + '/images-{0}/{1}'.format(project.id, image.id), 'rb') as saved_file:
             with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as original_file:
                 saved_content = saved_file.read()
                 original_content = original_file.read()
 
                 assert saved_content == original_content
 
-        assert image.get_url() == '/images/images-' + str(project.id) + '/Natural-red-apple.jpg'
+        assert image.get_url() == '/images/images-{0}/{1}.jpg'.format(project.id, image.id)
         
 
 
