@@ -15,7 +15,7 @@ You will now be presented with a list of pages underneath 'Welcome to your new W
 There is a + sign that pops up if you mouse over the Right Hand side 'Add a new child page'
 
 Click 'Blog Index page'
-Set the title to Labs
+Set the title to 'Labs'
 Leave intro empty
 Click on Publish (their is an arror button at the bottom of the page it is in that submenu)
 You will now be presented with a list of pages underneath 'Welcome to your new Wagtail site'
@@ -24,7 +24,7 @@ There is a + sign that pops up if you mouse over the Right Hand side 'Add a new 
 Click Blog page
 Set the title to 'Python Lab 1'
 Set intro to 'Intro to Python 1'
-Hello world Python Lab 1
+set body to 'Hello world Python Lab 1'
 Set post date to today
 Click on Publish (their is an arror button at the bottom of the page it is in that submenu)
 You will now be presented with a list of pages underneath 'Welcome to your new Wagtail site'
@@ -35,6 +35,7 @@ Click sites
 Click localhost
 Click choose a different root page
 Click the Landing Page create in the first step. These are a heirachy so you will need to the > on the right hand side to descend into the heirachy
+Click Save once set
 
 http://0.0.0.0:8000/content/ is the landing page
 http://0.0.0.0:8000/labs is the labs page
