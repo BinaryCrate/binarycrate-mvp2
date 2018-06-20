@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals, print_function
 from rest_framework.test import APITestCase
-from project.models import Project, DirectoryEntry, ProjectTypes #added ProjectTypes
+from project.models import Project, DirectoryEntry, ProjectTypes
 import uuid
 import tempfile
 import shutil
 import os
 from django.conf import settings
 import pytest
+
 
 #added additional imports from test apis
 from django.urls import reverse
@@ -16,6 +17,7 @@ from accounts.factories import UserFactory
 from rest_framework.test import APIClient
 
 
+#pytestmark = pytest.mark.skip('Skip while testing receivers')
 class TestModels(APITestCase):
 
     def test_initialising_new_model_has_empty_string_content(self):
@@ -45,7 +47,7 @@ class TestModels(APITestCase):
         assert de.is_default == de2.is_default
 
 class TestPythonProject(APITestCase):
-        def test_python_project_correct_type(self):
+        def test_create_python_project__type(self):
             self.project_id = uuid.uuid4()
             u = UserFactory()
             de = DirectoryEntry.objects.create(name='', is_file=False)
@@ -56,7 +58,7 @@ class TestPythonProject(APITestCase):
             self.assertEqual(Project.objects.all().first().type, 0)
 
 class TestWebpageProject(APITestCase):
-    def test_creating_webpage_project_type(self):
+    def test_create_webpage_project_type(self):
             self.project_id = uuid.uuid4()
             u = UserFactory()
             de = DirectoryEntry.objects.create(name='', is_file=False)
@@ -67,7 +69,7 @@ class TestWebpageProject(APITestCase):
             self.assertEqual(Project.objects.all().first().type, 1)
 
 class TestWebpageFiles(APITestCase):
-    def test_files_created_in_root(self):
+    def test_webpage_files_created_in_root(self):
             self.project_id = uuid.uuid4()
             u = UserFactory()
             de = DirectoryEntry.objects.create(name='', is_file=False)
@@ -77,8 +79,12 @@ class TestWebpageFiles(APITestCase):
             self.assertEqual(Project.objects.count(), 1)
             self.assertEqual(Project.objects.all().first().type, 1)
 
-            if(Project.objects.all().first().type == 1):
-                p.create_files()
+            #Checks that new files are not re-created upon saving project
+            p.save()
+            p.save()
 
+            print(p.get_directory_entries().values_list('name', flat=True))
+            p.save()
+            self.assertEqual(p.get_directory_entries().count(), 4)
             self.assertEqual(set(p.get_directory_entries().values_list('name', flat=True)),
             {u'', u'scripts.js', u'index.html', u'styles.css'})
