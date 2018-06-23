@@ -46,11 +46,11 @@ Open a console and cs to the binarcrate-mvp2 directory which the code is checked
 Type in
 
 ```
-virtualenv venv 
+virtualenv venv
 
 source venv/bin/activate
 
-pip install --upgrade pip 
+pip install --upgrade pip
 
 pip install --upgrade setuptools urllib3[secure]
 
@@ -69,11 +69,11 @@ These instructions assume you have install Python 2.7 into the c:\python27 folde
 Type in
 
 ```
-c:\python27\scripts\virtualenv venv 
+c:\python27\scripts\virtualenv venv
 
 venv\scripts\activate.bat
 
-pip install --upgrade pip 
+pip install --upgrade pip
 
 pip install --upgrade setuptools urllib3[secure]
 
@@ -160,10 +160,13 @@ To run unit tests for the backend
 fab development.frontend_test
 ```
 
-To run frontend unit tests 
+To run frontend unit tests
 
 ```
 fab development.behave
 ```
 
-To run BDD tests 
+To run BDD tests
+
+
+
