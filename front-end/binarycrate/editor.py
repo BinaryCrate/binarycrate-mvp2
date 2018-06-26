@@ -323,7 +323,7 @@ class EditorView(BCChrome):
                    if inspect.isclass(getattr(imported_module, name)) and
                      issubclass(getattr(imported_module, name), Form) and
                      getattr(imported_module, name) != Form]
-        assert len(classes) == 1, "Only 1 Form class should exist in a module"
+        assert len(classes) <= 1, "Only 1 Form class should exist in a module"
         return classes
 
     def on_historygraph_download_complete(self):

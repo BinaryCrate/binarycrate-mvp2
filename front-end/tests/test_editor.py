@@ -120,8 +120,8 @@ class TestEditor(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -230,7 +230,7 @@ class TestEditor(object):
         checkbox_folder = folder.get_children()[1]
         assert checkbox_folder.get_tag_name() == 'input'
         assert 'checked' in checkbox_folder.get_attribs()
-        
+
         hello_world.on_click(None)
         # Click on hello_world and check that the UI updates correctly That is the selected changes but not the fact that folder is checked (ie folded out)
         root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
@@ -355,8 +355,8 @@ class TestEditor(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -399,7 +399,7 @@ class TestEditor(object):
 
         assert root_folder.get_display_title() == '/'
         assert folder.get_display_title() == 'folder'
-        
+
         virtual_node = node._build_virtual_dom()
         #add_folder_link = get_matching_vnode(virtual_node, lambda vnode: get_vnode_by_css_class(vnode, 'fa fa-1x fa-folder-o'))
 
@@ -457,7 +457,7 @@ class TestEditor(object):
                         result['new_file_found'] = True
 
         js.IterateElements(rendered, lambda node: setup_mock_modal_callback_was_added(node, 'hello_file.py'))
-        
+
         assert result['new_file_found']
 
         root_de = [de for de in editor.project['directory_entry'] if de['parent_id'] is None][0]
@@ -482,7 +482,7 @@ class TestEditor(object):
         result['new_file_found'] = False
 
         js.IterateElements(rendered, lambda node: setup_mock_modal_callback_was_added(node, 'hello_subfile.py'))
-        
+
         assert result['new_file_found']
 
         assert folder_de['id'] == hello_subfile_de['parent_id']
@@ -548,8 +548,8 @@ class TestEditor(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -592,7 +592,7 @@ class TestEditor(object):
 
         assert root_folder.get_display_title() == '/'
         assert folder.get_display_title() == 'folder'
-        
+
         virtual_node = node._build_virtual_dom()
         #add_folder_link = get_matching_vnode(virtual_node, lambda vnode: get_vnode_by_css_class(vnode, 'fa fa-1x fa-folder-o'))
 
@@ -651,7 +651,7 @@ class TestEditor(object):
                         result['new_folder_found'] = True
 
         js.IterateElements(rendered, lambda node: setup_mock_modal_callback_was_added(node, 'folder2'))
-        
+
         assert result['new_folder_found']
 
         root_de = [de for de in editor.project['directory_entry'] if de['parent_id'] is None][0]
@@ -676,7 +676,7 @@ class TestEditor(object):
         result['new_folder_found'] = False
 
         js.IterateElements(rendered, lambda node: setup_mock_modal_callback_was_added(node, 'folder3'))
-        
+
         assert result['new_folder_found']
 
         folder_de = [de for de in editor.project['directory_entry'] if de['name'] == 'folder'][0]
@@ -742,8 +742,8 @@ class TestEditor(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -789,7 +789,7 @@ class TestEditor(object):
         node.delete_selected_de(Mock())
 
         assert editor.project['deleted_directory_entries'] == ['ae935c72-cf56-48ed-ab35-575cb9a983ea']
-        
+
         tree = node.get_project_tree()
         assert type(tree) == BCProjectTree
         root_folder = tree.get_children()[0]
@@ -798,7 +798,7 @@ class TestEditor(object):
         assert len(root_folder.folder_children) == 1
         assert type(root_folder.folder_children[0]) == BCPFolder
         assert root_folder.folder_children[0].de['name'] == 'folder'
-        
+
     def test_editor_can_delete_folder(self, monkeypatch):
         def dummy_uuid():
             return uuid.UUID('d7114859-3a2f-4701-967a-fb66fd60b963')
@@ -859,8 +859,8 @@ class TestEditor(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -906,7 +906,7 @@ class TestEditor(object):
         node.delete_selected_de(Mock())
 
         assert set(editor.project['deleted_directory_entries']) == {'c1a4bc81-1ade-4c55-b457-81e59b785b01', '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a'}
-        
+
         tree = node.get_project_tree()
         assert type(tree) == BCProjectTree
         root_folder = tree.get_children()[0]
@@ -915,7 +915,7 @@ class TestEditor(object):
         assert len(root_folder.folder_children) == 1
         assert type(root_folder.folder_children[0]) == BCPFile
         assert root_folder.folder_children[0].de['name'] == 'hello_world.py'
-        
+
 
 class TestContextMenu(object):
     def test_context_menu_appears(self, monkeypatch):
@@ -974,8 +974,8 @@ class TestContextMenu(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -1056,11 +1056,11 @@ class TestContextMenu(object):
         assert preview_node is not None
         preview_node.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == ''
-        
+
         vnode_button.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
-    
+
         # Lift the mouse button up and check we are still selected
         preview_node.get_attribs()['onmouseup'](Mock())
         assert view.selected_item == button['id']
@@ -1115,7 +1115,7 @@ class TestContextMenu(object):
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
         assert view.selected_handler == HANDLE_TOPLEFT
-        
+
         Router.router.on_body_mousemove(Mock(clientX=540, clientY=540))
         assert button['x'] == 20
         assert button['y'] == 40
@@ -1133,7 +1133,7 @@ class TestContextMenu(object):
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
         assert view.selected_handler == HANDLE_TOPRIGHT
-        
+
         Router.router.on_body_mousemove(Mock(clientX=550, clientY=545))
         assert button['x'] == 20
         assert button['y'] == 45
@@ -1151,7 +1151,7 @@ class TestContextMenu(object):
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
         assert view.selected_handler == HANDLE_BOTTOMRIGHT
-        
+
         Router.router.on_body_mousemove(Mock(clientX=565, clientY=555))
         assert button['x'] == 20
         assert button['y'] == 45
@@ -1169,7 +1169,7 @@ class TestContextMenu(object):
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
         assert view.selected_handler == HANDLE_BOTTOMLEFT
-        
+
         Router.router.on_body_mousemove(Mock(clientX=555, clientY=550))
         assert button['x'] == 10
         assert button['y'] == 45
@@ -1263,8 +1263,8 @@ class TestContextMenu(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -1339,7 +1339,7 @@ class TestContextMenu(object):
         virtual_node = view._build_virtual_dom()
         IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
 
-        assert result['default_value'] == 'Button'        
+        assert result['default_value'] == 'Button'
 
         # Call the modal handler
         rendered_modal = view._render(None)
@@ -1425,8 +1425,8 @@ class TestContextMenu(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -1582,8 +1582,8 @@ class TestContextMenu(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -1770,8 +1770,8 @@ class TestContextMenu(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -1861,7 +1861,7 @@ class TestContextMenu(object):
         virtual_node = view._build_virtual_dom()
         IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
 
-        assert result['default_value'] == 'button2'        
+        assert result['default_value'] == 'button2'
 
         # Call the modal handler
         rendered_modal = view._render(None)
@@ -2037,8 +2037,8 @@ class TestRunningAProgram(object):
                            # A folder in the root directory
                            {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                             'name': 'folder',
-                            'is_file': False, 
-                            'content': '', 
+                            'is_file': False,
+                            'content': '',
                             'form_items': '[]',
                             'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                             'is_default': False,
@@ -2126,8 +2126,8 @@ print('Hello folder i={}'.format(i))
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': [],
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -2219,8 +2219,8 @@ print('Hello folder i={}'.format(i))
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': [],
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -2301,8 +2301,8 @@ import copy
 
 
 # Don't change anything below this line
-for c in copy.copy(globals()):
-    if inspect.isclass(c) and issubclass(c, DocumentObject):
+for c in copy.copy(globals().values()):
+    if inspect.isclass(c) and issubclass(c, DocumentObject) and c != Document and c != DocumentObject:
         historygraphfrontend.documentcollection.register(c)
 
 historygraphfrontend.download_document_collection()
@@ -2334,8 +2334,8 @@ historygraphfrontend.download_document_collection()
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': [],
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -2443,8 +2443,8 @@ print('Hello folder i={}'.format(i))
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': [],
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -2534,8 +2534,8 @@ print('Hello folder i={}'.format(i))
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': [],
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -2631,8 +2631,8 @@ class TestNewFileContentPythonProject(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -2789,8 +2789,8 @@ class TestNewFileContentPythonProject(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -2892,5 +2892,3 @@ from binarycrate.controls import Form
 class Travel(Form):
     file_location = __file__
 """
-
-
