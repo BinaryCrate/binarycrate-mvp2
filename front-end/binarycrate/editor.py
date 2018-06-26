@@ -252,6 +252,7 @@ class EditorView(BCChrome):
         for de in project['directory_entry']:
             if de['name'] != '': # Don't try to save the root folder
                 de_copy = copy.copy(de)
+                #print('de_copy[form_items]=', de_copy['form_items'])
                 de_copy['form_items'] = json.dumps(de_copy['form_items'])
                 ajaxput('/api/projects/directoryentry/' + de['id'] + '/', de_copy, dummy_put_result_handler)
         for de_id in project['deleted_directory_entries']:
@@ -395,7 +396,18 @@ class EditorView(BCChrome):
         global project
         if len(project) == 0:
             # Only load the project if we don't alreayd have it
-            ajaxget('/api/projects/' + self.get_root().url_kwargs['project_id'] + '/', self.projects_api_ajax_result_handler)
+            def images_api_ajax_result_handler2(xmlhttp, response):
+                # Get the images first then the projects
+                #TODO: Do this all in one query. Otherwise it get brittle
+                print('images_api_ajax_result_handler2')
+                #self.images_api_ajax_result_handler(xmlhttp, response)
+                if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+                    self.images = json.loads(str(xmlhttp.responseText))
+                    #self.mount_redraw()
+                    #Router.router.ResetHashChange()
+                    ajaxget('/api/projects/' + self.get_root().url_kwargs['project_id'] + '/', self.projects_api_ajax_result_handler)
+
+            ajaxget('/api/projects/image-list/' + self.get_root().url_kwargs['project_id'] + '/', images_api_ajax_result_handler2)
 
     def was_mounted(self):
         super(EditorView, self).was_mounted()
@@ -619,10 +631,11 @@ class EditorView(BCChrome):
                 timeouts.set_timeout(display_modal, 1)
 
         if prop_type == FormItemPropType.PRELOADED_IMAGE:
-            #ajaxget('/api/projects/image-list/' + project['id'] + '/', self.images_api_ajax_result_handler)
+            #ajaxget('/api/projects/image-list/' + project['id'] + '/', self.self.images_api_ajax_result_handler)
             ajaxget('/api/projects/image-list/' + project['id'] + '/', images_handler2)
         else:
             timeouts.set_timeout(display_modal, 1)
+
 
     def contextmenu_control(self, form_item_id, e):
         posx, posy = self.xy_from_e(e)
@@ -676,8 +689,11 @@ class EditorView(BCChrome):
                     if preloaded_image == '':
                         attribs_extra = {'src': form_item['src'], 'preloaded_image': '' }
                     else:
-                        attribs_extra = {'src': '/images/images-{0}/{1}'.format(project['id'], 
-                                         filter(lambda image: image['id'] == preloaded_image, self.images)[0]['name']),
+                        image = filter(lambda image: image['id'] == preloaded_image, self.images)[0]
+                        i = image['name'].rfind('.')
+                        extension = image['name'][i:]
+                        attribs_extra = {'src': '/images/images-{0}/{1}{2}'.format(project['id'],
+                                         image['id'], extension),
                                          'preloaded_image': preloaded_image }
                 elif form_item['type'] == 'label':
                     control_class = p
@@ -1053,7 +1069,7 @@ class EditorView(BCChrome):
             value = 'none' if form_values['chkEmpty'] else 'rgb({},{},{})'.format(form_values['txtRed'], form_values['txtGreen'], form_values['txtBlue'])
         elif get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.PRELOADED_IMAGE:
             print('changeProperty_ok type is FormItemPropType.PRELOADED_IMAGE')
-            value = form_values['selChosenImage']
+            value = str(form_values['selChosenImage'])
         else:
             assert False # Unknown property type
         fi[self.current_prop_name] = value
