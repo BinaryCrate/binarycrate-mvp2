@@ -24,7 +24,7 @@ class TestEditor(object):
         assert type(node) == BCPFile
         assert len(node.get_children()) == 1
         first_child = node.get_children()[0]
-        assert first_child.tag.lower() == 'a'
+        assert first_child.get_tag_name().lower() == 'a'
         assert len(first_child.get_children()) == 1
         text_node = first_child.get_children()[0]
         assert type(text_node) == t
@@ -118,8 +118,8 @@ class TestEditor(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -204,13 +204,13 @@ class TestEditor(object):
         assert node.selected_de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'
         assert 'file-active' in hello_world.get_attribs().get('class', '')
         a_hello_world = hello_world.get_children()[0]
-        assert a_hello_world.tag == 'a'
+        assert a_hello_world.get_tag_name() == 'a'
         assert 'file-active' in a_hello_world.get_attribs().get('class', '')
         label_folder = folder.get_children()[0]
-        assert label_folder.tag == 'label'
+        assert label_folder.get_tag_name() == 'label'
         assert 'file-active' not in label_folder.get_attribs().get('class', '')
         checkbox_folder = folder.get_children()[1]
-        assert checkbox_folder.tag == 'input'
+        assert checkbox_folder.get_tag_name() == 'input'
         assert 'checked' not in checkbox_folder.get_attribs()
 
         folder.on_click(None)
@@ -220,28 +220,28 @@ class TestEditor(object):
         assert node.selected_de['id'] == 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
         assert 'file-active' not in hello_world.get_attribs().get('class', '')
         a_hello_world = hello_world.get_children()[0]
-        assert a_hello_world.tag == 'a'
+        assert a_hello_world.get_tag_name() == 'a'
         assert 'file-active' not in a_hello_world.get_attribs().get('class', '')
         label_folder = folder.get_children()[0]
-        assert label_folder.tag == 'label'
+        assert label_folder.get_tag_name() == 'label'
         assert 'file-active' in label_folder.get_attribs().get('class', '')
         checkbox_folder = folder.get_children()[1]
-        assert checkbox_folder.tag == 'input'
+        assert checkbox_folder.get_tag_name() == 'input'
         assert 'checked' in checkbox_folder.get_attribs()
-        
+
         hello_world.on_click(None)
         # Click on hello_world and check that the UI updates correctly That is the selected changes but not the fact that folder is checked (ie folded out)
         root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
         assert node.selected_de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'
         assert 'file-active' in hello_world.get_attribs().get('class', '')
         a_hello_world = hello_world.get_children()[0]
-        assert a_hello_world.tag == 'a'
+        assert a_hello_world.get_tag_name() == 'a'
         assert 'file-active' in a_hello_world.get_attribs().get('class', '')
         label_folder = folder.get_children()[0]
-        assert label_folder.tag == 'label'
+        assert label_folder.get_tag_name() == 'label'
         assert 'file-active' not in label_folder.get_attribs().get('class', '')
         checkbox_folder = folder.get_children()[1]
-        assert checkbox_folder.tag == 'input'
+        assert checkbox_folder.get_tag_name() == 'input'
         assert 'checked' in checkbox_folder.get_attribs()
 
         js.return_get_element_by_id = {'preview': Mock(getBoundingClientRect=Mock(return_value=Mock(left=0, top=0)))}
@@ -353,8 +353,8 @@ class TestEditor(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -397,7 +397,7 @@ class TestEditor(object):
 
         assert root_folder.get_display_title() == '/'
         assert folder.get_display_title() == 'folder'
-        
+
         virtual_node = node._build_virtual_dom()
         #add_folder_link = get_matching_vnode(virtual_node, lambda vnode: get_vnode_by_css_class(vnode, 'fa fa-1x fa-folder-o'))
 
@@ -418,10 +418,10 @@ class TestEditor(object):
             if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'newFile':
 
                 def mock_element_iterator_callback2(vnode):
-                    if hasattr(vnode, 'tag'):
-                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                    if hasattr(vnode, 'get_tag_name'):
+                        if vnode.get_tag_name() == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
                             result['newFile_OK_handler'] = vnode.get_attribs()['onclick']
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtFileName":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtFileName":
                             node.value = ''
                 IterateVirtualDOM(vnode, mock_element_iterator_callback2)
 
@@ -455,7 +455,7 @@ class TestEditor(object):
                         result['new_file_found'] = True
 
         js.IterateElements(rendered, lambda node: setup_mock_modal_callback_was_added(node, 'hello_file.py'))
-        
+
         assert result['new_file_found']
 
         root_de = [de for de in editor.project['directory_entry'] if de['parent_id'] is None][0]
@@ -480,7 +480,7 @@ class TestEditor(object):
         result['new_file_found'] = False
 
         js.IterateElements(rendered, lambda node: setup_mock_modal_callback_was_added(node, 'hello_subfile.py'))
-        
+
         assert result['new_file_found']
 
         assert folder_de['id'] == hello_subfile_de['parent_id']
@@ -546,8 +546,8 @@ class TestEditor(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -590,7 +590,7 @@ class TestEditor(object):
 
         assert root_folder.get_display_title() == '/'
         assert folder.get_display_title() == 'folder'
-        
+
         virtual_node = node._build_virtual_dom()
         #add_folder_link = get_matching_vnode(virtual_node, lambda vnode: get_vnode_by_css_class(vnode, 'fa fa-1x fa-folder-o'))
 
@@ -611,10 +611,10 @@ class TestEditor(object):
             if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'newFolder':
 
                 def mock_element_iterator_callback2(vnode):
-                    if hasattr(vnode, 'tag'):
-                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                    if hasattr(vnode, 'get_tag_name'):
+                        if vnode.get_tag_name() == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
                             result['newFolder_OK_handler'] = vnode.get_attribs()['onclick']
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtFolderName":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtFolderName":
                             node.value = ''
                 IterateVirtualDOM(vnode, mock_element_iterator_callback2)
 
@@ -649,7 +649,7 @@ class TestEditor(object):
                         result['new_folder_found'] = True
 
         js.IterateElements(rendered, lambda node: setup_mock_modal_callback_was_added(node, 'folder2'))
-        
+
         assert result['new_folder_found']
 
         root_de = [de for de in editor.project['directory_entry'] if de['parent_id'] is None][0]
@@ -674,7 +674,7 @@ class TestEditor(object):
         result['new_folder_found'] = False
 
         js.IterateElements(rendered, lambda node: setup_mock_modal_callback_was_added(node, 'folder3'))
-        
+
         assert result['new_folder_found']
 
         folder_de = [de for de in editor.project['directory_entry'] if de['name'] == 'folder'][0]
@@ -740,8 +740,8 @@ class TestEditor(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -787,7 +787,7 @@ class TestEditor(object):
         node.delete_selected_de(Mock())
 
         assert editor.project['deleted_directory_entries'] == ['ae935c72-cf56-48ed-ab35-575cb9a983ea']
-        
+
         tree = node.get_project_tree()
         assert type(tree) == BCProjectTree
         root_folder = tree.get_children()[0]
@@ -796,7 +796,7 @@ class TestEditor(object):
         assert len(root_folder.folder_children) == 1
         assert type(root_folder.folder_children[0]) == BCPFolder
         assert root_folder.folder_children[0].de['name'] == 'folder'
-        
+
     def test_editor_can_delete_folder(self, monkeypatch):
         def dummy_uuid():
             return uuid.UUID('d7114859-3a2f-4701-967a-fb66fd60b963')
@@ -857,8 +857,8 @@ class TestEditor(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -904,7 +904,7 @@ class TestEditor(object):
         node.delete_selected_de(Mock())
 
         assert set(editor.project['deleted_directory_entries']) == {'c1a4bc81-1ade-4c55-b457-81e59b785b01', '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a'}
-        
+
         tree = node.get_project_tree()
         assert type(tree) == BCProjectTree
         root_folder = tree.get_children()[0]
@@ -913,7 +913,7 @@ class TestEditor(object):
         assert len(root_folder.folder_children) == 1
         assert type(root_folder.folder_children[0]) == BCPFile
         assert root_folder.folder_children[0].de['name'] == 'hello_world.py'
-        
+
 
 class TestContextMenu(object):
     def test_context_menu_appears(self, monkeypatch):
@@ -972,8 +972,8 @@ class TestContextMenu(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -1026,9 +1026,9 @@ class TestContextMenu(object):
         assert button['name'] == 'button1'
 
         def is_nvode_button(vnode):
-            if hasattr(vnode, 'tag') is False:
+            if hasattr(vnode, 'get_tag_name') is False:
                 return None
-            if vnode.tag != 'button':
+            if vnode.get_tag_name() != 'button':
                 return None
             l = vnode.get_children()
             if len(l) != 1:
@@ -1054,11 +1054,11 @@ class TestContextMenu(object):
         assert preview_node is not None
         preview_node.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == ''
-        
+
         vnode_button.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
-    
+
         # Lift the mouse button up and check we are still selected
         preview_node.get_attribs()['onmouseup'](Mock())
         assert view.selected_item == button['id']
@@ -1113,7 +1113,7 @@ class TestContextMenu(object):
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
         assert view.selected_handler == HANDLE_TOPLEFT
-        
+
         Router.router.on_body_mousemove(Mock(clientX=540, clientY=540))
         assert button['x'] == 20
         assert button['y'] == 40
@@ -1131,7 +1131,7 @@ class TestContextMenu(object):
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
         assert view.selected_handler == HANDLE_TOPRIGHT
-        
+
         Router.router.on_body_mousemove(Mock(clientX=550, clientY=545))
         assert button['x'] == 20
         assert button['y'] == 45
@@ -1149,7 +1149,7 @@ class TestContextMenu(object):
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
         assert view.selected_handler == HANDLE_BOTTOMRIGHT
-        
+
         Router.router.on_body_mousemove(Mock(clientX=565, clientY=555))
         assert button['x'] == 20
         assert button['y'] == 45
@@ -1167,7 +1167,7 @@ class TestContextMenu(object):
         assert view.selected_item == button['id']
         assert view.mouse_is_down == True
         assert view.selected_handler == HANDLE_BOTTOMLEFT
-        
+
         Router.router.on_body_mousemove(Mock(clientX=555, clientY=550))
         assert button['x'] == 10
         assert button['y'] == 45
@@ -1261,8 +1261,8 @@ class TestContextMenu(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -1294,9 +1294,9 @@ class TestContextMenu(object):
         button = view.selected_de['form_items'][0]
 
         def is_nvode_button(vnode, button_title):
-            if hasattr(vnode, 'tag') is False:
+            if hasattr(vnode, 'get_tag_name') is False:
                 return None
-            if vnode.tag != 'button':
+            if vnode.get_tag_name() != 'button':
                 return None
             l = vnode.get_children()
             if len(l) != 1:
@@ -1325,10 +1325,10 @@ class TestContextMenu(object):
             if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'changeProperty':
 
                 def mock_element_iterator_callback2(vnode):
-                    if hasattr(vnode, 'tag'):
-                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                    if hasattr(vnode, 'get_tag_name'):
+                        if vnode.get_tag_name() == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
                             result['changeProperty_OK_handler'] = vnode.get_attribs()['onclick']
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtValue":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtValue":
                             result['default_value'] = vnode.get_attribs().get('value', '')
                 IterateVirtualDOM(vnode, mock_element_iterator_callback2)
 
@@ -1337,7 +1337,7 @@ class TestContextMenu(object):
         virtual_node = view._build_virtual_dom()
         IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
 
-        assert result['default_value'] == 'Button'        
+        assert result['default_value'] == 'Button'
 
         # Call the modal handler
         rendered_modal = view._render(None)
@@ -1423,8 +1423,8 @@ class TestContextMenu(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -1456,9 +1456,9 @@ class TestContextMenu(object):
         checkbox = view.selected_de['form_items'][0]
 
         def is_nvode_checkbox(vnode):
-            if hasattr(vnode, 'tag') is False:
+            if hasattr(vnode, 'get_tag_name') is False:
                 return None
-            if vnode.tag != 'input':
+            if vnode.get_tag_name() != 'input':
                 return None
             if vnode.get_attribs().get('type', '') != 'checkbox':
                 return None
@@ -1488,10 +1488,10 @@ class TestContextMenu(object):
                 #print('mock_element_iterator_callback changeBooleanProperty found')
 
                 def mock_element_iterator_callback2(vnode):
-                    if hasattr(vnode, 'tag'):
-                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                    if hasattr(vnode, 'get_tag_name'):
+                        if vnode.get_tag_name() == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
                             result['changePropertyBoolean_OK_handler'] = vnode.get_attribs()['onclick']
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "chkValue":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "chkValue":
                             #print('mock_element_iterator_callback  vnode.checked=',vnode.get_attribs().get('checked', ''))
                             result['default_value'] = vnode.get_attribs().get('checked', '') == 'checked'
                 IterateVirtualDOM(vnode, mock_element_iterator_callback2)
@@ -1580,8 +1580,8 @@ class TestContextMenu(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -1613,9 +1613,9 @@ class TestContextMenu(object):
         checkbox = view.selected_de['form_items'][0]
 
         def is_nvode_rect(vnode):
-            if hasattr(vnode, 'tag') is False:
+            if hasattr(vnode, 'get_tag_name') is False:
                 return None
-            if vnode.tag != 'rect':
+            if vnode.get_tag_name() != 'rect':
                 return None
             #if vnode.get_attribs().get('type', '') != 'checkbox':
             #    return None
@@ -1647,16 +1647,16 @@ class TestContextMenu(object):
                 #print('mock_element_iterator_callback changeBooleanProperty found')
 
                 def mock_element_iterator_callback2(vnode):
-                    if hasattr(vnode, 'tag'):
-                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                    if hasattr(vnode, 'get_tag_name'):
+                        if vnode.get_tag_name() == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
                             result['changePropertyColor_OK_handler'] = vnode.get_attribs()['onclick']
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "chkEmpty":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "chkEmpty":
                             result['color_empty'] = vnode.get_attribs().get('checked', '') == 'checked'
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtRed":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtRed":
                             result['color_red'] = vnode.get_attribs().get('value', '')
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtGreen":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtGreen":
                             result['color_green'] = vnode.get_attribs().get('value', '')
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtBlue":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtBlue":
                             result['color_blue'] = vnode.get_attribs().get('value', '')
                 IterateVirtualDOM(vnode, mock_element_iterator_callback2)
 
@@ -1768,8 +1768,8 @@ class TestContextMenu(object):
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -1802,9 +1802,9 @@ class TestContextMenu(object):
         button = view.selected_de['form_items'][0]
 
         def is_nvode_button(vnode, button_title):
-            if hasattr(vnode, 'tag') is False:
+            if hasattr(vnode, 'get_tag_name') is False:
                 return None
-            if vnode.tag != 'button':
+            if vnode.get_tag_name() != 'button':
                 return None
             l = vnode.get_children()
             if len(l) != 1:
@@ -1847,10 +1847,10 @@ class TestContextMenu(object):
             if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'changeProperty':
 
                 def mock_element_iterator_callback2(vnode):
-                    if hasattr(vnode, 'tag'):
-                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                    if hasattr(vnode, 'get_tag_name'):
+                        if vnode.get_tag_name() == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
                             result['changeProperty_OK_handler'] = vnode.get_attribs()['onclick']
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtValue":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtValue":
                             result['default_value'] = vnode.get_attribs().get('value', '')
                 IterateVirtualDOM(vnode, mock_element_iterator_callback2)
 
@@ -1859,7 +1859,7 @@ class TestContextMenu(object):
         virtual_node = view._build_virtual_dom()
         IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
 
-        assert result['default_value'] == 'button2'        
+        assert result['default_value'] == 'button2'
 
         # Call the modal handler
         rendered_modal = view._render(None)
@@ -2034,8 +2034,8 @@ class TestRunningAProgram(object):
                            # A folder in the root directory
                            {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                             'name': 'folder',
-                            'is_file': False, 
-                            'content': '', 
+                            'is_file': False,
+                            'content': '',
                             'form_items': '[]',
                             'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                             'is_default': False,
@@ -2121,8 +2121,8 @@ print('Hello folder i={}'.format(i))
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': [],
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -2214,8 +2214,8 @@ print('Hello folder i={}'.format(i))
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': [],
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -2306,8 +2306,8 @@ print('Hello folder i={}'.format(i))
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': [],
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -2400,8 +2400,8 @@ print('Hello folder i={}'.format(i))
                        # A folder in the root directory
                        {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'name': 'folder',
-                        'is_file': False, 
-                        'content': '', 
+                        'is_file': False,
+                        'content': '',
                         'form_items': '[]',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
@@ -2436,12 +2436,12 @@ print('Hello folder i={}'.format(i))
         js.return_get_element_by_id = {'preview': Mock(getBoundingClientRect=Mock(return_value=Mock(left=0, top=0)))}
         view.new_image(Mock(clientX=10, clientY=20))
 
-        checkbox = view.selected_de['form_items'][0]
+        virtual_dom = view._build_virtual_dom()
 
         def is_nvode_image(vnode):
-            if hasattr(vnode, 'tag') is False:
+            if hasattr(vnode, 'get_tag_name') is False:
                 return None
-            if vnode.tag != 'img':
+            if vnode.get_tag_name() != 'img':
                 return None
             #if vnode.get_attribs().get('type', '') != 'checkbox':
             #    return None
@@ -2450,7 +2450,7 @@ print('Hello folder i={}'.format(i))
             #    return None
             return vnode
 
-        vnode_image = get_matching_vnode(view, lambda vnode: is_nvode_image(vnode))
+        vnode_image = get_matching_vnode(virtual_dom, lambda vnode: is_nvode_image(vnode))
 
         view.mount_redraw = Mock()
         Router.router.ResetHashChange.reset_mock()
@@ -2473,12 +2473,12 @@ print('Hello folder i={}'.format(i))
                 #print('mock_element_iterator_callback changeBooleanProperty found')
 
                 def mock_element_iterator_callback2(vnode):
-                    if hasattr(vnode, 'tag'):
+                    if hasattr(vnode, 'get_tag_name'):
                         #print('mock_element_iterator_callback2 vnode.tag=', vnode.tag)
                         #print('mock_element_iterator_callback2 vnode.get_attribs().get(\'id\')=', vnode.get_attribs().get('id'))
-                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                        if vnode.get_tag_name() == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
                             result['changePropertyPreloadedImage_OK_handler'] = vnode.get_attribs()['onclick']
-                        if vnode.tag == 'select' and vnode.get_attribs().get('id') == "selChosenImage":
+                        if vnode.get_tag_name() == 'select' and vnode.get_attribs().get('id') == "selChosenImage":
                             result['chosen_image'] = vnode.get_attribs().get('value', '')
                 IterateVirtualDOM(vnode, mock_element_iterator_callback2)
 
@@ -2532,4 +2532,3 @@ print('Hello folder i={}'.format(i))
         vnode_rect = get_matching_vnode(rendered, lambda vnode: is_nvode_image(vnode))
         assert vnode_rect.get_attribs()['preloaded_image'] == ''
         assert vnode_rect.get_attribs()['src'] == ''
-
