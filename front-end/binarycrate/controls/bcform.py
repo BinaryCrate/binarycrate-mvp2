@@ -28,7 +28,7 @@ class Form(object):
             return de['form_items']
 
 
-        
+
     def get_file_location(self):
         # Returns the file local relative to the module directory
         from binarycrate.editor import python_module_dir
@@ -76,23 +76,32 @@ class Form(object):
                 #control = html_button({'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
             elif form_item['type'] == 'textbox':
                 control_class = html_input
-                attribs_extra = {'type': "text"}           
+                attribs_extra = {'type': "text"}
                 #control = html_input({'type': "text", 'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
             elif form_item['type'] == 'image':
                 control_class = img
-                attribs_extra = { 'src': 'text', 'preloaded_image': '' }           
+                project = self.editorview.get_project()
+                preloaded_image = form_item['preloaded_image']
+                if preloaded_image != '':
+                    image = filter(lambda image: image['id'] == preloaded_image, self.images)[0]
+                    i = image['name'].rfind('.')
+                    extension = image['name'][i:]
+                    attribs_extra = {'src': '/images/images-{0}/{1}{2}'.format(project['id'],
+                                     image['id'], extension),
+                                     'preloaded_image': preloaded_image }
+                #attribs_extra = { 'src': 'text', 'preloaded_image': '' }
             elif form_item['type'] == 'label':
                 control_class = p
-                attribs_extra = { }           
+                attribs_extra = { }
             elif form_item['type'] == 'frame':
                 control_class = div
-                #attribs_extra = {'s': "text"}           
+                #attribs_extra = {'s': "text"}
             elif form_item['type'] == 'checkbox':
                 control_class = html_input
                 attribs_extra = merge_dicts({'type': "checkbox", 'form_item': 'True'}, {'checked': 'checked'} if form_item['value'] else { })
             elif form_item['type'] == 'select':
                 control_class = select
-                attribs_extra = { }           
+                attribs_extra = { }
             attribs.update(attribs_extra)
             if  control_class:
                 control = control_class(attribs, form_item.get('caption', ''))
@@ -101,7 +110,7 @@ class Form(object):
         svg_list = list()
         for form_item in self.form_controls:
             if form_item['type'] == 'rect':
-                control = svg('rect', {'x': form_item['x'], 
+                control = svg('rect', {'x': form_item['x'],
                              'y':form_item['y'],
                              'width': form_item['width'],
                              'height': form_item['height'],
@@ -111,7 +120,7 @@ class Form(object):
                              #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e), 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
                              })
             if form_item['type'] == 'circle':
-                control = svg('circle', {'cx': form_item['x'] + form_item['width'] / 2, 
+                control = svg('circle', {'cx': form_item['x'] + form_item['width'] / 2,
                              'cy':form_item['y'] + form_item['height'] / 2,
                              'r': form_item['width'] / 2,
                              #'height': form_item['height'],
@@ -121,7 +130,7 @@ class Form(object):
                              #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
                              })
             if form_item['type'] == 'ellipse':
-                control = svg('ellipse', {'cx': form_item['x'] + form_item['width'] / 2, 
+                control = svg('ellipse', {'cx': form_item['x'] + form_item['width'] / 2,
                              'cy':form_item['y'] + form_item['height'] / 2,
                              'rx': form_item['width'] / 2,
                              'ry': form_item['height'] / 2,
@@ -131,7 +140,7 @@ class Form(object):
                              #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
                              })
             if form_item['type'] == 'line':
-                control = svg('line', {'x1': form_item['x'], 
+                control = svg('line', {'x1': form_item['x'],
                              'y1':form_item['y'],
                              'x2': form_item['x'] + form_item['width'],
                              'y2': form_item['y'] + form_item['height'],
@@ -170,8 +179,7 @@ class Form(object):
         super(Form, self).__init__(*args, **kwargs)
         self.initialise_form_controls()
         self.editorview = editorview
+        self.images = editorview.images
 
     def on_historygraph_download_complete(self):
         pass
-
-
