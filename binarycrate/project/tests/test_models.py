@@ -99,10 +99,9 @@ import copy
 
 
 # Don't change anything below this line
-for c in copy.copy(globals()):
-    if inspect.isclass(c) and issubclass(c, DocumentObject):
+for c in copy.copy(globals().values()):
+    if inspect.isclass(c) and issubclass(c, DocumentObject) and c != Document and c != DocumentObject:
         historygraphfrontend.documentcollection.register(c)
 
 historygraphfrontend.download_document_collection()
 """)
-

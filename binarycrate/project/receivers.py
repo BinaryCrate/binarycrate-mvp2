@@ -21,12 +21,12 @@ def load_de_content(sender, instance, **kwargs):
     if project_media_storage.exists(str(instance.id) + '-form-items'):
         with project_media_storage.open(str(instance.id) + '-form-items', 'r') as project_file:
             instance._form_items = project_file.read()
-        
+
 
 def save_project(sender, instance, created, raw, **kwargs):
     from .models import DirectoryEntry, ProjectTypes
     if raw is False and created is True and instance.type == ProjectTypes.python_with_storage.value:
-        DirectoryEntry.objects.create(name='documents.py', is_file=True, 
+        DirectoryEntry.objects.create(name='documents.py', is_file=True,
             parent=instance.get_directory_entries().first(),
             content="""from __future__ import absolute_import, unicode_literals, print_function
 from binarycrate import historygraphfrontend
@@ -43,10 +43,9 @@ import copy
 
 
 # Don't change anything below this line
-for c in copy.copy(globals()):
-    if inspect.isclass(c) and issubclass(c, DocumentObject):
+for c in copy.copy(globals().values()):
+    if inspect.isclass(c) and issubclass(c, DocumentObject) and c != Document and c != DocumentObject:
         historygraphfrontend.documentcollection.register(c)
 
 historygraphfrontend.download_document_collection()
 """)
-
