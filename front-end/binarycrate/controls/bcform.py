@@ -5,7 +5,7 @@ import copy
 from cavorite import Router
 
 
-class StudentForm(object):
+class Form(object):
     def get_form_items(self, loc=None, parent_id=None):
         from binarycrate.editor import project
         # Return the form items for this form
@@ -32,6 +32,8 @@ class StudentForm(object):
     def get_file_location(self):
         # Returns the file local relative to the module directory
         from binarycrate.editor import python_module_dir
+        print('python_module_dir=', python_module_dir)
+        print('self.file_location=', self.file_location)
         assert self.file_location.startswith(python_module_dir)
         return self.file_location[len(python_module_dir):]
 
@@ -165,7 +167,7 @@ class StudentForm(object):
         return ret
 
     def __init__(self, editorview, *args, **kwargs):
-        super(StudentForm, self).__init__(*args, **kwargs)
+        super(Form, self).__init__(*args, **kwargs)
         self.initialise_form_controls()
         self.editorview = editorview
 

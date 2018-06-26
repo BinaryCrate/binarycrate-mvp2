@@ -1,13 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals, print_function
 from rest_framework.test import APITestCase
-from project.models import Project, DirectoryEntry, Image
+from project.models import Project, DirectoryEntry, Image, ProjectTypes
 import uuid
 import tempfile
 import shutil
 import os
 from django.conf import settings
 from accounts.factories import UserFactory
+
+#added additional imports from test apis
+from django.urls import reverse
+from rest_framework import status
+from accounts.factories import UserFactory
+from rest_framework.test import APIClient
 
 
 class TestModels(APITestCase):
@@ -58,6 +64,68 @@ class TestImageModel(APITestCase):
                 assert saved_content == original_content
 
         assert image.get_url() == '/images/images-{0}/{1}.jpg'.format(project.id, image.id)
-        
 
 
+
+class TestPythonProject(APITestCase):
+        def test_python_project_correct_type(self):
+            self.project_id = uuid.uuid4()
+            u = UserFactory()
+            de = DirectoryEntry.objects.create(name='', is_file=False)
+            Project.objects.create(id=self.project_id, name='Test Python', type=ProjectTypes.python.value, public=False,
+                                   root_folder=de, owner=u)
+
+            self.assertEqual(Project.objects.count(), 1)
+            p = Project.objects.all().first()
+            self.assertEqual(p.type, 0)
+
+            self.assertEqual(set(p.get_directory_entries().values_list('name', flat=True)), {''})
+
+class TestWebpageProject(APITestCase):
+    def test_creating_webpage_project_type(self):
+            self.project_id = uuid.uuid4()
+            u = UserFactory()
+            de = DirectoryEntry.objects.create(name='', is_file=False)
+            Project.objects.create(id=self.project_id, name='Test Webpage', type=ProjectTypes.webpage.value, public=False,
+                                   root_folder=de, owner=u)
+
+            self.assertEqual(Project.objects.count(), 1)
+            self.assertEqual(Project.objects.all().first().type, 1)
+
+class TestPythonWithStorageProject(APITestCase):
+        def test_python_project_correct_type(self):
+            self.project_id = uuid.uuid4()
+            u = UserFactory()
+            de = DirectoryEntry.objects.create(name='', is_file=False)
+            Project.objects.create(id=self.project_id, name='Test Python', type=ProjectTypes.python_with_storage.value, public=False,
+                                   root_folder=de, owner=u)
+
+            self.assertEqual(Project.objects.count(), 1)
+            p = Project.objects.all().first()
+            self.assertEqual(p.type, 2)
+
+            self.assertEqual(set(p.get_directory_entries().values_list('name', flat=True)),
+                {'', 'documents.py'})
+
+            de = p.get_directory_entries().get(name='documents.py')
+            self.assertEqual(de.content, """from __future__ import absolute_import, unicode_literals, print_function
+from binarycrate import historygraphfrontend
+from historygraph import Document, DocumentObject
+from historygraph import fields
+import inspect
+import copy
+
+# Don't change anything above this line
+# Your Document definition go here
+
+
+
+
+
+# Don't change anything below this line
+for c in copy.copy(globals().values()):
+    if inspect.isclass(c) and issubclass(c, DocumentObject) and c != Document and c != DocumentObject:
+        historygraphfrontend.documentcollection.register(c)
+
+historygraphfrontend.download_document_collection()
+""")

@@ -8,7 +8,7 @@ import uuid
 from mock import Mock
 import json
 from binarycrate.editor import BCProjectTree, BCPFolder, BCPFile, ContextMenu
-from binarycrate.controls import codemirror, StudentForm
+from binarycrate.controls import codemirror, Form
 from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode, style_to_dict, get_vnode_by_id, get_vnode_by_css_class, get_matching_vnodes
 import cavorite.bootstrap.modals
 from binarycrate.editor import HANDLE_NONE, HANDLE_TOPLEFT, HANDLE_TOPRIGHT, HANDLE_BOTTOMLEFT, HANDLE_BOTTOMRIGHT
@@ -17,6 +17,8 @@ import tempfile
 from backports.tempfile import TemporaryDirectory
 import os
 from cavorite.HTML import *
+from binarycrate import historygraphfrontend
+import sys
 
 
 class TestEditor(object):
@@ -1990,6 +1992,7 @@ class TestRunningAProgram(object):
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
 
+        old_python_module_dir = editor.python_module_dir
         with TemporaryDirectory() as temp_dir:
             assert os.path.isdir(temp_dir)
             editor.python_module_dir = temp_dir + '/'
@@ -2063,6 +2066,8 @@ class TestRunningAProgram(object):
             with open(temp_dir + '/folder/hello_folder.py', 'r') as project_file:
                 file_content = project_file.read()
             assert file_content == hello_folder_content
+
+        editor.python_module_dir = old_python_module_dir
 
     def test_process_file_location(self, monkeypatch):
         monkeypatch.setattr(Router, 'ResetHashChange', Mock())
@@ -2139,13 +2144,13 @@ print('Hello folder i={}'.format(i))
                      ]
                     }
 
-        class TestForm1(StudentForm):
+        class TestForm1(Form):
             file_location = '/lib/pypyjs/lib_pypy/hello_world.py'
 
         t1 = TestForm1(view)
         assert t1.get_file_location() == 'hello_world.py'
 
-        class TestForm2(StudentForm):
+        class TestForm2(Form):
             file_location = '/lib/pypyjs/lib_pypy/folder/hello_folder.py'
 
         t2 = TestForm2(view)
@@ -2234,7 +2239,7 @@ print('Hello folder i={}'.format(i))
 
         assert len(view.form_stack) == 0
 
-        class TestForm1(StudentForm):
+        class TestForm1(Form):
             file_location = '/lib/pypyjs/lib_pypy/hello_world.py'
 
         form_classes = [TestForm1]
@@ -2249,6 +2254,229 @@ print('Hello folder i={}'.format(i))
         view.form_stack[-1].on_historygraph_download_complete.assert_not_called()
         view.on_historygraph_download_complete()
         view.form_stack[-1].on_historygraph_download_complete.assert_called_once()
+
+    def test_running_with_storage_program_initialises_historygraph(self, monkeypatch):
+        monkeypatch.setattr(Router, 'ResetHashChange', Mock())
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(codemirror, 'js', js)
+        mock_download_document_collection = Mock()
+        monkeypatch.setattr(historygraphfrontend, 'download_document_collection', mock_download_document_collection)
+
+        callbacks.initialise_global_callbacks()
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        body = js.globals.document.body
+        error_404_page = c("div", [c("p", "No match 404 error"),
+                                   c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
+        view = editor.EditorView()
+        r = Router({r'^$': view},
+                    error_404_page, body)
+        r.route()
+        view.mount_redraw = Mock()
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+print('Hello folder i={}'.format(i))
+"""
+        documents_content = """from __future__ import absolute_import, unicode_literals, print_function
+from binarycrate import historygraphfrontend
+from historygraph import Document, DocumentObject
+from historygraph import fields
+import inspect
+import copy
+
+# Don't change anything above this line
+# Your Document definition go here
+
+
+
+
+
+# Don't change anything below this line
+for c in copy.copy(globals().values()):
+    if inspect.isclass(c) and issubclass(c, DocumentObject) and c != Document and c != DocumentObject:
+        historygraphfrontend.documentcollection.register(c)
+
+historygraphfrontend.download_document_collection()
+"""
+        editor.project = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 2,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': [],
+                        'parent_id': None,
+                        'is_default': False,
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]'),
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': True,
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': [],
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'form_items': [],
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
+                       },
+                       # A the documents.py file in the root directory
+                       {'id': '5f1b86d7-58ae-46e5-ad1f-775b7c561e7b',
+                        'name': 'documents.py',
+                        'is_file': True,
+                        'content': documents_content,
+                        'form_items': [],
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': True,
+                       },
+                     ]
+                    }
+
+        assert len(view.form_stack) == 0
+
+        #class TestForm1(Form):
+        #    file_location = '/lib/pypyjs/lib_pypy/hello_world.py'
+
+        #form_classes = [TestForm1]
+        #view.get_default_module_form_classes = Mock(return_value=form_classes)
+        #view.write_program_to_virtual_file_system = Mock()
+
+        old_python_module_dir = editor.python_module_dir
+        with TemporaryDirectory() as temp_dir:
+            assert os.path.isdir(temp_dir)
+            editor.python_module_dir = temp_dir + '/'
+            sys.path.append(editor.python_module_dir)
+            mock_download_document_collection.assert_not_called()
+            view.write_program_to_virtual_file_system()
+            view.run_project(Mock())
+
+            mock_download_document_collection.assert_called_once()
+            assert sys.path[-1] == editor.python_module_dir
+            sys.path.pop()
+            assert sys.path[-1] != editor.python_module_dir
+        editor.python_module_dir = old_python_module_dir
+
+    def test_running_without_storage_program_doesnt_initialise_historygraph(self, monkeypatch):
+        monkeypatch.setattr(Router, 'ResetHashChange', Mock())
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(codemirror, 'js', js)
+        mock_download_document_collection = Mock()
+        monkeypatch.setattr(historygraphfrontend, 'download_document_collection', mock_download_document_collection)
+
+        callbacks.initialise_global_callbacks()
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        body = js.globals.document.body
+        error_404_page = c("div", [c("p", "No match 404 error"),
+                                   c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
+        view = editor.EditorView()
+        r = Router({r'^$': view},
+                    error_404_page, body)
+        r.route()
+        view.mount_redraw = Mock()
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+print('Hello folder i={}'.format(i))
+"""
+        editor.project = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': [],
+                        'parent_id': None,
+                        'is_default': False,
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]'),
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': True,
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': [],
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'form_items': [],
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
+                       },
+                     ]
+                    }
+
+        assert len(view.form_stack) == 0
+
+        old_python_module_dir = editor.python_module_dir
+        with TemporaryDirectory() as temp_dir:
+            assert os.path.isdir(temp_dir)
+            editor.python_module_dir = temp_dir + '/'
+            sys.path.append(editor.python_module_dir)
+            mock_download_document_collection.assert_not_called()
+            view.write_program_to_virtual_file_system()
+            view.run_project(Mock())
+
+            mock_download_document_collection.assert_not_called()
+            assert sys.path[-1] == editor.python_module_dir
+            sys.path.pop()
+            assert sys.path[-1] != editor.python_module_dir
+        editor.python_module_dir = old_python_module_dir
 
     def test_running_program_without_default_file_causes_an_error(self, monkeypatch):
         monkeypatch.setattr(Router, 'ResetHashChange', Mock())
@@ -2326,7 +2554,7 @@ print('Hello folder i={}'.format(i))
 
         assert len(view.form_stack) == 0
 
-        class TestForm1(StudentForm):
+        class TestForm1(Form):
             file_location = '/lib/pypyjs/lib_pypy/hello_world.py'
 
         form_classes = [TestForm1]
@@ -2366,6 +2594,7 @@ print('Hello folder i={}'.format(i))
         r.route()
 
         view.mount_redraw = Mock()
+
 
         hello_world_content = "print('Hello world')"
         hello_folder_content = \
@@ -2532,3 +2761,327 @@ print('Hello folder i={}'.format(i))
         vnode_rect = get_matching_vnode(rendered, lambda vnode: is_nvode_image(vnode))
         assert vnode_rect.get_attribs()['preloaded_image'] == ''
         assert vnode_rect.get_attribs()['src'] == ''
+
+class TestNewFileContentPythonProject(object):
+    def test_new_file_standard_python(self, monkeypatch):
+        def dummy_uuid():
+            return uuid.UUID('d7114859-3a2f-4701-967a-fb66fd60b963')
+        project_id = 'e1e37287-9127-46cb-bddb-4a1a825a5d8e'
+
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(ajaxget, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(Router, 'router', Mock())
+        monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        monkeypatch.setattr(cavorite.svg, 'js', js)
+        callbacks.initialise_global_callbacks()
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        result = defaultdict(int)
+
+        node = editor.editor_view()
+        node.url_kwargs = { 'project_id': project_id }
+
+        tree = node.get_project_tree()
+
+        monkeypatch.setattr(node, 'mount_redraw', Mock())
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+    print('Hello folder i={}'.format(i))
+"""
+
+        response = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': '[]',
+                        'parent_id': None,
+                        'is_default': False,
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'form_items': '[]',
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
+                       },
+                     ]
+                    }
+        node.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)),
+                                              response)
+
+        tree = node.get_project_tree()
+
+        #root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        #root_folder = tree.get_children()[0]
+        #folder = root_folder.get_children()[0]
+        #return root_folder, root_folder.get_children()[1], folder, folder.get_children()[2].get_children()[0]
+
+        """
+        assert type(tree) == BCProjectTree
+        #root_folder = tree.get_children()[0]
+        assert type(root_folder) == BCPFolder
+        assert root_folder.get_is_checked()
+        assert len(root_folder.folder_children) == 2
+        assert type(root_folder.folder_children[0]) == BCPFolder
+        assert root_folder.folder_children[0].de['name'] == 'folder'
+        #hello_world = root_folder.folder_children[1]
+        assert type(hello_world) == BCPFile
+        assert self.get_BCPFile_title(hello_world) == 'hello_world.py'
+        #folder = root_folder.folder_children[0]
+        #hello_folder = folder.folder_children[0]
+        assert type(hello_folder) == BCPFile
+        assert self.get_BCPFile_title(hello_folder) == 'hello_folder.py'
+
+        assert root_folder.get_display_title() == '/'
+        assert folder.get_display_title() == 'folder'
+        """
+        virtual_node = node._build_virtual_dom()
+        #add_folder_link = get_matching_vnode(virtual_node, lambda vnode: get_vnode_by_css_class(vnode, 'fa fa-1x fa-folder-o'))
+
+        editor.js.globals.window.alert = Mock()
+        #hello_world.on_click(Mock())
+        #add_folder_link.get_attribs()['onclick'](Mock())
+        #node.display_new_file_modal(Mock())
+
+        #editor.js.globals.window.alert.assert_called_with('Error: You must select a folder to insert this file in')
+
+        editor.js.globals.window.alert = Mock()
+        #root_folder.on_click(Mock())
+        node.display_new_file_modal(Mock())
+
+        editor.js.globals.window.alert.assert_not_called()
+
+        def mock_element_iterator_callback(vnode):
+            if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'newFile':
+
+                def mock_element_iterator_callback2(vnode):
+                    if hasattr(vnode, 'get_tag_name'):
+                        if vnode.get_tag_name() == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                            result['newFile_OK_handler'] = vnode.get_attribs()['onclick']
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtFileName":
+                            node.value = ''
+                IterateVirtualDOM(vnode, mock_element_iterator_callback2)
+
+        node.mount_redraw = Mock()
+
+        virtual_node = node._build_virtual_dom()
+        IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
+
+        # Call the modal handler
+        rendered_modal = node._render(None)
+        cavorite.bootstrap.modals.js.return_get_element_by_id = {'newFile': rendered_modal}
+
+        def setup_mock_modal_callback(node, file_name):
+            if isinstance(node, js.MockElement) and node.getAttribute('id') == 'txtFileName':
+                node.value = file_name
+
+        js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, 'travel.py'))
+
+        #print('test_editor result[newFile_OK_handler]=', result['newFile_OK_handler'])
+        result['newFile_OK_handler'](Mock())
+
+        assert len(node.get_project()['directory_entry']) == 5
+        new_de = [de for de in node.get_project()['directory_entry'] if de['name'] == 'travel.py'][0]
+
+        assert new_de['content'] == """from __future__ import unicode_literals, absolute_import, print_function
+"""
+
+    def test_new_file_graphical_python(self, monkeypatch):
+        def dummy_uuid():
+            return uuid.UUID('d7114859-3a2f-4701-967a-fb66fd60b963')
+        project_id = 'e1e37287-9127-46cb-bddb-4a1a825a5d8e'
+
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(ajaxget, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(Router, 'router', Mock())
+        monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        monkeypatch.setattr(cavorite.svg, 'js', js)
+        callbacks.initialise_global_callbacks()
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        result = defaultdict(int)
+
+        node = editor.editor_view()
+        node.url_kwargs = { 'project_id': project_id }
+
+        tree = node.get_project_tree()
+
+        monkeypatch.setattr(node, 'mount_redraw', Mock())
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+    print('Hello folder i={}'.format(i))
+"""
+
+        response = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': '[]',
+                        'parent_id': None,
+                        'is_default': False,
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'form_items': '[]',
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
+                       },
+                     ]
+                    }
+        node.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)),
+                                              response)
+
+        tree = node.get_project_tree()
+
+        #root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        #root_folder = tree.get_children()[0]
+        #folder = root_folder.get_children()[0]
+        #return root_folder, root_folder.get_children()[1], folder, folder.get_children()[2].get_children()[0]
+
+        """
+        assert type(tree) == BCProjectTree
+        #root_folder = tree.get_children()[0]
+        assert type(root_folder) == BCPFolder
+        assert root_folder.get_is_checked()
+        assert len(root_folder.folder_children) == 2
+        assert type(root_folder.folder_children[0]) == BCPFolder
+        assert root_folder.folder_children[0].de['name'] == 'folder'
+        #hello_world = root_folder.folder_children[1]
+        assert type(hello_world) == BCPFile
+        assert self.get_BCPFile_title(hello_world) == 'hello_world.py'
+        #folder = root_folder.folder_children[0]
+        #hello_folder = folder.folder_children[0]
+        assert type(hello_folder) == BCPFile
+        assert self.get_BCPFile_title(hello_folder) == 'hello_folder.py'
+
+        assert root_folder.get_display_title() == '/'
+        assert folder.get_display_title() == 'folder'
+        """
+        virtual_node = node._build_virtual_dom()
+        #add_folder_link = get_matching_vnode(virtual_node, lambda vnode: get_vnode_by_css_class(vnode, 'fa fa-1x fa-folder-o'))
+
+        editor.js.globals.window.alert = Mock()
+        #hello_world.on_click(Mock())
+        #add_folder_link.get_attribs()['onclick'](Mock())
+        #node.display_new_file_modal(Mock())
+
+        #editor.js.globals.window.alert.assert_called_with('Error: You must select a folder to insert this file in')
+
+        editor.js.globals.window.alert = Mock()
+        #root_folder.on_click(Mock())
+        node.display_new_file_modal(Mock())
+
+        editor.js.globals.window.alert.assert_not_called()
+
+        def mock_element_iterator_callback(vnode):
+            if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'newFile':
+
+                def mock_element_iterator_callback2(vnode):
+                    if hasattr(vnode, 'get_tag_name'):
+                        if vnode.get_tag_name() == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                            result['newFile_OK_handler'] = vnode.get_attribs()['onclick']
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtFileName":
+                            node.value = ''
+                IterateVirtualDOM(vnode, mock_element_iterator_callback2)
+
+        node.mount_redraw = Mock()
+
+        virtual_node = node._build_virtual_dom()
+        IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
+
+        # Call the modal handler
+        rendered_modal = node._render(None)
+        cavorite.bootstrap.modals.js.return_get_element_by_id = {'newFile': rendered_modal}
+
+        def setup_mock_modal_callback(node, file_name):
+            if isinstance(node, js.MockElement) and node.getAttribute('id') == 'txtFileName':
+                node.value = file_name
+            if isinstance(node, js.MockElement) and node.getAttribute('id') == 'selFileType':
+                node.value = 'graphical-py-file'
+
+        js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, 'travel.py'))
+
+        #print('test_editor result[newFile_OK_handler]=', result['newFile_OK_handler'])
+        result['newFile_OK_handler'](Mock())
+
+        assert len(node.get_project()['directory_entry']) == 5
+        new_de = [de for de in node.get_project()['directory_entry'] if de['name'] == 'travel.py'][0]
+
+        print(new_de['content'])
+        assert new_de['content'] == """from __future__ import unicode_literals, absolute_import, print_function
+from binarycrate.controls import Form
+
+class Travel(Form):
+    file_location = __file__
+"""

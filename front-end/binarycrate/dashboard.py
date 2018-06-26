@@ -185,8 +185,9 @@ class DashboardView(BCChrome):
                         div({'class': 'form-group'}, [
                           label({'for': 'selectProjectType'}, 'Project Type'),
                           select({'class': 'form-control', 'id': 'selectProjectType'}, [
-                            option({'value': 0}, 'Python'),
+                            option({'value': 0}, 'Python'), #TODO: The values in these selects should somehow be made portable between the frond and back ends
                             option({'value': 1}, 'Webpage'),
+                            option({'value': 2}, 'Python with Storage (HistoryGraph)'),
                           ]),
                         ]),
                       ], self.createNew_ok),

@@ -1,0 +1,4 @@
+#! /bin/bash
+rm -f /opt/project/binarycrate/binarycrate/settings/__init__.py
+ln -s /opt/project/binarycrate/binarycrate/settings/development.py ./binarycrate/settings/__init__.py
+

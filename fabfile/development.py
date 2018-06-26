@@ -1,6 +1,7 @@
 from fabric.api import abort, lcd, local, task, warn_only
 from fabric.colors import green, red, yellow
 from sys import platform
+from shutil import copyfile
 import os
 
 local_pwd = os.path.realpath(
@@ -39,7 +40,7 @@ def run(**kwargs):
             abort(red('Could not start chrome. Have you run '
                       '\'setup_chrome\'?'))
 
-        local('cp binarycrate/binarycrate/settings/build_number.py front-end/binarycrate/build_number.py')
+        copyfile('binarycrate/binarycrate/settings/build_number.py', 'front-end/binarycrate/build_number.py')
         local('docker run --tty '
               '--interactive '
               '--publish=8000:8000 '
@@ -58,7 +59,7 @@ def run(**kwargs):
 def migrate():
     print(yellow('Running docker process...'))
     with lcd('.'):
-        local('docker run --tty --interactive --volume "${PWD}":/opt/project --publish=8000:8000 "${PWD##*/}" migrate')
+        local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --publish=8000:8000 "' + project_name + '" migrate')
 
 @task
 def test(testname=None):
@@ -68,7 +69,7 @@ def test(testname=None):
     else:
         testcommand = ""
     with lcd('.'):
-        local('docker run --tty --interactive --volume "${PWD}":/opt/project --entrypoint="pytest" "${PWD##*/}"' + testcommand)
+        local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --entrypoint="pytest" "' + project_name + '"' + testcommand)
 
 @task
 def frontend_test(testname=None):
@@ -78,24 +79,24 @@ def frontend_test(testname=None):
     else:
         testcommand = ""
     with lcd('.'):
-        local('cp binarycrate/binarycrate/settings/build_number.py front-end/binarycrate/build_number.py')
+        copyfile('binarycrate/binarycrate/settings/build_number.py', 'front-end/binarycrate/build_number.py')
         local('docker run --tty '
-              '--interactive --volume "${PWD}":/opt/project '
+              '--interactive --volume "' + local_pwd + '":/opt/project '
               #'--volume "/home/mark/cavorite":/opt/project/cavorite '
               '--entrypoint="/opt/project/run-frontend-tests" '
-              '"${PWD##*/}"' + testcommand)
+              '"' + project_name + '"' + testcommand)
 
 @task
 def makemigrations():
     print(yellow('Running docker process...'))
     with lcd('.'):
-        local('docker run --tty --interactive --volume "${PWD}":/opt/project --publish=8000:8000 "${PWD##*/}" makemigrations')
+        local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --publish=8000:8000 "' + project_name + '" makemigrations')
 
 @task
 def bash():
     print(yellow('Running docker process...'))
     with lcd('.'):
-        local('docker run --tty --interactive --volume "${PWD}":/opt/project --entrypoint="bash" --publish=8000:8000 "${PWD##*/}"')
+        local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --entrypoint="bash" --publish=8000:8000 "' + project_name + '"')
 
 @task
 def setup():
@@ -128,8 +129,6 @@ def setup_chrome():
 @task
 def create_symlinks():
     print(yellow('Creating symlinks...'))
-    with lcd('./binarycrate/binarycrate/settings'):
-        local('rm -rf ./__init__.py')
-        local('ln -s ./development.py ./__init__.py')
-
-
+    print(yellow('Running docker process...'))
+    with lcd('.'):
+        local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --entrypoint="/opt/project/run-create-symlinks" --publish=8000:8000 "' + project_name + '"')
