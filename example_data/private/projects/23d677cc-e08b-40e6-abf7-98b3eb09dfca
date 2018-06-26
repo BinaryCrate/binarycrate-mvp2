@@ -5,3 +5,6 @@ class Aa(Form):
     file_location = __file__
     def button1_onclick(self, e):
          self.button1['x'] += 10
+         self.image1['y'] -= 10
+        
+        
