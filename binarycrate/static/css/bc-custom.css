@@ -742,7 +742,9 @@ ____________________________________________________________________________ */
     #sidenavToggler {
         visibility: hidden;
     }
-}/* Mark's customisations */
+}
+
+/* Mark's customisations */
 
 .nav-link-text {
   margin-left: 5px;
@@ -816,4 +818,5 @@ a.context-menu__link:visited {
 a.social-media-login-link {
   color: white;
 }
+
 

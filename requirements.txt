@@ -9,6 +9,9 @@ mock==2.0.0
 backports.tempfile==1.0
 psycopg2==2.7.4
 
+#Wagtail
+wagtail==1.12.3
+
 # General requirements for testing
 selenium==3.5.0
 factory-boy==2.8.1
