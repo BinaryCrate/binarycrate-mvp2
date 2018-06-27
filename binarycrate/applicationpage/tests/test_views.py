@@ -18,7 +18,7 @@ class ApplicationPageTestCase(TestCase):
         self.assertIn(b"pypyjs", response.content)
         self.assertIn(settings.BUILD_NUMBER, response.content)
         # Check we are loading the correct boot file
-        self.assertIn('bootbc.py', response.content)
+        self.assertIn('bootbc_anonymous_user.py', response.content)
 
     def test_logged_in_gets_correct_page(self):
         # Create a non-admin user.
