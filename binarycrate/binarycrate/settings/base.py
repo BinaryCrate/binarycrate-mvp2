@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.sites', 
+    'django.contrib.sites',
 
     'allauth',
     'allauth.account',
@@ -51,8 +51,8 @@ INSTALLED_APPS = [
     'rest_framework',
 
     'accounts',
+    'applicationpage',
     'historygraphbackend',
-    'landingpage',
     'project',
     'share',
     'content',
@@ -254,4 +254,3 @@ else:
 # Email
 
 DEFAULT_FROM_EMAIL = 'noreply@dev.binarycrate.com'
-

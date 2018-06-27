@@ -9,10 +9,10 @@ from accounts.models import User
 from django.conf import settings
 
 
-class LandingPageTestCase(TestCase):
+class ApplicationPageTestCase(TestCase):
     def test_redirects_to_login(self):
-        response = self.client.get('/')
-        self.assertRedirects(response, '/accounts/login/?next=/')
+        response = self.client.get('/app/')
+        self.assertRedirects(response, '/accounts/login/?next=/app/')
 
     def test_logged_in_gets_correct_page(self):
         # Create a non-admin user.
@@ -20,12 +20,10 @@ class LandingPageTestCase(TestCase):
         self.client.login(username='a@a.com', password='userpass')
 
         #Check if the content is valid
-        response = self.client.get('/')
+        response = self.client.get('/app/')
         self.assertEqual(response.status_code, 200)
         response.render()
         self.assertIn(b"pypyjs", response.content)
         self.assertIn(settings.BUILD_NUMBER, response.content)
         # Check we are loading the correct boot file
         self.assertIn('bootbc.py', response.content)
-
-

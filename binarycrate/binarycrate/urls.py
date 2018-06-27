@@ -34,7 +34,7 @@ urlpatterns = [
     url(r'^accounts/', include('allauth.urls')),
 
     # Landing Page
-    url(r'^', include('landingpage.urls')),
+    url(r'^app/', include('applicationpage.urls')),
 
     # API
     url(r'^api/', include('api.urls')),

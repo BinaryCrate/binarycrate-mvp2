@@ -2,15 +2,15 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from django.conf.urls import url
-from landingpage.views import LandingPageView
+from applicationpage.views import ApplicationPageView
 
 
-app_name = 'landingpage'
+app_name = 'applicationpage'
 
 
 urlpatterns = [
 
-    url(r'^$', LandingPageView.as_view(), name='landingpage'),
+    url(r'^$', ApplicationPageView.as_view(), name='applicationpage'),
 
 
 
