@@ -199,8 +199,12 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USERNAME_REQUIRED = False
 
+ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = True
+LOGIN_REDIRECT_URL = '/app/'
+
 ACCOUNT_ADAPTER = 'accounts.adapters.BCAdapter'
 
+#TODO: This could allow malious javascript / pypyjs to log the current user out of BC
 ACCOUNT_LOGOUT_ON_GET = True
 
 SOCIALACCOUNT_PROVIDERS = {
