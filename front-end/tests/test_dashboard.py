@@ -40,7 +40,7 @@ class TestDashboard(object):
                 assert isinstance(text_node, js.MockTextNode)
                 if str(text_node) == 'Mark\'s Project':
                     result['marks_project'] += 1
-                
+
 
         node = dashboard.dashboard_view()
         node.mount_redraw = Mock()
@@ -84,12 +84,12 @@ class TestDashboard(object):
             if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'createNew':
 
                 def mock_element_iterator_callback2(vnode):
-                    if hasattr(vnode, 'tag'):
-                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                    if hasattr(vnode, 'get_tag_name'):
+                        if vnode.get_tag_name() == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
                             result['createNew_OK_handler'] = vnode.get_attribs()['onclick']
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtProjectName":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtProjectName":
                             node.value = 'Porject2'
-                        if vnode.tag == 'select' and vnode.get_attribs().get('id') == "selectProjectType":
+                        if vnode.get_tag_name() == 'select' and vnode.get_attribs().get('id') == "selectProjectType":
                             node.value = 'Porject2'
                 IterateVirtualDOM(vnode, mock_element_iterator_callback2)
 
@@ -148,12 +148,12 @@ class TestDashboard(object):
             if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'renameProj':
 
                 def mock_element_iterator_callback2(vnode):
-                    if hasattr(vnode, 'tag'):
-                        if vnode.tag == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                    if hasattr(vnode, 'get_tag_name'):
+                        if vnode.get_tag_name() == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
                             result['renameProj_OK_handler'] = vnode.get_attribs()['onclick']
-                        if vnode.tag == 'input' and vnode.get_attribs().get('id') == "txtProjectName":
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtProjectName":
                             node.value = 'Porject2'
-                        if vnode.tag == 'select' and vnode.get_attribs().get('id') == "selectProjectType":
+                        if vnode.get_tag_name() == 'select' and vnode.get_attribs().get('id') == "selectProjectType":
                             node.value = 0
                 IterateVirtualDOM(vnode, mock_element_iterator_callback2)
 
@@ -186,4 +186,3 @@ class TestDashboard(object):
         node.projects_api_ajax_put_result_handler(Mock(status=200, responseText=json.dumps('OK')), 'OK')
 
         js.globals.cavorite_ajaxGet.assert_called_with('/api/projects/', str(dummy_uuid()))
-

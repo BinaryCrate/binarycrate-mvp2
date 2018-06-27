@@ -1,7 +1,10 @@
 from __future__ import unicode_literals, absolute_import, print_function
-from binarycrate.controls import StudentForm
+from binarycrate.controls import Form
 
-class Aa(StudentForm):
+class Aa(Form):
     file_location = __file__
     def button1_onclick(self, e):
          self.button1['x'] += 10
+         self.image1['y'] -= 10
+        
+        

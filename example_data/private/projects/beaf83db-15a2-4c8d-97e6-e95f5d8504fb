@@ -1,0 +1,19 @@
+from __future__ import absolute_import, unicode_literals, print_function
+from binarycrate import historygraphfrontend
+from historygraph import Document, DocumentObject
+from historygraph import fields
+import inspect
+import copy
+
+# Don't change anything above this line
+# Your Document definition go here
+
+class Score(Document):
+    score = fields.IntCounter()
+
+# Don't change anything below this line
+for c in copy.copy(globals().values()):
+    if inspect.isclass(c) and issubclass(c, DocumentObject) and c != Document and c != DocumentObject:
+        historygraphfrontend.documentcollection.register(c)
+
+historygraphfrontend.download_document_collection()
