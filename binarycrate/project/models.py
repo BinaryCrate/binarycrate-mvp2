@@ -49,7 +49,7 @@ class Project(models.Model):
     type = models.IntegerField(choices=ProjectTypes.choices())
     root_folder = models.OneToOneField(DirectoryEntry)
     public = models.BooleanField()
-    owner = models.ForeignKey('accounts.User')
+    owner = models.ForeignKey('accounts.User', null=True, blank=True)
 
     def get_directory_entries(self):
         return self.root_folder.get_descendants(include_self=True)

@@ -81,6 +81,19 @@ class TestPythonProject(APITestCase):
 
             self.assertEqual(set(p.get_directory_entries().values_list('name', flat=True)), {''})
 
+        def test_python_project_owner_not_required(self):
+            self.project_id = uuid.uuid4()
+            de = DirectoryEntry.objects.create(name='', is_file=False)
+            Project.objects.create(id=self.project_id, name='Test Python',
+                                   type=ProjectTypes.python.value, public=False,
+                                   root_folder=de, owner=None)
+
+            self.assertEqual(Project.objects.count(), 1)
+            p = Project.objects.all().first()
+            self.assertEqual(p.type, 0)
+
+            self.assertEqual(set(p.get_directory_entries().values_list('name', flat=True)), {''})
+
 class TestWebpageProject(APITestCase):
     def test_creating_webpage_project_type(self):
             self.project_id = uuid.uuid4()
