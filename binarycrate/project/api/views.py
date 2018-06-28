@@ -7,7 +7,7 @@ from rest_framework import mixins
 from rest_framework import generics
 from rest_framework import permissions
 #from .permissions import IsOwner
-from project.models import DirectoryEntry
+from project.models import DirectoryEntry, Project
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
@@ -67,6 +67,7 @@ class ProjectDetail(APIView):
         serializer = ProjectGetSerializer(project)
         return Response(serializer.data)
 
+    # test that project is html, return error code
     def delete(self, request,pk, format=None):
         project = self.get_object(pk)
         if project.owner != request.user:
@@ -101,27 +102,66 @@ class DirectoryEntryDetail(APIView):
         except DirectoryEntry.DoesNotExist:
             return DirectoryEntry(id=pk, is_file=True)
 
+    def de_exists(self, pk):
+        return (DirectoryEntry.objects.filter(pk=pk).count() == 1)
+
     def put(self, request, pk, format=None):
         de = self.get_or_create_object(pk)
-        #print('DirectoryEntryDetail de=', de)
+        # print('DirectoryEntryDetail de=', de)
         serializer = DirectoryEntrySerializer(de, data=request.data)
         if serializer.is_valid():
-            de = serializer.save()
-            de.content = request.data['content'] # TODO: Add some validation here
-            de.form_items = request.data['form_items'] # TODO: Add some validation here
-            if request.data['parent_id'] is None:
-                de.parent = None
+            parentid = request.data['parent_id']
+            parent_de = DirectoryEntry.objects.get(id=parentid)
+            html_projects = Project.objects.filter(type=1)
+            is_html = html_projects.filter(root_folder=parent_de.get_root()).count() == 1
+            #Existing HTML project files
+            if is_html and self.de_exists(pk):
+                old_de = DirectoryEntry.objects.get(pk=pk)
+                #If attempting to rename html file, fail immediately
+                if request.data['name'] != old_de.name:
+                    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                else:
+                    de = serializer.save()
+                    de.content = request.data['content']
+                    de.form_items = request.data['form_items']
+                    if request.data['parent_id'] is None:
+                        de.parent = None
+                    else:
+                        de.parent = DirectoryEntry.objects.get(id=request.data['parent_id'])
+                    de.save()
+                    # print('DirectoryEntryDetail de=', de)
+                    response_data = copy.copy(serializer.data)
+                    response_data['content'] = de.content
+                    response_data['form_items'] = de.form_items
+                return Response(response_data)
+            #HTML project files that do not exist
+            elif is_html and self.de_exists(pk) is False:
+                return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            #All Python project files
             else:
-                de.parent = DirectoryEntry.objects.get(id=request.data['parent_id'])
-            de.save()
-            #print('DirectoryEntryDetail de=', de)
-            response_data = copy.copy(serializer.data)
-            response_data['content'] = de.content
-            response_data['form_items'] = de.form_items
-            return Response(response_data)
+                de = serializer.save()
+                de.content = request.data['content']  # TODO: Add some validation here
+                de.form_items = request.data['form_items']  # TODO: Add some validation here
+                if request.data['parent_id'] is None:
+                    de.parent = None
+                else:
+                    de.parent = DirectoryEntry.objects.get(id=request.data['parent_id'])
+                de.save()
+                # print('DirectoryEntryDetail de=', de)
+                response_data = copy.copy(serializer.data)
+                response_data['content'] = de.content
+                response_data['form_items'] = de.form_items
+                return Response(response_data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
         de = self.get_object(pk)
-        de.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        de_root = de.get_root()
+        html_projects = Project.objects.filter(type=1)
+        is_html = html_projects.filter(root_folder=de_root).count() == 1
+        #Only allow deletion of python files
+        if is_html:
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        else:
+            de.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)

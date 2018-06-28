@@ -17,7 +17,6 @@ from accounts.factories import UserFactory
 from rest_framework.test import APIClient
 
 
-#pytestmark = pytest.mark.skip('Skip while testing receivers')
 class TestModels(APITestCase):
 
     def test_initialising_new_model_has_empty_string_content(self):
