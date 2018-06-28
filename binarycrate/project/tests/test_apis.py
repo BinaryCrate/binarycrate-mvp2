@@ -125,14 +125,6 @@ class ProjectMustLogin(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(str(self.project_id) in response.content)
 
-    def test_project_post_must_login(self):
-        url = reverse('api:project-list')
-        project_id = str(uuid.uuid4())
-        data = { 'id': project_id, 'name':'Test 2', 'type':0, 'public':False }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertFalse(str(self.project_id) in response.content)
-
     def test_put_project_detail_must_login(self):
         """
         Ensure a user can only change their  projects
@@ -570,7 +562,7 @@ class ProjectImageTestCase(APITestCase):
 
     def test_upload_image(self):
         # Upload the file and test we don't get an error
-        assert Image.objects.all().count() == 0        
+        assert Image.objects.all().count() == 0
         with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
             response = self.client.post(reverse('api:image-upload'), {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
                                           'file_data': f}, format='multipart')
@@ -601,7 +593,7 @@ class ProjectImageTestCase(APITestCase):
 
     def test_delete_uploaded_image(self):
         # Upload the file and test we don't get an error
-        assert Image.objects.all().count() == 0        
+        assert Image.objects.all().count() == 0
         with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
             response = self.client.post(reverse('api:image-upload'), {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
                                           'file_data': f}, format='multipart')
@@ -614,7 +606,7 @@ class ProjectImageTestCase(APITestCase):
 
     def test_rename_uploaded_image(self):
         # Upload the file and test we don't get an error
-        assert Image.objects.all().count() == 0        
+        assert Image.objects.all().count() == 0
         with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
             response = self.client.post(reverse('api:image-upload'), {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
                                           'file_data': f}, format='multipart')
@@ -697,3 +689,18 @@ class ProjectImageOtherUserTestCase(APITestCase):
         assert Image.objects.all().count() == 1
         assert {i.name for i in Image.objects.all()} == {'hello.jpg'}
 
+class ProjectAnonymousCreateTestCase(APITestCase):
+    def setUp(self):
+        self.project_id = uuid.uuid4()
+        de = DirectoryEntry.objects.create(name='', is_file=False)
+        Project.objects.create(id=self.project_id, name='Test 1', type=0, public=False,
+                               root_folder=de, owner=None)
+
+    def test_project_post_creates_project(self):
+        self.assertEqual(Project.objects.count(), 1)
+        url = reverse('api:project-list')
+        project_id = str(uuid.uuid4())
+        data = {'name':'Test 2', 'type':0, 'public':False }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Project.objects.count(), 2)

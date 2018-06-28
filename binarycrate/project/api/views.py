@@ -28,7 +28,7 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
         return  # To not perform the csrf check previously happening
 
 class ProjectList(APIView):
-    permission_classes = (permissions.IsAuthenticated, )
+    #permission_classes = (permissions.IsAuthenticated, )
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
 
     def get_queryset(self):
@@ -37,6 +37,8 @@ class ProjectList(APIView):
         return Project.objects.filter(owner=user)
 
     def get(self, request, format=None):
+        if self.request.user.is_anonymous:
+            raise PermissionDenied()
         projects = self.get_queryset()
         serializer = ProjectGetSerializer(projects, many=True)
         return Response(serializer.data)
@@ -45,7 +47,11 @@ class ProjectList(APIView):
         serializer = ProjectPostSerializer(data=request.data)
         if serializer.is_valid():
             de = DirectoryEntry.objects.create(name='', is_file=False)
-            serializer.save(owner=self.request.user, root_folder=de)
+            if self.request.user.is_anonymous:
+                owner = None
+            else:
+                owner = self.request.user
+            serializer.save(owner=owner, root_folder=de)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -192,4 +198,3 @@ class ImageListView(APIView):
             raise PermissionDenied()
         serializer = ImageGetSerializer(images, many=True)
         return Response(serializer.data)
-
