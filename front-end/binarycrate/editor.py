@@ -430,14 +430,19 @@ class EditorView(BCChrome):
             return BCProjectTree(get_as_tree(None))
 
     def get_new_file_folder_icons(self):
-        return [
-            a({'href': get_current_hash()}, [
-                span({'class': 'fa fa-1x fa-file-code-o', 'onclick': self.display_new_file_modal}),
-            ]),
-            a({'href': get_current_hash()}, [
-                span({'class': 'fa fa-1x fa-folder-o', 'onclick': self.display_new_folder_modal}),
-            ]),
-        ]
+        global project
+        #There are no 'new file/folder' icons for html projects
+        if project.get('type', None) == 1:
+            return []
+        else:
+            return [
+                a({'href': get_current_hash()}, [
+                    span({'class': 'fa fa-1x fa-file-code-o', 'onclick': self.display_new_file_modal}),
+                ]),
+                a({'href': get_current_hash()}, [
+                    span({'class': 'fa fa-1x fa-folder-o', 'onclick': self.display_new_folder_modal}),
+                ]),
+            ]
 
     def get_central_content(self):
         global project
@@ -1097,36 +1102,69 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
 
     def get_top_navbar_items(self):
-        return [
-            drop_down_menu('File', [
-                drop_down_item('Run', 'fa-caret-right', self.run_project),
-                drop_down_item('Save Project', '', self.save_project),
-                drop_down_item('Delete File/Folder', '', self.delete_selected_de),
-                drop_down_item('Set Default', '', self.set_current_file_as_default),
-                drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
-                drop_down_item('Square', 'fa-square', None),
-                drop_down_item('Something else here', 'fa-btc', None),
-                drop_down_submenu('Recent documents', 'fa-caret-right', [
-                    drop_down_item('Hello.py', '', None),
-                    drop_down_item('World.py', '', None),
-                ])
-            ]),
-            drop_down_menu('Edit', [
-                drop_down_item('Triangle', 'fa-caret-up', None),
-                drop_down_item('Square', 'fa-square', None),
-                drop_down_item('Something else here', 'fa-btc', None),
-            ]),
-            drop_down_menu('Debug', [
-                drop_down_item('Run', 'fa-caret-right', self.run_project),
-                drop_down_item('Square', 'fa-square', None),
-                drop_down_item('Something else here', 'fa-btc', None),
-            ]),
-            li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
-                form({'action': '#'}, [
-                    ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
+        global project
+        #There is no Delete File/Folder button for html projects
+        if project.get('type', None) == 1:
+            return [
+                drop_down_menu('File', [
+                    drop_down_item('Run', 'fa-caret-right', self.run_project),
+                    drop_down_item('Save Project', '', self.save_project),
+                    drop_down_item('Set Default', '', self.set_current_file_as_default),
+                    drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
+                    drop_down_item('Square', 'fa-square', None),
+                    drop_down_item('Something else here', 'fa-btc', None),
+                    drop_down_submenu('Recent documents', 'fa-caret-right', [
+                        drop_down_item('Hello.py', '', None),
+                        drop_down_item('World.py', '', None),
+                    ])
                 ]),
-            ]),
-        ]
+                drop_down_menu('Edit', [
+                    drop_down_item('Triangle', 'fa-caret-up', None),
+                    drop_down_item('Square', 'fa-square', None),
+                    drop_down_item('Something else here', 'fa-btc', None),
+                ]),
+                drop_down_menu('Debug', [
+                    drop_down_item('Run', 'fa-caret-right', self.run_project),
+                    drop_down_item('Square', 'fa-square', None),
+                    drop_down_item('Something else here', 'fa-btc', None),
+                ]),
+                li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
+                    form({'action': '#'}, [
+                        ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
+                    ]),
+                ]),
+            ]
+        else:
+            return [
+                drop_down_menu('File', [
+                    drop_down_item('Run', 'fa-caret-right', self.run_project),
+                    drop_down_item('Save Project', '', self.save_project),
+                    drop_down_item('Delete File/Folder', '', self.delete_selected_de),
+                    drop_down_item('Set Default', '', self.set_current_file_as_default),
+                    drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
+                    drop_down_item('Square', 'fa-square', None),
+                    drop_down_item('Something else here', 'fa-btc', None),
+                    drop_down_submenu('Recent documents', 'fa-caret-right', [
+                        drop_down_item('Hello.py', '', None),
+                        drop_down_item('World.py', '', None),
+                    ])
+                ]),
+                drop_down_menu('Edit', [
+                    drop_down_item('Triangle', 'fa-caret-up', None),
+                    drop_down_item('Square', 'fa-square', None),
+                    drop_down_item('Something else here', 'fa-btc', None),
+                ]),
+                drop_down_menu('Debug', [
+                    drop_down_item('Run', 'fa-caret-right', self.run_project),
+                    drop_down_item('Square', 'fa-square', None),
+                    drop_down_item('Something else here', 'fa-btc', None),
+                ]),
+                li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
+                    form({'action': '#'}, [
+                        ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
+                    ]),
+                ]),
+            ]
 
     def get_modals(self):
         # print('EditorView get_modals called')
