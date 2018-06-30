@@ -1,19 +1,20 @@
 from __future__ import absolute_import, print_function, unicode_literals
 import cavorite
 from cavorite.HTML import *
-from cavorite import timeouts
+from cavorite import timeouts, Router
 import cavorite.bootstrap.modals as modals
 try:
     import js
 except ImportError:
     js = None
 from cavorite.bootstrap.modals import Modal
-from cavorite.ajaxget import ajaxpost
+from cavorite.ajaxget import ajaxpost, ajaxget
 
 
 class AnonymousView(div):
     def __init__(self, *args, **kwargs):
         super(AnonymousView, self).__init__(*args, **kwargs)
+        self.projects = {}
 
     def get_children(self):
         return [
@@ -42,6 +43,14 @@ class AnonymousView(div):
     def projects_api_ajax_post_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             print('OK received to new project')
+            def projects_result_handler(xmlhttp, response):
+                if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+                    print('OK received to list projects')
+                    self.projects = response
+                    self.mount_redraw()
+                    Router.router.ResetHashChange()
+
+            ajaxget('/api/projects/', projects_result_handler)
 
     def mount(self, element):
         super(AnonymousView, self).mount(element)
