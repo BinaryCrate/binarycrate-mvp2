@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from django.views.generic.base import TemplateView
 from django.conf import settings
+import json
 
 
 class ApplicationPageView(TemplateView):
@@ -16,5 +17,5 @@ class ApplicationPageView(TemplateView):
             context['boot_file'] = 'bootbc_anonymous_user.py'
         else:
             context['boot_file'] = 'bootbc.py'
-        context['is_anonymous'] = self.request.user.is_anonymous
+        context['is_anonymous'] = json.dumps(bool(self.request.user.is_anonymous))
         return context
