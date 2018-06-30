@@ -110,9 +110,8 @@ class ProjectMustLogin(APITestCase):
         url = reverse('api:project-list')
         data = { }
         response = self.client.get(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertFalse(str(self.project_id) in response.content)
-
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        assert len(response.data) == 0
 
     def test_project_detail(self):
         """
@@ -483,9 +482,8 @@ class PublicAccessNotLoggedInUserTestCase(APITestCase):
         url = reverse('api:project-list')
         data = { }
         response = self.client.get(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertFalse(str(self.project_id1) in response.content)
-        self.assertFalse(str(self.project_id2) in response.content)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        assert len(response.data) == 0
 
 
     def test_project_detail_can_access_other_users_projects(self):
@@ -707,3 +705,14 @@ class ProjectAnonymousCreateTestCase(APITestCase):
         self.assertEqual(Project.objects.count(), 2)
         assert 'project_id' in self.client.session
         assert Project.objects.get(id=self.client.session['project_id']).name == 'Test 2'
+
+        # Test we can get the project once it is created
+        url = reverse('api:project-list')
+        data = { }
+        response = self.client.get(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], self.client.session['project_id'])
+        self.assertEqual(response.data[0]['name'], 'Test 2')
+        self.assertEqual(response.data[0]['type'], 0)
+        self.assertEqual(response.data[0]['public'], False)

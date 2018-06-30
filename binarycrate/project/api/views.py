@@ -38,8 +38,9 @@ class ProjectList(APIView):
 
     def get(self, request, format=None):
         if self.request.user.is_anonymous:
-            raise PermissionDenied()
-        projects = self.get_queryset()
+            projects = Project.objects.filter(id=request.session.get('project_id'))
+        else:
+            projects = self.get_queryset()
         serializer = ProjectGetSerializer(projects, many=True)
         return Response(serializer.data)
 
