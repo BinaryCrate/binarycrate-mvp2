@@ -446,60 +446,44 @@ class EditorView(BCChrome):
 
     def get_central_content(self):
         global project
-        if project.get('type', None) == 1:
-            return c("div",
-                     {'class': "container-fluid code-area", 'style': 'padding-left: 1px; padding-top:1px height:100%;'}, [
-                         div({'class': 'row row-wrapper'}, [
-                             div({'class': "project-fnf col-ms-2"}, [
-                                 div({'class': 'top-tree'}, [
-                                     p({'style': 'display:inline'}, 'Files'),
-                                 ] + self.get_new_file_folder_icons()),
-                                 self.get_project_tree(),
-                             ]),
-                             article({'class': 'col-md-12 row', 'id': 'editor'}, [
-                                 self.code_mirror,
-                                 div({'class': 'row col-md-5 output-col'}, [
-                                     #Generate iframe for webpage projects
-                                     iframe({'id': 'preview', 'class': 'col-12 code-output'}),
-                                     div({'id': 'console', 'class': 'console-editor col-12'}, [
-                                         pre({'id': 'secondary-output', 'class': 'logMessage'}, [
-                                              # span('//: '),
-                                              # t('request sent'),
-                                         ]),
-                                     ]),
-                                 ]),
-                             ]),
+        return c("div",
+                 {'class': "container-fluid code-area", 'style': 'padding-left: 1px; padding-top:1px height:100%;'}, [
+                     div({'class': 'row row-wrapper'}, [
+                         div({'class': "project-fnf col-ms-2"}, [
+                             div({'class': 'top-tree'}, [
+                                 p({'style': 'display:inline'}, 'Files'),
+                             ] + self.get_new_file_folder_icons()),
+                             self.get_project_tree(),
                          ]),
-                     ])
-        else:
-            return c("div",
-                     {'class': "container-fluid code-area", 'style': 'padding-left: 1px; padding-top:1px height:100%;'},
-                     [
-                         div({'class': 'row row-wrapper'}, [
-                             div({'class': "project-fnf col-ms-2"}, [
-                                 div({'class': 'top-tree'}, [
-                                     p({'style': 'display:inline'}, 'Files'),
-                                 ] + self.get_new_file_folder_icons()),
-                                 self.get_project_tree(),
-                             ]),
-                             article({'class': 'col-md-12 row', 'id': 'editor'}, [
-                                 self.code_mirror,
-                                 div({'class': 'row col-md-5 output-col'}, [
-                                     div({'id': 'preview', 'class': 'col-12 code-output',
-                                          'oncontextmenu': self.contextmenu_preview, 'style': 'padding-left: 0px',
-                                          'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up},
-                                         self.get_selected_de_form_controls()),
+                         article({'class': 'col-md-12 row', 'id': 'editor'}, [
+                             self.code_mirror,
+                             div({'class': 'row col-md-5 output-col'},
+                                 (
+                                     [
+                                        # Generate iframe for webpage projects
+                                        iframe({'id': 'preview', 'class': 'col-12 code-output'}),
+                                     ]
+                                 if (project.get('type', None) == 1) else
+
+                                     [
+                                        # Generate preview for python projects
+                                        div({'id': 'preview', 'class': 'col-12 code-output',
+                                        'oncontextmenu': self.contextmenu_preview, 'style': 'padding-left: 0px',
+                                        'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up},
+                                        self.get_selected_de_form_controls()),
+                                     ]
+                                 ) +
+                                 [
                                      div({'id': 'console', 'class': 'console-editor col-12'}, [
                                          pre({'id': 'secondary-output', 'class': 'logMessage'}, [
                                              # span('//: '),
                                              # t('request sent'),
                                          ]),
                                      ]),
-                                 ]),
-                             ]),
+                                 ])
                          ]),
-                     ])
-
+                     ]),
+                 ])
 
     def on_body_click(self, e):
         if self.context_menu is not None:
@@ -1103,68 +1087,38 @@ class EditorView(BCChrome):
 
     def get_top_navbar_items(self):
         global project
-        #There is no Delete File/Folder button for html projects
-        if project.get('type', None) == 1:
-            return [
-                drop_down_menu('File', [
-                    drop_down_item('Run', 'fa-caret-right', self.run_project),
-                    drop_down_item('Save Project', '', self.save_project),
-                    drop_down_item('Set Default', '', self.set_current_file_as_default),
-                    drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
-                    drop_down_item('Square', 'fa-square', None),
-                    drop_down_item('Something else here', 'fa-btc', None),
-                    drop_down_submenu('Recent documents', 'fa-caret-right', [
-                        drop_down_item('Hello.py', '', None),
-                        drop_down_item('World.py', '', None),
-                    ])
+        # There is no Delete File/Folder button for html projects
+        return [
+            drop_down_menu('File', [
+                drop_down_item('Run', 'fa-caret-right', self.run_project),
+                drop_down_item('Save Project', '', self.save_project),
+            ] + ([drop_down_item('Delete File/Folder', '', self.delete_selected_de),
+                 ] if (project.get('type', None) == 0) else []) + [
+                   drop_down_item('Set Default', '', self.set_current_file_as_default),
+                   drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
+                   drop_down_item('Square', 'fa-square', None),
+                   drop_down_item('Something else here', 'fa-btc', None),
+                   drop_down_submenu('Recent documents', 'fa-caret-right', [
+                       drop_down_item('Hello.py', '', None),
+                       drop_down_item('World.py', '', None),
+                   ])
+               ]),
+            drop_down_menu('Edit', [
+                drop_down_item('Triangle', 'fa-caret-up', None),
+                drop_down_item('Square', 'fa-square', None),
+                drop_down_item('Something else here', 'fa-btc', None),
+            ]),
+            drop_down_menu('Debug', [
+                drop_down_item('Run', 'fa-caret-right', self.run_project),
+                drop_down_item('Square', 'fa-square', None),
+                drop_down_item('Something else here', 'fa-btc', None),
+            ]),
+            li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
+                form({'action': '#'}, [
+                    ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
                 ]),
-                drop_down_menu('Edit', [
-                    drop_down_item('Triangle', 'fa-caret-up', None),
-                    drop_down_item('Square', 'fa-square', None),
-                    drop_down_item('Something else here', 'fa-btc', None),
-                ]),
-                drop_down_menu('Debug', [
-                    drop_down_item('Run', 'fa-caret-right', self.run_project),
-                    drop_down_item('Square', 'fa-square', None),
-                    drop_down_item('Something else here', 'fa-btc', None),
-                ]),
-                li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
-                    form({'action': '#'}, [
-                        ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
-                    ]),
-                ]),
-            ]
-        else:
-            return [
-                drop_down_menu('File', [
-                    drop_down_item('Run', 'fa-caret-right', self.run_project),
-                    drop_down_item('Save Project', '', self.save_project),
-                    drop_down_item('Delete File/Folder', '', self.delete_selected_de),
-                    drop_down_item('Set Default', '', self.set_current_file_as_default),
-                    drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
-                    drop_down_item('Square', 'fa-square', None),
-                    drop_down_item('Something else here', 'fa-btc', None),
-                    drop_down_submenu('Recent documents', 'fa-caret-right', [
-                        drop_down_item('Hello.py', '', None),
-                        drop_down_item('World.py', '', None),
-                    ])
-                ]),
-                drop_down_menu('Edit', [
-                    drop_down_item('Triangle', 'fa-caret-up', None),
-                    drop_down_item('Square', 'fa-square', None),
-                    drop_down_item('Something else here', 'fa-btc', None),
-                ]),
-                drop_down_menu('Debug', [
-                    drop_down_item('Run', 'fa-caret-right', self.run_project),
-                    drop_down_item('Square', 'fa-square', None),
-                    drop_down_item('Something else here', 'fa-btc', None),
-                ]),
-                li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
-                    form({'action': '#'}, [
-                        ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
-                    ]),
-                ]),
-            ]
+            ]),
+        ]
 
     def get_modals(self):
         # print('EditorView get_modals called')
