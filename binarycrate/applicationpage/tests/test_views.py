@@ -10,7 +10,7 @@ from django.conf import settings
 
 
 class ApplicationPageTestCase(TestCase):
-    def test_redirects_to_login(self):
+    def test_anonymous_login_displays_the_correct_page(self):
         #Check if the content is valid
         response = self.client.get('/app/')
         self.assertEqual(response.status_code, 200)
@@ -19,6 +19,8 @@ class ApplicationPageTestCase(TestCase):
         self.assertIn(settings.BUILD_NUMBER, response.content)
         # Check we are loading the correct boot file
         self.assertIn('bootbc_anonymous_user.py', response.content)
+        print('response.context=', response.context)
+        assert response.context['is_anonymous'] == True
 
     def test_logged_in_gets_correct_page(self):
         # Create a non-admin user.
@@ -33,3 +35,4 @@ class ApplicationPageTestCase(TestCase):
         self.assertIn(settings.BUILD_NUMBER, response.content)
         # Check we are loading the correct boot file
         self.assertIn('bootbc.py', response.content)
+        assert response.context['is_anonymous'] == False

@@ -16,4 +16,5 @@ class ApplicationPageView(TemplateView):
             context['boot_file'] = 'bootbc_anonymous_user.py'
         else:
             context['boot_file'] = 'bootbc.py'
+        context['is_anonymous'] = self.request.user.is_anonymous
         return context

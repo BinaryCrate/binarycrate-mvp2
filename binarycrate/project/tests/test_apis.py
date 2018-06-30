@@ -696,11 +696,14 @@ class ProjectAnonymousCreateTestCase(APITestCase):
         Project.objects.create(id=self.project_id, name='Test 1', type=0, public=False,
                                root_folder=de, owner=None)
 
-    def test_project_post_creates_project(self):
+    def test_anonymous_project_post_creates_project(self):
         self.assertEqual(Project.objects.count(), 1)
         url = reverse('api:project-list')
         project_id = str(uuid.uuid4())
         data = {'name':'Test 2', 'type':0, 'public':False }
+        assert 'project_id' not in self.client.session
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Project.objects.count(), 2)
+        assert 'project_id' in self.client.session
+        assert Project.objects.get(id=self.client.session['project_id']).name == 'Test 2'

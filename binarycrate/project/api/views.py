@@ -51,7 +51,8 @@ class ProjectList(APIView):
                 owner = None
             else:
                 owner = self.request.user
-            serializer.save(owner=owner, root_folder=de)
+            project = serializer.save(owner=owner, root_folder=de)
+            self.request.session['project_id'] = str(project.pk)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
