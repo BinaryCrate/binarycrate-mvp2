@@ -18,4 +18,5 @@ class ApplicationPageView(TemplateView):
         else:
             context['boot_file'] = 'bootbc.py'
         context['is_anonymous'] = json.dumps(bool(self.request.user.is_anonymous))
+        context['anonymous_project_id'] = self.request.session.get('project_id', '')
         return context
