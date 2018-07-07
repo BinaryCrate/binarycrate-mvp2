@@ -9,6 +9,7 @@ from mock import Mock
 from utils import IterateVirtualDOM
 import uuid
 import json
+from binarycrate import editor
 
 
 class TestAnonymousProject(object):
@@ -87,5 +88,41 @@ class TestAnonymousProject(object):
 
         assert len(view.get_children()) == 1
         assert view.get_children()[0] == view.project_view
+
+        js.globals.cavorite_ajaxGet.assert_called_with('/api/projects/image-list/4b352f3a-752f-4769-8537-880be4e99ce0/', str(dummy_uuid()))
+
+    def test_pops_opens_the_editor_if_anon_project_already_exists(self, monkeypatch):
+        def dummy_uuid():
+            return uuid.UUID('820885b9-f53b-4ea0-8240-af4ec7fca032')
+
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(anonymous, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(anonymous.cavorite, 'js', js)
+        monkeypatch.setattr(anonymous.modals, 'js', js)
+        monkeypatch.setattr(ajaxget, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(Router, 'router', Mock())
+
+        callbacks.initialise_global_callbacks()
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        def get_attribute(name):
+            assert name == 'data-anonymous-project-id'
+            return '4b352f3a-752f-4769-8537-880be4e99ce0'
+
+        js.globals.document.body.getAttribute = get_attribute
+
+        view = anonymous.anonymous_project_view()
+
+        view.mount_redraw = Mock()
+        view.was_mounted()
+
+        assert len(view.get_children()) == 1
+        assert view.get_children()[0] == view.project_view
+
+        view.project_view.query_project()
 
         js.globals.cavorite_ajaxGet.assert_called_with('/api/projects/image-list/4b352f3a-752f-4769-8537-880be4e99ce0/', str(dummy_uuid()))

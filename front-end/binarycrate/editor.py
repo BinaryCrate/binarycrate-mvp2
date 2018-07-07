@@ -387,7 +387,7 @@ class EditorView(BCChrome):
                         de['form_items'] = []
                     else:
                         de['form_items'] = json.loads(de['form_items'])
-                self.mount_redraw()
+                self.get_root().mount_redraw()
                 Router.router.ResetHashChange()
 
     def mount(self, element):

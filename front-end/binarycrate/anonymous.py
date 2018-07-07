@@ -24,10 +24,21 @@ class AnonymousView(div):
     def __init__(self, *args, **kwargs):
         super(AnonymousView, self).__init__(*args, **kwargs)
         self.project_view = None
+        self.project_id = None
 
+    def was_mounted(self):
+        super(AnonymousView, self).was_mounted()
+        if self.project_view is None:
+            self.project_id = str(js.globals.document.body.getAttribute('data-anonymous-project-id'))
+            if self.project_id != '' and not (self.project_id is None):
+                self.project_view = AnonymousEditorView(self.project_id)
+                self.project_view.parent = self
+                self.mount_redraw()
+                Router.router.ResetHashChange()
 
     def get_children(self):
-        if self.project_view:
+        print('get_children self.project_view=', self.project_view)
+        if self.project_view is not None:
             return [self.project_view]
         else:
             return [
