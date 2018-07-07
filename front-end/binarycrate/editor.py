@@ -412,9 +412,12 @@ class EditorView(BCChrome):
                     self.images = json.loads(str(xmlhttp.responseText))
                     #self.mount_redraw()
                     #Router.router.ResetHashChange()
-                    ajaxget('/api/projects/' + self.get_root().url_kwargs['project_id'] + '/', self.projects_api_ajax_result_handler)
+                    ajaxget('/api/projects/' + self.get_project_id() + '/', self.projects_api_ajax_result_handler)
 
-            ajaxget('/api/projects/image-list/' + self.get_root().url_kwargs['project_id'] + '/', images_api_ajax_result_handler2)
+            ajaxget('/api/projects/image-list/' + self.get_project_id() + '/', images_api_ajax_result_handler2)
+
+    def get_project_id(self):
+        return self.get_root().url_kwargs['project_id']
 
     def was_mounted(self):
         super(EditorView, self).was_mounted()

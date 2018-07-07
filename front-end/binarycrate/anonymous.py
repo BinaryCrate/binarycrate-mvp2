@@ -9,15 +9,28 @@ except ImportError:
     js = None
 from cavorite.bootstrap.modals import Modal
 from cavorite.ajaxget import ajaxpost, ajaxget
+from .editor import EditorView
 
+
+class AnonymousEditorView(EditorView):
+    def __init__(self, project_id, *args, **kwargs):
+        self.project_id = project_id
+        super(AnonymousEditorView, self).__init__(*args, **kwargs)
+
+    def get_project_id(self):
+        return self.project_id
 
 class AnonymousView(div):
     def __init__(self, *args, **kwargs):
         super(AnonymousView, self).__init__(*args, **kwargs)
-        self.projects = {}
+        self.project_view = None
+
 
     def get_children(self):
-        return [
+        if self.project_view:
+            return [self.project_view]
+        else:
+            return [
                   #TODO: This modal is used in more than one place so it should be in a library
                   Modal("createNew", "Create New", [
                     div({'class': 'form-group'}, [
@@ -40,17 +53,23 @@ class AnonymousView(div):
                 'public': True}
         ajaxpost('/api/projects/', data, self.projects_api_ajax_post_result_handler)
 
+    def project_result_handler(self, xmlhttp, response):
+        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+            pass
+
+    def projects_result_handler(self, xmlhttp, response):
+        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+            print('OK received to list projects')
+            self.project_view = AnonymousEditorView(response[0]['id'])
+            self.mount_redraw()
+            Router.router.ResetHashChange()
+            #ajaxget('/api/projects/' + response[0]['id'] + '/', self.project_result_handler)
+
     def projects_api_ajax_post_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             print('OK received to new project')
-            def projects_result_handler(xmlhttp, response):
-                if xmlhttp.status >= 200 and xmlhttp.status <= 299:
-                    print('OK received to list projects')
-                    self.projects = response
-                    self.mount_redraw()
-                    Router.router.ResetHashChange()
 
-            ajaxget('/api/projects/', projects_result_handler)
+            ajaxget('/api/projects/', self.projects_result_handler)
 
     def mount(self, element):
         super(AnonymousView, self).mount(element)

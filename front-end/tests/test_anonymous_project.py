@@ -3,7 +3,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 import cavorite
 import cavorite.bootstrap.modals
 from binarycrate import anonymous
-from cavorite import callbacks, ajaxget, timeouts
+from cavorite import callbacks, ajaxget, timeouts, Router
 import cavorite_tests.fakejs as js
 from mock import Mock
 from utils import IterateVirtualDOM
@@ -22,6 +22,7 @@ class TestAnonymousProject(object):
         monkeypatch.setattr(anonymous.cavorite, 'js', js)
         monkeypatch.setattr(anonymous.modals, 'js', js)
         monkeypatch.setattr(ajaxget, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(Router, 'router', Mock())
 
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
@@ -67,4 +68,24 @@ class TestAnonymousProject(object):
 
         js.globals.cavorite_ajaxPost.assert_called_with('/api/projects/', str(dummy_uuid()), {'name':'Test 2', 'type':0, 'public':True })
 
+        js.globals.cavorite_ajaxGet = Mock()
         view.projects_api_ajax_post_result_handler(Mock(status=200, responseText=json.dumps('OK')), 'OK')
+
+        js.globals.cavorite_ajaxGet.assert_called_with('/api/projects/', str(dummy_uuid()))
+
+        response = [{'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                            'name': 'Mark\'s Project',
+                            'type': 0,
+                            'public': True,
+                    }]
+
+        js.globals.cavorite_ajaxGet = Mock()
+        view.mount_redraw = Mock()
+        view.projects_result_handler(Mock(status=200,responseText=json.dumps(response)), response)
+        view.mount_redraw.assert_called()
+        view.project_view.query_project()
+
+        assert len(view.get_children()) == 1
+        assert view.get_children()[0] == view.project_view
+
+        js.globals.cavorite_ajaxGet.assert_called_with('/api/projects/image-list/4b352f3a-752f-4769-8537-880be4e99ce0/', str(dummy_uuid()))
