@@ -2147,13 +2147,13 @@ print('Hello folder i={}'.format(i))
         class TestForm1(Form):
             file_location = '/lib/pypyjs/lib_pypy/hello_world.py'
 
-        t1 = TestForm1(view)
+        t1 = TestForm1(editorview=view)
         assert t1.get_file_location() == 'hello_world.py'
 
         class TestForm2(Form):
             file_location = '/lib/pypyjs/lib_pypy/folder/hello_folder.py'
 
-        t2 = TestForm2(view)
+        t2 = TestForm2(editorview=view)
         assert t2.get_file_location() == 'folder/hello_folder.py'
 
         form_items = t1.get_form_items()
@@ -2239,8 +2239,14 @@ print('Hello folder i={}'.format(i))
 
         assert len(view.form_stack) == 0
 
+        class TestForm2(Form):
+            file_location = '/lib/pypyjs/lib_pypy/folder/hello_folder.py'
+
         class TestForm1(Form):
             file_location = '/lib/pypyjs/lib_pypy/hello_world.py'
+
+            def open_child(self):
+                self.dislay_form(TestForm2(parent=self))
 
         form_classes = [TestForm1]
         view.get_default_module_form_classes = Mock(return_value=form_classes)
@@ -2254,6 +2260,11 @@ print('Hello folder i={}'.format(i))
         view.form_stack[-1].on_historygraph_download_complete.assert_not_called()
         view.on_historygraph_download_complete()
         view.form_stack[-1].on_historygraph_download_complete.assert_called_once()
+
+        # Assert we can add a new form to the form stack
+        view.form_stack[-1].open_child()
+        assert len(view.form_stack) == 2
+        assert type(view.form_stack[-1]) == TestForm2
 
     def test_running_with_storage_program_initialises_historygraph(self, monkeypatch):
         monkeypatch.setattr(Router, 'ResetHashChange', Mock())

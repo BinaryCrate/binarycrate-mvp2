@@ -175,11 +175,19 @@ class Form(object):
         ret.append(svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%'}, svg_list))
         return ret
 
-    def __init__(self, editorview, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        assert 'editorview' in kwargs or 'parent' in kwargs, 'A form must set either a parent or the editorview'
+        self.editorview = kwargs.pop('editorview', None)
+        self.parent = None
+        if self.editorview is None:
+            self.parent = kwargs.pop('parent')
+            self.editorview = self.parent.editorview
+        self.images = self.editorview.images
         super(Form, self).__init__(*args, **kwargs)
         self.initialise_form_controls()
-        self.editorview = editorview
-        self.images = editorview.images
 
     def on_historygraph_download_complete(self):
         pass
+
+    def display_form(self, new_form):
+        self.editorview.form_stack.append(new_form)
