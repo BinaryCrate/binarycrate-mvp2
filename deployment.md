@@ -110,6 +110,13 @@ sudo git submodule sync
 sudo git submodule update
 ```
 
+We need to go into the pypyjs directory and undo any updates caused by previous preloads.
+```
+cd pypyjs-release/pypyjs-release/
+git checkout -- .
+cd /srv/binarycrate-mvp2
+```
+
 Production specific config values are stored in binarycrate/binarycrate/settings/production.py however this file is not stored in git for security reasons.
 Instead we have binarycrate/binarycrate/settings/production_template.py if this update requires to the production config you must make them now manually with
 
@@ -128,12 +135,25 @@ Next we need to manually copy the build_number.py file so it is available and up
 sudo cp binarycrate/binarycrate/settings/build_number.py front-end/binarycrate/build_number.py
 ```
 
+We need to update the version hash used for the static files
+```
+sudo ./binarycrate/bin/fab development.create_version_file
+```
+
 We now load the new frontend code into the pypysjs-release area.
 
 ```
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ cavorite/cavorite/
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ front-end/binarycrate/
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ historygraph/historygraph/
+```
+
+Next we tell pypyjs to preload all of our modules - this greatly improves the load time
+
+```
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ cavorite
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ binarycrate
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ historygraph
 ```
 
 We now update the django static. Note this is different to the above step in that we put all pypyjs files including standard modules and the pypyjs interpreter
