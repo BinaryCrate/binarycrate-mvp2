@@ -118,7 +118,7 @@ sudo git submodule update
 We need to go into the pypyjs directory and undo any updates caused by previous preloads.
 ```
 cd pypyjs-release/pypyjs-release/
-git checkout -- .
+sudo git checkout -- .
 cd /srv/binarycrate-mvp2
 ```
 
@@ -164,7 +164,7 @@ sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs
 We now update the django static. Note this is different to the above step in that we put all pypyjs files including standard modules and the pypyjs interpreter
 in the correct Django static area.
 ```
-sudo ./binarycrate/bin/python binarycrate/manage.py collectstatic
+sudo ./binarycrate/bin/python binarycrate/manage.py collectstatic --noinput
 ```
 
 Run the migrations
