@@ -9,7 +9,7 @@ This document discusses how to deploy an update for BinaryCrate, it does not yet
 BinaryCrate currently has a single development server running inside AWS specifically an EC2 instance running Ubuntu 16.04 in the us-west2 Oregon region.
 Oregon is chosen because it is the cheapest region. The production system will probably be run in another region.
 
-You will need to have been given access to this server. This will require you supplying a SSH public key. 
+You will need to have been given access to this server. This will require you supplying a SSH public key.
 
 ### Preparing the code
 
@@ -92,6 +92,11 @@ Connect to the server in the cloud.
 ssh ubuntu@dev.binarycrate.com
 ```
 
+Turn off the webserver while we are performing the upgrade this version. These instructions could cause clients to immutabilty cache the wrong version of the static files otherwise.
+```
+sudo service nginx stop
+```
+
 Go to the correct directory
 
 ```
@@ -124,9 +129,9 @@ Instead we have binarycrate/binarycrate/settings/production_template.py if this 
 sudo pico binarycrate/binarycrate/settings/production.py
 ```
 
-Run the migrations
+We now update the deployed virtual environment with any new module versions
 ```
-sudo ./binarycrate/bin/python binarycrate/manage.py migrate
+sudo ./binarycrate/bin/pip install -r requirements.txt
 ```
 
 Next we need to manually copy the build_number.py file so it is available and up to date in the front end code
@@ -172,6 +177,11 @@ Restart uwsgi to force it to reload our changes.
 sudo service uwsgi-emperor restart
 ```
 
+Turn the webserver back on
+```
+sudo service nginx start
+```
+
 We are now deployed, you can use the method above to check the build number.
 
 We is useful to update the ubuntu requirements on the erver as frequently as possible. Whenever we are logged into it that is a good time.
@@ -186,4 +196,3 @@ If apt-get updated the kernel version the server will need a reboot.
 ```
 sudo reboot
 ```
-

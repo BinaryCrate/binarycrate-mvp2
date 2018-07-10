@@ -2,5 +2,7 @@
 python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py add /opt/project/pypyjs-release/pypyjs-release/lib/modules/ /opt/project/cavorite/cavorite/
 python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py add /opt/project/pypyjs-release/pypyjs-release/lib/modules/ /opt/project/front-end/binarycrate/
 python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py add /opt/project/pypyjs-release/pypyjs-release/lib/modules/ /opt/project/historygraph/historygraph/
+python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py preload /opt/project/pypyjs-release/pypyjs-release/lib/modules/ cavorite
+python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py preload /opt/project/pypyjs-release/pypyjs-release/lib/modules/ binarycrate
+python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py preload /opt/project/pypyjs-release/pypyjs-release/lib/modules/ historygraph
 python /opt/project/binarycrate/manage.py $*
-
