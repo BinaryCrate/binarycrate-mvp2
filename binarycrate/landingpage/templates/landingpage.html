@@ -1,3 +1,4 @@
+{% load static %}
 <html>
 <head>
   <meta charset="utf-8">
@@ -7,22 +8,22 @@
   <meta name="author" content="">
   <title>Binary Crate - Learn, Code, Share</title>
   <!-- Bootstrap core CSS-->
-  <link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="{% static "bootstrap/css/bootstrap.min.css" %}" rel="stylesheet">
   <!-- Custom fonts for this template-->
-  <link href="/static/font-awesome/css/font-awesome.css" rel="stylesheet" type="text/css">
+  <link href="{% static "font-awesome/css/font-awesome.css" %}" rel="stylesheet" type="text/css">
   <!-- Custom styles for this template-->
-  <link href="/static/css/sb-admin.css" type="text/css" rel="stylesheet">
+  <link href="{% static "css/sb-admin.css" %}" type="text/css" rel="stylesheet">
   <!-- <link href="/static/css/bc-custom.css" type="text/css" rel="stylesheet">  -->
   <!-- Code Mirror CSS -->
-  <link rel=stylesheet href="/static/doc/docs.css">
-  <link rel=stylesheet href=/static/lib/codemirror.css>
-  <link href="/static/css/bc-custom.css" type="text/css" rel="stylesheet">
-  <script src=/static/lib/codemirror.js></script>
-  <script src=/static/mode/xml/xml.js></script>
-  <script src=/static/mode/javascript/javascript.js></script>
-  <script src=/static/mode/css/css.js></script>
-  <script src=/static/mode/htmlmixed/htmlmixed.js></script>
-  <script src=/static/mode/python/python.js></script>
+  <link rel=stylesheet href="{% static "doc/docs.css" %}">
+  <link rel=stylesheet href=""{% static "lib/codemirror.css" %}>
+  <link href="{% static "css/bc-custom.css" %}" type="text/css" rel="stylesheet">
+  <script src={% static "lib/codemirror.js" %}></script>
+  <script src={% static "mode/xml/xml.js" %}></script>
+  <script src={% static "mode/javascript/javascript.js" %}></script>
+  <script src={% static "mode/css/css.js" %}></script>
+  <script src={% static "mode/htmlmixed/htmlmixed.js" %}></script>
+  <script src={% static "mode/python/python.js" %}></script>
     <style>
     pre.output {
         width: 90%;
@@ -44,12 +45,12 @@
     </style>
 
     <!-- Bootstrap core JavaScript-->
-    <script src="/static/jquery/jquery.min.js"></script>
-    <script src="/static/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static "jquery/jquery.min.js" %}"></script>
+    <script src="{% static "bootstrap/js/bootstrap.bundle.min.js" %}"></script>
     <!-- Core plugin JavaScript-->
-    <script src="/static/jquery-easing/jquery.easing.min.js"></script>
+    <script src="{% static "jquery-easing/jquery.easing.min.js" %}"></script>
     <!-- Custom scripts for all pages-->
-    {#<script src="/static/js/sb-admin.min.js"></script>#}
+    {#<script src="{% static "js/sb-admin.min.js" %}"></script>#}
 </head>
 <body class="fixed-nav sticky-footer" id="page-top" {% block bodyattributes %}{% endblock %}>
 <!-- Build number = {{ build_number }} -->
@@ -63,9 +64,9 @@
     </div>
   </div>
 
-<script src="/static/pypyjs-release/lib/Promise.min.js" type="text/javascript" charset="utf-8" onerror="JavaScript:alert('Error loading file ['+this.src+'] !');"></script>
-<script src="/static/pypyjs-release/lib/FunctionPromise.js" type="text/javascript" charset="utf-8" onerror="JavaScript:alert('Error loading file ['+this.src+'] !');"></script>
-<script src="/static/pypyjs-release/lib/pypyjs.js" type="text/javascript" charset="utf-8" onerror="JavaScript:alert('Error loading file ['+this.src+'] !');"></script>
+<script src="{% static "pypyjs-release/lib/Promise.min.js" %}" type="text/javascript" charset="utf-8" onerror="JavaScript:alert('Error loading file ['+this.src+'] !');"></script>
+<script src="{% static "pypyjs-release/lib/FunctionPromise.js" %}" type="text/javascript" charset="utf-8" onerror="JavaScript:alert('Error loading file ['+this.src+'] !');"></script>
+<script src="{% static "pypyjs-release/lib/pypyjs.js" %}" type="text/javascript" charset="utf-8" onerror="JavaScript:alert('Error loading file ['+this.src+'] !');"></script>
 <script type="text/javascript" charset="utf-8">
 try {
     jQuery(document);
@@ -113,7 +114,7 @@ $(function () {
         pypyjs.stdout.reset();
 
         pypyjs.stdout("load '{{ boot_file }}'...");
-        $.get( "/static/front-end/{{ boot_file }}", function( data ) {
+        $.get( "{% static "front-end/"%}{{ boot_file }}", function( data ) {
             console_exec( data );
         }).done(function() {
             status_printout("OK\n");

@@ -42,6 +42,11 @@ urlpatterns = [
     # Shared projects
     url(r'^share/', include('share.urls')),
 
+    # These redirects are hack because django-allauth redirects us to weird places. Fix it to go somewhere reasonable by default
+    url(r'^accounts/profile', RedirectView.as_view(url='/', permanent=False)),
+    url(r'^accounts/profile/', RedirectView.as_view(url='/', permanent=False)),
+    url(r'^accounts/signup/None', RedirectView.as_view(url='/', permanent=False)),
+
     # Wagtail
     url(r'^cms/', include(wagtailadmin_urls)),
     url(r'^documents/', include(wagtaildocs_urls)),
@@ -49,10 +54,6 @@ urlpatterns = [
     url(r'', include(wagtail_urls)),
     url(r'^search/$', search_views.search, name='search'),
 
-
-    # These redirects are hack because django-allauth redirects us to weird places. Fix it to go somewhere reasonable by default
-    url(r'^accounts/profile', RedirectView.as_view(url='/', permanent=False)),
-    url(r'^accounts/signup/None', RedirectView.as_view(url='/', permanent=False)),
 
     # Image downloads
     url(r'^images/', include('project.image_urls')),
