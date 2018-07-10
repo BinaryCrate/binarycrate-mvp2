@@ -4,6 +4,7 @@ import sys
 import tempfile
 
 from .build_number import BUILD_NUMBER
+from .version_hash import VERSION_HASH
 
 """
 Django settings for binarycrate project.
@@ -35,7 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.sites', 
+    'django.contrib.sites',
 
     'allauth',
     'allauth.account',
@@ -95,7 +96,7 @@ MIDDLEWARE = [
 
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-STATIC_URL = '/static/'
+STATIC_URL = '/static/{}/'.format(VERSION_HASH)
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
@@ -162,7 +163,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
-STATIC_URL = '/static/'
 WAGTAIL_SITE_NAME = 'Content'
 
 STATICFILES_DIRS = [
@@ -254,4 +254,3 @@ else:
 # Email
 
 DEFAULT_FROM_EMAIL = 'noreply@dev.binarycrate.com'
-
