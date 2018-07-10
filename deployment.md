@@ -9,7 +9,7 @@ This document discusses how to deploy an update for BinaryCrate, it does not yet
 BinaryCrate currently has a single development server running inside AWS specifically an EC2 instance running Ubuntu 16.04 in the us-west2 Oregon region.
 Oregon is chosen because it is the cheapest region. The production system will probably be run in another region.
 
-You will need to have been given access to this server. This will require you supplying a SSH public key. 
+You will need to have been given access to this server. This will require you supplying a SSH public key.
 
 ### Preparing the code
 
@@ -136,10 +136,23 @@ sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-rel
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ historygraph/historygraph/
 ```
 
+Next we tell pypyjs to preload all of our modules - this greatly improves the load time
+
+```
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ cavorite
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ binarycrate
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ historygraph
+```
+
 We now update the django static. Note this is different to the above step in that we put all pypyjs files including standard modules and the pypyjs interpreter
 in the correct Django static area.
 ```
 sudo ./binarycrate/bin/python binarycrate/manage.py collectstatic
+```
+
+We need to update the version hash used for the static files
+```
+sudo ./binarycrate/bin/fab development.create_version_file
 ```
 
 Run the migrations
@@ -166,4 +179,3 @@ If apt-get updated the kernel version the server will need a reboot.
 ```
 sudo reboot
 ```
-
