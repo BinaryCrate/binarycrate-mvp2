@@ -44,6 +44,12 @@ def run(**kwargs):
         if result.failed:
             abort(red('Could not start chrome. Have you run '
                       '\'setup_chrome\'?'))
+        with warn_only():
+            result = local('docker start {project_name}-redis'.format(
+                project_name=project_name))
+        if result.failed:
+            abort(red('Could not start redis. Have you run '
+                      '\'setup_redis\'?'))
 
         copyfile('binarycrate/binarycrate/settings/build_number.py', 'front-end/binarycrate/build_number.py')
         local('docker run --tty '
@@ -130,6 +136,20 @@ def setup_chrome():
             if result.failed:
                 abort(red('Could not setup chrome. Have you run '
                           '\'setup_network\'?'))
+
+@task
+def setup_redis():
+    print(yellow('Launching detached postgres docker process...'))
+    with lcd('.'):
+        with warn_only():
+            result = local('docker run --detach --name={project_name}-redis '
+                           '--network={project_name}-network '
+                           '--network-alias=redis '
+                           'redis:4.0'.format(
+                            project_name=project_name))
+            if result.failed:
+                abort(red('Could not setup redis. Have you run '
+                          '\'redis\'?'))
 
 @task
 def create_symlinks():
