@@ -204,3 +204,16 @@ class Form(object):
             self.editorview.mount_redraw()
             Router.router.ResetHashChange()
         return timeouts.set_timeout(wrapper, delay)
+
+    def clear_timeout(self, val):
+        timeouts.clear_timeout(val)
+
+    def set_interval(self, func, delay):
+        def wrapper():
+            func()
+            self.editorview.mount_redraw()
+            Router.router.ResetHashChange()
+        return timeouts.set_interval(wrapper, delay)
+
+    def clear_interval(self, val):
+        timeouts.clear_interval(val)
