@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function
 from cavorite.HTML import *
 from cavorite.svg import svg
 import copy
-from cavorite import Router
+from cavorite import Router, timeouts
 
 
 class Form(object):
@@ -197,3 +197,10 @@ class Form(object):
         self.editorview.form_stack = self.editorview.form_stack[:-1]
         if self.parent is not None:
             self.parent.on_child_form_closed()
+
+    def set_timeout(self, func, delay):
+        def wrapper():
+            func()
+            self.editorview.mount_redraw()
+            Router.router.ResetHashChange()
+        return timeouts.set_timeout(wrapper, delay)
