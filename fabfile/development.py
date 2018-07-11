@@ -17,6 +17,11 @@ def build():
 
 @task
 def runserver():
+    print(yellow('Checking that celery is running...'))
+    ret = local('docker ps --quiet --filter "label={project_name}-celery"'.format(project_name=project_name), capture=True)
+    if len(ret) == 0:
+        abort(red('Could not runserver. Have you run '
+                  '\'fab development.celery\'?'))
     run(command='runserver 0.0.0.0:8000')
 
 @task
@@ -29,7 +34,7 @@ def shell():
     run(command='shell')
 
 @task
-def run(**kwargs):
+def run(entrypoint="/opt/project/run-django", open_port=True, extra_options = [], **kwargs):
     print(yellow('Updating version file...'))
     create_version_file()
     print(yellow('Reseting pypyjs environment...'))
@@ -50,20 +55,25 @@ def run(**kwargs):
         if result.failed:
             abort(red('Could not start redis. Have you run '
                       '\'setup_redis\'?'))
+        publish_cmd = ' --publish=8000:8000 ' if open_port else ''
 
         copyfile('binarycrate/binarycrate/settings/build_number.py', 'front-end/binarycrate/build_number.py')
         local('docker run --tty '
               '--interactive '
-              '--publish=8000:8000 '
+              '{publish_cmd} '
               '--volume "{local_pwd}":/opt/project '
               #'--volume "/home/mark/cavorite":/opt/project/cavorite '
               #'--volume "/home/mark/historygraph-perm":/opt/project/historygraph '
               #'--volume "/home/mark/behave-django/behave_django":/usr/local/lib/python2.7/dist-packages/behave_django '
               '--network={project_name}-network '
               '--network-alias=webserver '
+              '--entrypoint="{entrypoint}" '
               '{project_name} {command}'.format(command=command,
                             local_pwd=local_pwd,
-                            project_name=project_name))
+                            project_name=project_name,
+                            entrypoint=entrypoint,
+                            publish_cmd=publish_cmd,
+                            extra_options=' '.join(extra_options)))
 
 
 @task
@@ -71,6 +81,23 @@ def migrate():
     print(yellow('Running docker process...'))
     with lcd('.'):
         local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --publish=8000:8000 "' + project_name + '" migrate')
+
+@task
+def celery():
+    with lcd('.'):
+        local('docker run --tty '
+              '--interactive '
+              '--volume "{local_pwd}":/opt/project '
+              #'--volume "/home/mark/cavorite":/opt/project/cavorite '
+              #'--volume "/home/mark/historygraph-perm":/opt/project/historygraph '
+              #'--volume "/home/mark/behave-django/behave_django":/usr/local/lib/python2.7/dist-packages/behave_django '
+              '--network={project_name}-network '
+              '--network-alias=celery '
+              '--label {project_name}-celery '
+              '--entrypoint="/opt/project/run-celery" '
+              '{project_name} '.format(local_pwd=local_pwd,
+                            project_name=project_name,
+                            ))
 
 @task
 def test(testname=None):
@@ -107,7 +134,13 @@ def makemigrations():
 def bash():
     print(yellow('Running docker process...'))
     with lcd('.'):
-        local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --entrypoint="bash" --publish=8000:8000 "' + project_name + '"')
+        local('docker run --tty --interactive '
+              '--volume "{local_pwd}":/opt/project '
+              '--entrypoint="bash" '
+              '--network={project_name}-network '
+              '--network-alias=webserver '
+              '--publish=8000:8000 "{project_name}"'.format(
+                local_pwd=local_pwd, project_name=project_name))
 
 @task
 def setup():

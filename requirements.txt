@@ -1,4 +1,5 @@
 backports.tempfile==1.0
+celery==4.2.0
 django==1.11.13
 django-allauth==0.36.0
 django-mptt==0.9.0
@@ -9,6 +10,7 @@ mock==2.0.0
 psutil==5.4.6
 psycopg2==2.7.4
 pytest-django==3.3.2
+redis==2.10.6
 
 #Wagtail
 wagtail==1.13.1

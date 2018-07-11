@@ -25,3 +25,11 @@ DATABASES = {
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+# Celery
+
+CELERY_BROKER_TRANSPORT_OPTIONS = {'fanout_patterns': True, 'fanout_prefix': True}
+
+CELERY_BROKER_URL = 'redis://redis'
+
+CELERY_RESULT_BACKEND = 'redis://redis'
+
