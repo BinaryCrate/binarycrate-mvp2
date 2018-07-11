@@ -2246,7 +2246,7 @@ print('Hello folder i={}'.format(i))
             file_location = '/lib/pypyjs/lib_pypy/hello_world.py'
 
             def open_child(self):
-                self.display_form(TestForm2(parent=self))
+                TestForm2(self)
 
         form_classes = [TestForm1]
         view.get_default_module_form_classes = Mock(return_value=form_classes)
