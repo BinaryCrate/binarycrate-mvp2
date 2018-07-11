@@ -2246,7 +2246,7 @@ print('Hello folder i={}'.format(i))
             file_location = '/lib/pypyjs/lib_pypy/hello_world.py'
 
             def open_child(self):
-                self.dislay_form(TestForm2(parent=self))
+                self.display_form(TestForm2(parent=self))
 
         form_classes = [TestForm1]
         view.get_default_module_form_classes = Mock(return_value=form_classes)
@@ -2265,6 +2265,13 @@ print('Hello folder i={}'.format(i))
         view.form_stack[-1].open_child()
         assert len(view.form_stack) == 2
         assert type(view.form_stack[-1]) == TestForm2
+
+        # Assert we can close the form on the top of the stack
+        view.form_stack[0].on_child_form_closed = Mock()
+        view.form_stack[-1].close()
+        assert len(view.form_stack) == 1
+        view.form_stack[0].on_child_form_closed.assert_called()
+
 
     def test_running_with_storage_program_initialises_historygraph(self, monkeypatch):
         monkeypatch.setattr(Router, 'ResetHashChange', Mock())

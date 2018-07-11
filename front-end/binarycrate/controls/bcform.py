@@ -191,3 +191,11 @@ class Form(object):
 
     def display_form(self, new_form):
         self.editorview.form_stack.append(new_form)
+
+    def on_child_form_closed(self):
+        pass
+
+    def close(self):
+        self.editorview.form_stack = self.editorview.form_stack[:-1]
+        if self.parent is not None:
+            self.parent.on_child_form_closed()
