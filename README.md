@@ -111,6 +111,8 @@ Open a standard console and Cdcto the binarycrate-mvp2 directory the source code
 ```
 fab development.setup_network
 
+fab development.setup_redis
+
 fab development.setup_chrome
 
 fab development.setup
@@ -122,7 +124,15 @@ This will create the development docker container. Fabric3 you installed earlier
 fab development.run:command=createsuperuser
 ```
 
-This will create a superuser for the binarycrate django project. Enter a user name and password
+This will create a superuser for the binarycrate django project. Enter a user name and password.
+
+Next you will need two consoles running the binarycrate venv. This is because we will run the celery worker in one of them and the webserver in the other.
+
+```
+fab development.celery
+```
+
+This will start the celery worker, next change to the other console and start up the webserver
 
 ```
 fab development.runserver
