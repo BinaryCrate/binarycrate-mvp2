@@ -30,7 +30,11 @@ def shell():
 
 @task
 def run(**kwargs):
+    print(yellow('Updating version file...'))
     create_version_file()
+    print(yellow('Reseting pypyjs environment...'))
+    with lcd('./pypyjs-release/pypyjs-release'):
+        local('git checkout -- .')#, capture=True)
     command = kwargs.get('command', 'check')
     print(yellow('Running docker process...'))
     with lcd('.'):
@@ -144,4 +148,3 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 VERSION_HASH = '{}'
 '''.format(output.stdout))
-        print('output=', type(output),',',output.stdout)
