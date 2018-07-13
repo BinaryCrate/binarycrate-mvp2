@@ -10,3 +10,6 @@
 [submodule "pypyjs_modules/munch"]
 	path = pypyjs_modules/munch
 	url = https://github.com/BinaryCrate/munch.git
+[submodule "pypyjs_modules/six"]
+	path = pypyjs_modules/six
+	url = https://github.com/BinaryCrate/six.git
