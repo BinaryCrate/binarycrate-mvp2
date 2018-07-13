@@ -7,3 +7,6 @@
 [submodule "pypyjs-release/pypyjs-release"]
 	path = pypyjs-release/pypyjs-release
 	url = https://github.com/pypyjs/pypyjs-release-nojit.git
+[submodule "pypyjs_modules/munch"]
+	path = pypyjs_modules/munch
+	url = https://github.com/BinaryCrate/munch.git
