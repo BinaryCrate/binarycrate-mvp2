@@ -35,6 +35,8 @@ class TestBCFormItemMunches(object):
                     'name': 'button1', 'caption': 'Hello'})
         assert b.caption == 'Hello'
         assert b['caption'] == 'Hello'
+        assert b['type'] == 'button'
+        assert 'id' in b
 
     def test_must_supply_necessary_values_to_form_item(self):
         with pytest.raises(AssertionError):

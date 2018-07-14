@@ -4,6 +4,7 @@ from cavorite.svg import svg
 import copy
 from cavorite import Router, timeouts
 from binarycrate.bcmunch import BCMunch
+import uuid
 
 
 class FormItemPropType(object):
@@ -52,7 +53,9 @@ control_types = ['line', 'button', 'label', 'frame','checkbox',
 def ClassFactory(class_name, control_type, BaseClass):
     def __init__(self, *args, **kwargs):
         BaseClass.__init__(self, *args, **kwargs)
-        #self.type = control_type
+        self.type = control_type
+        if 'id' not in self:
+            self.id = str(uuid.uuid4())
     newclass = type(str(class_name), (BaseClass,),{"__init__": __init__,
         "_members": get_form_item_property(control_type).keys()})
     return newclass
