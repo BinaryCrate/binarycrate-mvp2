@@ -62,6 +62,9 @@ def run(**kwargs):
 
 @task
 def migrate():
+    print(yellow('Reseting pypyjs environment...'))
+    with lcd('./pypyjs-release/pypyjs-release'):
+        local('git checkout -- .')#, capture=True)
     print(yellow('Running docker process...'))
     with lcd('.'):
         local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --publish=8000:8000 "' + project_name + '" migrate')
