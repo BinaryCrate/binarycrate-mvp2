@@ -16,3 +16,5 @@ wagtail==1.13.1
 # General requirements for testing
 selenium==3.13.0
 factory-boy==2.11.1
+# Munch is only used in the front end tests
+git+https://github.com/BinaryCrate/munch.git@2e302bc9590b7e399b1c4e021e847fb38a1577ec
