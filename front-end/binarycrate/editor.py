@@ -25,6 +25,7 @@ from binarycrate import historygraphfrontend
 import binarycrate
 from .urllib import urlencode
 from .uploadmodal import UploadModal
+from binarycrate.controls.bcform import get_form_item_property, FormItemPropType
 
 
 HANDLE_NONE = 0
@@ -201,43 +202,6 @@ class ContextMenu(nav):
         return              [
                               ul({'class': 'context-menu__items'}, menu_items),
                             ]
-
-class FormItemPropType(object):
-    INT = 0
-    STRING = 1
-    BOOLEAN = 2
-    COLOR = 3
-    PRELOADED_IMAGE = 4
-
-def get_form_item_property(form_item_type):
-    if form_item_type == 'line':
-        return  {'x1': FormItemPropType.INT,
-                 'y1': FormItemPropType.INT,
-                 'x2': FormItemPropType.INT,
-                 'y2': FormItemPropType.INT,
-                 'name': FormItemPropType.STRING,
-                 'stroke_width': FormItemPropType.INT,
-                 'stroke': FormItemPropType.COLOR}
-    props = {'x': FormItemPropType.INT,
-             'y': FormItemPropType.INT,
-             'width': FormItemPropType.INT,
-             'height': FormItemPropType.INT,
-             'name': FormItemPropType.STRING}
-    if form_item_type == 'button' or form_item_type == 'label' \
-       or form_item_type == 'frame' or form_item_type == 'checkbox':
-        props.update({'caption': FormItemPropType.STRING})
-    if form_item_type == 'textbox':
-        props.update({'text': FormItemPropType.STRING})
-    if form_item_type == 'image':
-        props.update({'src': FormItemPropType.STRING, 'preloaded_image': FormItemPropType.PRELOADED_IMAGE})
-    if form_item_type == 'checkbox':
-        props.update({'value': FormItemPropType.BOOLEAN})
-    if form_item_type in {'rect', 'circle', 'ellipse', 'hexagon'}:
-        props.update({'stroke_width': FormItemPropType.INT,
-                      'stroke': FormItemPropType.COLOR,
-                      'fill': FormItemPropType.COLOR,
-                     })
-    return props
 
 
 class EditorView(BCChrome):

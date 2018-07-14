@@ -12,7 +12,7 @@ from binarycrate.controls import codemirror, Form
 from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode, style_to_dict, get_vnode_by_id, get_vnode_by_css_class, get_matching_vnodes
 import cavorite.bootstrap.modals
 from binarycrate.editor import HANDLE_NONE, HANDLE_TOPLEFT, HANDLE_TOPRIGHT, HANDLE_BOTTOMLEFT, HANDLE_BOTTOMRIGHT
-from binarycrate.editor import get_form_item_property, FormItemPropType
+from binarycrate.controls.bcform import get_form_item_property, FormItemPropType
 import tempfile
 from backports.tempfile import TemporaryDirectory
 import os
