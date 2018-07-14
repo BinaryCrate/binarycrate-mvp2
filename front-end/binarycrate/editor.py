@@ -804,7 +804,7 @@ class EditorView(BCChrome):
             ret.append(svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%', 'oncontextmenu': self.contextmenu_preview, 'z-index':-5, 'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up}, svg_list))
         if self.program_is_running and len(self.form_stack) > 0:
             #print('get_selected_de_form_controls getting form controls from from_stack')
-            ret = self.form_stack[-1].get_form_controls()
+            ret = self.form_stack[-1].get_form_control_elements()
         return ret
 
     def clear_selected_item(self, e):

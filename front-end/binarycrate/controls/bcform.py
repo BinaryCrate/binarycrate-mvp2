@@ -106,8 +106,18 @@ class Form(object):
     def initialise_form_controls(self):
         self._static_form_controls = [control_types2[fi['type']](fi) for fi in
                               self.get_form_items()]
+        self._dynamic_form_controls = []
         for control in self._static_form_controls:
             setattr(self, control['name'], control)
+
+    def get_form_controls(self):
+        return self._static_form_controls + self._dynamic_form_controls
+
+    def add_control(self, control):
+        self._dynamic_form_controls.append(control)
+
+    def remove_dynamic_controls(self):
+        self._dynamic_form_controls = []
 
     def handle_onclick(self, e, form_item_name):
         #print('handle_onclick form_item_name=', form_item_name)
@@ -117,10 +127,10 @@ class Form(object):
         self.editorview.mount_redraw()
         Router.router.ResetHashChange()
 
-    def get_form_controls(self):
+    def get_form_control_elements(self):
         ret = list()
         html_controls = dict()
-        for form_item in self._static_form_controls:
+        for form_item in self.get_form_controls():
             #print('initialise_form_controls form_item=', form_item)
             #TODO: Copied code from editor.py should be refactored
             style = ''.join(('position: absolute; ',

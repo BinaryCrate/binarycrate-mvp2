@@ -2257,6 +2257,16 @@ print('Hello folder i={}'.format(i))
         assert len(view.form_stack) == 1
         assert isinstance(view.form_stack[-1].button1, bcform.Button)
 
+        # Test we can add a dynamic button to the form
+        form = view.form_stack[-1]
+        assert len(form.get_form_controls()) == 1
+        form.add_control(bcform.Button({'x': 1, 'y': 1, 'width': 100,
+                                        'height': 80, 'caption': '2nd Button',
+                                        'name':'bill'}))
+        assert len(form.get_form_controls()) == 2
+        form.remove_dynamic_controls()
+        assert len(form.get_form_controls()) == 1
+
         view.form_stack[-1].on_historygraph_download_complete = Mock()
         view.form_stack[-1].on_historygraph_download_complete.assert_not_called()
         view.on_historygraph_download_complete()
