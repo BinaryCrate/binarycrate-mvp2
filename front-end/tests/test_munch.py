@@ -38,6 +38,17 @@ class TestBCFormItemMunches(object):
         assert b['type'] == 'button'
         assert 'id' in b
 
+    def test_can_create_form_item_and_assign_values_with_optional_event_handler(self):
+        def dummy_handler(e):
+            pass
+        b = Button({'x': 1, 'y': 2, 'width': 100, 'height': 20,
+                    'name': 'button1', 'caption': 'Hello',
+                    'onclick': dummy_handler})
+        assert b.caption == 'Hello'
+        assert b['caption'] == 'Hello'
+        assert b['type'] == 'button'
+        assert 'id' in b
+
     def test_must_supply_necessary_values_to_form_item(self):
         with pytest.raises(AssertionError):
             m = Button()

@@ -2257,13 +2257,28 @@ print('Hello folder i={}'.format(i))
         assert len(view.form_stack) == 1
         assert isinstance(view.form_stack[-1].button1, bcform.Button)
 
+        d = {'count': 0}
+        def dummy_handler(e):
+            d['count'] += 1
+
         # Test we can add a dynamic button to the form
         form = view.form_stack[-1]
         assert len(form.get_form_controls()) == 1
         form.add_control(bcform.Button({'x': 1, 'y': 1, 'width': 100,
                                         'height': 80, 'caption': '2nd Button',
-                                        'name':'bill'}))
+                                        'name':'bill',
+                                        'onclick': dummy_handler}))
         assert len(form.get_form_controls()) == 2
+        static_button = form.get_form_control_elements()[0]
+        dynamic_button = form.get_form_control_elements()[1]
+        form.handle_onclick = Mock()
+        static_button.get_attribs()['onclick'](Mock())
+        form.handle_onclick.assert_called_once()
+        form.handle_onclick = Mock()
+        assert d['count'] == 0
+        dynamic_button.get_attribs()['onclick'](Mock())
+        assert d['count'] == 1
+        form.handle_onclick.assert_not_called()
         form.remove_dynamic_controls()
         assert len(form.get_form_controls()) == 1
 

@@ -44,6 +44,14 @@ def get_form_item_property(form_item_type):
                      })
     return props
 
+def get_form_item_optional_members(form_item_type):
+    #print('get_form_item_optional_members form_item_type=',form_item_type)
+    #assert False
+    #Optional members can only every be created dynamically
+    if form_item_type == 'button':
+        return ['onclick']
+    return []
+
 control_types = ['line', 'button', 'label', 'frame','checkbox',
                  'textbox', 'image', 'checkbox', 'rect',
                  'circle', 'ellipse', 'hexagon',
@@ -57,7 +65,8 @@ def ClassFactory(class_name, control_type, BaseClass):
         if 'id' not in self:
             self.id = str(uuid.uuid4())
     newclass = type(str(class_name), (BaseClass,),{"__init__": __init__,
-        "_members": get_form_item_property(control_type).keys()})
+        "_members": get_form_item_property(control_type).keys(),
+        "_optional_members": get_form_item_optional_members(control_type)})
     return newclass
 
 control_types2 = dict()
@@ -120,7 +129,7 @@ class Form(object):
         self._dynamic_form_controls = []
 
     def handle_onclick(self, e, form_item_name):
-        #print('handle_onclick form_item_name=', form_item_name)
+        print('handle_onclick form_item_name=', form_item_name)
         if hasattr(self, form_item_name + '_onclick'):
             #print('handle_onclick calling custom handler')
             getattr(self, form_item_name + '_onclick')(e)
@@ -148,7 +157,11 @@ class Form(object):
             control_class = None
             if form_item['type'] == 'button':
                 control_class = html_button
-                attribs_extra = { 'onclick': lambda e, form_item_name=form_item['name']: self.handle_onclick(e, form_item_name) }
+                if form_item in self._static_form_controls:
+                    # Static control fire handle_onclick to route then dynamic ones may have their own handler attached
+                    attribs_extra = { 'onclick': lambda e, form_item_name=form_item['name']: self.handle_onclick(e, form_item_name) }
+                else:
+                    attribs_extra = { 'onclick': form_item.get('onclick', lambda e: None) }
                 #control = html_button({'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
             elif form_item['type'] == 'textbox':
                 control_class = html_input
