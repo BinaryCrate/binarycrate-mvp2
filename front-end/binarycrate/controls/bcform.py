@@ -101,9 +101,9 @@ class Form(object):
 
 
     def initialise_form_controls(self):
-        self.form_controls = [control_types2[fi['type']](fi) for fi in
+        self._static_form_controls = [control_types2[fi['type']](fi) for fi in
                               self.get_form_items()]
-        for control in self.form_controls:
+        for control in self._static_form_controls:
             setattr(self, control['name'], control)
 
     def handle_onclick(self, e, form_item_name):
@@ -117,7 +117,7 @@ class Form(object):
     def get_form_controls(self):
         ret = list()
         html_controls = dict()
-        for form_item in self.form_controls:
+        for form_item in self._static_form_controls:
             #print('initialise_form_controls form_item=', form_item)
             #TODO: Copied code from editor.py should be refactored
             style = ''.join(('position: absolute; ',
@@ -171,7 +171,7 @@ class Form(object):
                 html_controls[form_item['name']] = control
                 ret.append(control)
         svg_list = list()
-        for form_item in self.form_controls:
+        for form_item in self._static_form_controls:
             if form_item['type'] == 'rect':
                 control = svg('rect', {'x': form_item['x'],
                              'y':form_item['y'],
