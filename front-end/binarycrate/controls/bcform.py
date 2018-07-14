@@ -1,8 +1,9 @@
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from cavorite.HTML import *
 from cavorite.svg import svg
 import copy
 from cavorite import Router, timeouts
+from binarycrate.bcmunch import BCMunch
 
 
 class FormItemPropType(object):
@@ -42,6 +43,29 @@ def get_form_item_property(form_item_type):
                      })
     return props
 
+control_types = ['line', 'button', 'label', 'frame','checkbox',
+                 'textbox', 'image', 'checkbox', 'rect',
+                 'circle', 'ellipse', 'hexagon',
+                ]
+
+# Dynamically create classes from https://stackoverflow.com/a/15247892
+def ClassFactory(class_name, control_type, BaseClass):
+    def __init__(self, *args, **kwargs):
+        BaseClass.__init__(self, *args, **kwargs)
+        #self.type = control_type
+    newclass = type(str(class_name), (BaseClass,),{"__init__": __init__,
+        "_members": get_form_item_property(control_type).keys()})
+    return newclass
+
+control_types2 = dict()
+
+# Dynamically insert variables into the global namespace
+for control_type in control_types:
+    class_name = control_type[0].upper() + control_type[1:]
+    cls = ClassFactory(class_name, control_type, BCMunch)
+    globals()[class_name] = cls
+    control_types2[control_type] = cls
+
 
 class Form(object):
     def get_form_items(self, loc=None, parent_id=None):
@@ -70,14 +94,15 @@ class Form(object):
     def get_file_location(self):
         # Returns the file local relative to the module directory
         from binarycrate.editor import python_module_dir
-        print('python_module_dir=', python_module_dir)
-        print('self.file_location=', self.file_location)
+        #print('python_module_dir=', python_module_dir)
+        #print('self.file_location=', self.file_location)
         assert self.file_location.startswith(python_module_dir)
         return self.file_location[len(python_module_dir):]
 
 
     def initialise_form_controls(self):
-        self.form_controls = copy.deepcopy(self.get_form_items())
+        self.form_controls = [control_types2[fi['type']](fi) for fi in
+                              self.get_form_items()]
         for control in self.form_controls:
             setattr(self, control['name'], control)
 

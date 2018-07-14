@@ -5,4 +5,6 @@ from munch import *
 class BCMunch(Munch):
     def __init__(self, *args, **kwargs):
         super(BCMunch, self).__init__(*args, **kwargs)
-        assert set(self._members) == set(self.keys())
+        #print('self._members=', set(self._members))
+        #print('self.keys()=', set(self.keys()))
+        assert set(self._members)  == set(self.keys()) - {'id', 'type'}

@@ -13,6 +13,7 @@ from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode, style_to
 import cavorite.bootstrap.modals
 from binarycrate.editor import HANDLE_NONE, HANDLE_TOPLEFT, HANDLE_TOPRIGHT, HANDLE_BOTTOMLEFT, HANDLE_BOTTOMRIGHT
 from binarycrate.controls.bcform import get_form_item_property, FormItemPropType
+from binarycrate.controls import bcform
 import tempfile
 from backports.tempfile import TemporaryDirectory
 import os
@@ -2254,7 +2255,7 @@ print('Hello folder i={}'.format(i))
         view.run_project(Mock())
 
         assert len(view.form_stack) == 1
-        assert isinstance(view.form_stack[-1].button1, dict)
+        assert isinstance(view.form_stack[-1].button1, bcform.Button)
 
         view.form_stack[-1].on_historygraph_download_complete = Mock()
         view.form_stack[-1].on_historygraph_download_complete.assert_not_called()
