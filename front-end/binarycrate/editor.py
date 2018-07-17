@@ -284,18 +284,29 @@ class EditorView(BCChrome):
             return []
         if project['type'] == 2:
             documents_imported_module = __import__('documents') #TODO: Make it impossible to rename or delete the documents file from the root of the proejct
-        imported_module = __import__(de['name'][:de['name'].find('.')])
+        self.imported_module = __import__(de['name'][:de['name'].find('.')])
         #print('EditorView run_project dir(imported_module)=', dir(imported_module))
-        classes = [getattr(imported_module, name) for name in dir(imported_module)
-                   if inspect.isclass(getattr(imported_module, name)) and
-                     issubclass(getattr(imported_module, name), Form) and
-                     getattr(imported_module, name) != Form]
+        classes = [getattr(self.imported_module, name) for name in dir(self.imported_module)
+                   if inspect.isclass(getattr(self.imported_module, name)) and
+                     issubclass(getattr(self.imported_module, name), Form) and
+                     getattr(self.imported_module, name) != Form]
         assert len(classes) <= 1, "Only 1 Form class should exist in a module"
         return classes
 
     def on_historygraph_download_complete(self):
         for form in self.form_stack:
             form.on_historygraph_download_complete()
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
+    def stop_project(self, e):
+        print('EditorView stop_project called')
+        self.program_is_running = False
+        for form in self.form_stack:
+            form.clear_all_active_timeouts()
+            form.clear_all_active_intervals()
+        self.form_stack = []
+        js.globals.document.print_to_secondary_output = False
         self.mount_redraw()
         Router.router.ResetHashChange()
 
@@ -327,6 +338,12 @@ class EditorView(BCChrome):
             self.program_is_running = False
         #aa.tr()
         #print('EditorView run_project called 4')
+
+    def get_sidebar_nav_items(self):
+        if self.program_is_running:
+            return []
+        else:
+            return super(EditorView, self).get_sidebar_nav_items()
 
     def set_current_file_as_default(self, e):
         #print('set_current_file_as_default called')
@@ -1074,7 +1091,22 @@ class """ + class_name + """(Form):
         Router.router.ResetHashChange()
 
     def get_top_navbar_items(self):
-        return [
+        if self.program_is_running:
+            return [
+                     #drop_down_item('Stop', 'fa-square', self.stop_project),
+                      li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
+                        form({'action': '#'}, [
+                          a({'class': "btn btn-default navbar-btn crt-btn",
+                             'href': get_current_hash(), 'onclick': self.stop_project}, [
+                            i({'class': "fa fa-1x fa-square'", 'aria-hidden':"true"}),
+                            t('Stop'),
+                          ]),
+                        ]),
+                      ]),
+
+                   ]
+        else:
+            return [
                       drop_down_menu('File', [
                         #drop_down_item('Run', 'fa-caret-right', self.run_project),
                         drop_down_item('Save Project', '', self.save_project),

@@ -273,6 +273,8 @@ class Form(object):
             self.editorview = self.parent.editorview
             self.editorview.form_stack.append(self)
         self.images = self.editorview.images
+        self._active_timeouts = set()
+        self._active_intervals = set()
         super(Form, self).__init__(*args, **kwargs)
         self.initialise_form_controls()
 
@@ -288,13 +290,25 @@ class Form(object):
             self.parent.on_child_form_closed()
 
     def set_timeout(self, func, delay):
+        # We need a list here because we need a variable the we can amend and
+        # access from inside the inner function.
+        value_wrapper = list()
         def wrapper():
             func()
+            self._active_timeouts.remove(value_wrapper[0])
             self.editorview.mount_redraw()
             Router.router.ResetHashChange()
-        return timeouts.set_timeout(wrapper, delay)
+        value_wrapper.append(timeouts.set_timeout(wrapper, delay))
+        self._active_timeouts.add(value_wrapper[0])
+        return value_wrapper[0]
+
+    def clear_all_active_timeouts(self):
+        timeouts = copy.copy(self._active_timeouts)
+        for val in timeouts:
+            self.clear_timeout(val)
 
     def clear_timeout(self, val):
+        self._active_timeouts.remove(val)
         timeouts.clear_timeout(val)
 
     def set_interval(self, func, delay):
@@ -302,7 +316,15 @@ class Form(object):
             func()
             self.editorview.mount_redraw()
             Router.router.ResetHashChange()
-        return timeouts.set_interval(wrapper, delay)
+        val = timeouts.set_interval(wrapper, delay)
+        self._active_intervals.add(val)
+        return val
+
+    def clear_all_active_intervals(self):
+        intervals = copy.copy(self._active_intervals)
+        for val in intervals:
+            self.clear_interval(val)
 
     def clear_interval(self, val):
+        self._active_intervals.remove(val)
         timeouts.clear_interval(val)

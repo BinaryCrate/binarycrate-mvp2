@@ -2252,8 +2252,43 @@ print('Hello folder i={}'.format(i))
         form_classes = [TestForm1]
         view.get_default_module_form_classes = Mock(return_value=form_classes)
         view.write_program_to_virtual_file_system = Mock()
+
+        # Test dashboard link is inthe Dom before we run the project
+        result = defaultdict(bool)
+        def mock_element_iterator_callback(vnode):
+            if hasattr(vnode, 'text') and vnode.text == 'Dashboard':
+                result['dashboard_found'] = True
+            if hasattr(vnode, 'text') and vnode.text == 'Debug':
+                result['debug_found'] = True
+            if hasattr(vnode, 'text') and vnode.text == 'Run':
+                result['run_found'] = True
+            if hasattr(vnode, 'text') and vnode.text == 'Stop':
+                result['stop_found'] = True
+        view.mount_redraw = Mock()
+
+        virtual_node = view._build_virtual_dom()
+        IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
+
+        assert result['dashboard_found'] == True
+        assert result['debug_found'] == True
+        assert result['run_found'] == True
+        assert result['stop_found'] == False
+
         view.run_project(Mock())
+
+        # Test that while the program is running we cannot see the Dashboard Link
         assert view.program_is_running == True
+
+        result = defaultdict(bool)
+        view.mount_redraw = Mock()
+
+        virtual_node = view._build_virtual_dom()
+        IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
+
+        assert result['dashboard_found'] == False
+        assert result['debug_found'] == False
+        assert result['run_found'] == False
+        assert result['stop_found'] == True
 
         assert len(view.form_stack) == 1
         assert isinstance(view.form_stack[-1].button1, bcform.Button)
@@ -2298,6 +2333,22 @@ print('Hello folder i={}'.format(i))
         view.form_stack[-1].close()
         assert len(view.form_stack) == 1
         view.form_stack[0].on_child_form_closed.assert_called()
+
+        result = defaultdict(bool)
+        view.stop_project(Mock())
+        assert view.program_is_running == False
+        assert view.form_stack == []
+        assert js.globals.document.print_to_secondary_output == False
+        view.mount_redraw = Mock()
+
+        virtual_node = view._build_virtual_dom()
+        IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
+
+        assert result['dashboard_found'] == True
+        assert result['debug_found'] == True
+        assert result['run_found'] == True
+        assert result['stop_found'] == False
+
 
 
     def test_running_program_can_access_timeouts(self, monkeypatch):
@@ -2402,10 +2453,13 @@ print('Hello folder i={}'.format(i))
         assert len(timeouts.global_timeout_callbacks) == 1
         assert len(timeouts.global_timeout_val_to_id) == 1
         assert len(timeouts.global_timeout_id_to_val) == 1
-        val = view.form_stack[-1].fire_timeout()
+        form = view.form_stack[-1]
+        assert len(form._active_timeouts) == 0
+        val = form.fire_timeout()
         assert set(timeouts.global_timeout_callbacks.keys()) == {str(dummy_uuid())}
         assert set(timeouts.global_timeout_id_to_val.keys()) == {str(dummy_uuid())}
         assert set(timeouts.global_timeout_val_to_id.keys()) == {val}
+        assert len(form._active_timeouts) == 1
 
         assert counter['count'] == 0
 
@@ -2420,6 +2474,120 @@ print('Hello folder i={}'.format(i))
         assert len(timeouts.global_timeout_callbacks) == 0
         assert len(timeouts.global_timeout_val_to_id) == 0
         assert len(timeouts.global_timeout_id_to_val) == 0
+        assert len(form._active_timeouts) == 0
+
+    def test_stopping_program_can_clears_timeouts(self, monkeypatch):
+        def dummy_uuid():
+            return uuid.UUID('531cb169-91f4-4102-9a0a-2cd5e9659071')
+
+        reset_hash_change_mock = Mock()
+        monkeypatch.setattr(Router, 'ResetHashChange', reset_hash_change_mock)
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(timeouts, 'get_uuid', dummy_uuid)
+
+        callbacks.initialise_global_callbacks()
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        body = js.globals.document.body
+        error_404_page = c("div", [c("p", "No match 404 error"),
+                                   c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
+        view = editor.EditorView()
+        r = Router({r'^$': view},
+                    error_404_page, body)
+        r.route()
+        view.mount_redraw = Mock()
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+print('Hello folder i={}'.format(i))
+"""
+        editor.project = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': [],
+                        'parent_id': None,
+                        'is_default': False,
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]'),
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': True,
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': [],
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'form_items': [],
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
+                       },
+                     ]
+                    }
+
+        assert len(view.form_stack) == 0
+
+        counter = dict()
+        counter['count'] = 0
+
+        class TestForm1(Form):
+            file_location = '/lib/pypyjs/lib_pypy/hello_world.py'
+
+            def timeout_handler(self):
+                counter['count'] += 1
+
+            def fire_timeout(self):
+                return self.set_timeout(self.timeout_handler, 1000)
+
+        form_classes = [TestForm1]
+        view.get_default_module_form_classes = Mock(return_value=form_classes)
+        view.write_program_to_virtual_file_system = Mock()
+        view.run_project(Mock())
+        assert view.program_is_running == True
+
+        assert len(timeouts.global_timeout_callbacks) == 1
+        assert len(timeouts.global_timeout_val_to_id) == 1
+        assert len(timeouts.global_timeout_id_to_val) == 1
+        form = view.form_stack[-1]
+        assert len(form._active_timeouts) == 0
+        val = form.fire_timeout()
+        assert set(timeouts.global_timeout_callbacks.keys()) == {str(dummy_uuid())}
+        assert set(timeouts.global_timeout_id_to_val.keys()) == {str(dummy_uuid())}
+        assert set(timeouts.global_timeout_val_to_id.keys()) == {val}
+        assert len(form._active_timeouts) == 1
+
+        view.stop_project(Mock())
+        assert len(form._active_timeouts) == 0
 
     def test_running_program_can_clear_timeouts(self, monkeypatch):
         def dummy_uuid():
@@ -2645,10 +2813,13 @@ print('Hello folder i={}'.format(i))
         assert len(timeouts.global_interval_callbacks) == 0
         assert len(timeouts.global_interval_val_to_id) == 0
         assert len(timeouts.global_interval_id_to_val) == 0
-        val = view.form_stack[-1].fire_interval()
+        form = view.form_stack[-1]
+        assert len(form._active_intervals) == 0
+        val = form.fire_interval()
         assert set(timeouts.global_interval_callbacks.keys()) == {str(dummy_uuid())}
         assert set(timeouts.global_interval_id_to_val.keys()) == {str(dummy_uuid())}
         assert set(timeouts.global_interval_val_to_id.keys()) == {val}
+        assert len(form._active_intervals) == 1
 
         assert counter['count'] == 0
 
@@ -2663,6 +2834,7 @@ print('Hello folder i={}'.format(i))
         assert set(timeouts.global_interval_callbacks.keys()) == {str(dummy_uuid())}
         assert set(timeouts.global_interval_id_to_val.keys()) == {str(dummy_uuid())}
         assert set(timeouts.global_interval_val_to_id.keys()) == {val}
+        assert len(form._active_intervals) == 1
 
         val = view.form_stack[-1].clear_interval(val)
 
@@ -2670,7 +2842,136 @@ print('Hello folder i={}'.format(i))
         assert len(timeouts.global_interval_callbacks) == 0
         assert len(timeouts.global_interval_val_to_id) == 0
         assert len(timeouts.global_interval_id_to_val) == 0
+        assert len(form._active_intervals) == 0
 
+    def test_stopping_program_clears_intervals(self, monkeypatch):
+        def dummy_uuid():
+            return uuid.UUID('531cb169-91f4-4102-9a0a-2cd5e9659071')
+
+        reset_hash_change_mock = Mock()
+        monkeypatch.setattr(Router, 'ResetHashChange', reset_hash_change_mock)
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(timeouts, 'get_uuid', dummy_uuid)
+
+        callbacks.initialise_global_callbacks()
+        monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        body = js.globals.document.body
+        error_404_page = c("div", [c("p", "No match 404 error"),
+                                   c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
+        view = editor.EditorView()
+        r = Router({r'^$': view},
+                    error_404_page, body)
+        r.route()
+        view.mount_redraw = Mock()
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+print('Hello folder i={}'.format(i))
+"""
+        editor.project = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': [],
+                        'parent_id': None,
+                        'is_default': False,
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]'),
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': True,
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': [],
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'form_items': [],
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': False,
+                       },
+                     ]
+                    }
+
+        assert len(view.form_stack) == 0
+
+        counter = dict()
+        counter['count'] = 0
+
+        class TestForm1(Form):
+            file_location = '/lib/pypyjs/lib_pypy/hello_world.py'
+
+            def timeout_handler(self):
+                counter['count'] += 1
+
+            def fire_interval(self):
+                return self.set_interval(self.timeout_handler, 1000)
+
+        form_classes = [TestForm1]
+        view.get_default_module_form_classes = Mock(return_value=form_classes)
+        view.write_program_to_virtual_file_system = Mock()
+        view.run_project(Mock())
+        assert view.program_is_running == True
+
+        assert len(timeouts.global_interval_callbacks) == 0
+        assert len(timeouts.global_interval_val_to_id) == 0
+        assert len(timeouts.global_interval_id_to_val) == 0
+        form = view.form_stack[-1]
+        assert len(form._active_intervals) == 0
+        val = form.fire_interval()
+        assert set(timeouts.global_interval_callbacks.keys()) == {str(dummy_uuid())}
+        assert set(timeouts.global_interval_id_to_val.keys()) == {str(dummy_uuid())}
+        assert set(timeouts.global_interval_val_to_id.keys()) == {val}
+        assert len(form._active_intervals) == 1
+
+        assert counter['count'] == 0
+
+        view.mount_redraw = Mock()
+        assert reset_hash_change_mock.call_count == 2
+        js.globals.document.cavorite_intervalhandler(str(dummy_uuid()))
+
+        view.mount_redraw.assert_called()
+        assert reset_hash_change_mock.call_count == 3
+
+        assert counter['count'] == 1
+        assert set(timeouts.global_interval_callbacks.keys()) == {str(dummy_uuid())}
+        assert set(timeouts.global_interval_id_to_val.keys()) == {str(dummy_uuid())}
+        assert set(timeouts.global_interval_val_to_id.keys()) == {val}
+        assert len(form._active_intervals) == 1
+
+        view.stop_project(Mock())
+
+        assert len(form._active_intervals) == 0
 
 
     def test_running_with_storage_program_initialises_historygraph(self, monkeypatch):
