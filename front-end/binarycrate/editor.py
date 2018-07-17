@@ -26,6 +26,8 @@ import binarycrate
 from .urllib import urlencode
 from .uploadmodal import UploadModal
 from binarycrate.controls.bcform import get_form_item_property, FormItemPropType
+import random
+import string
 
 
 HANDLE_NONE = 0
@@ -247,8 +249,15 @@ class EditorView(BCChrome):
         global project
         if parent_id is None:
             #print('write_program_to_virtual_file_system 1')
+            # Create a directory with a random  name in the owning directory
+            # we recreate the project every time to keep the running versions
+            # fresh
+            self.random_path = ''.join(random.choice(string.ascii_uppercase) for _ in range(32))
+            os.mkdir(python_module_dir + self.random_path + '/')
+            with open(python_module_dir + self.random_path + '/__init__.py', "w+") as fl:
+                 fl.write('from __future__ import absolute_import, print_function, unicode_literals\n')
             de = [de for de in project['directory_entry'] if de['parent_id'] is None][0]
-            self.write_program_to_virtual_file_system(de['id'])
+            self.write_program_to_virtual_file_system(de['id'], self.random_path + '/')
         else:
             #print('write_program_to_virtual_file_system 2')
             des = [de for de in project['directory_entry'] if de['parent_id'] == parent_id]
@@ -266,6 +275,8 @@ class EditorView(BCChrome):
                     #print('write_program_to_virtual_file_system 6')
                     #print('write_program_to_virtual_file_system de[content]', de['content'])
                     #print('write_program_to_virtual_file_system type(de[content])', type(de['content']))
+                    print('write_program_to_virtual_file_system de[name]', de['name'])
+                    print('write_program_to_virtual_file_system path', python_module_dir + extra_path + de['name'])
                     with open(python_module_dir + extra_path + de['name'], "w+") as fl:
                          fl.write(de['content'])
                     #print('write_program_to_virtual_file_system 7')
@@ -283,8 +294,8 @@ class EditorView(BCChrome):
         if de is None:
             return []
         if project['type'] == 2:
-            documents_imported_module = __import__('documents') #TODO: Make it impossible to rename or delete the documents file from the root of the proejct
-        self.imported_module = __import__(de['name'][:de['name'].find('.')])
+            documents_imported_module = __import__(self.random_path + '.documents') #TODO: Make it impossible to rename or delete the documents file from the root of the proejct
+        self.imported_module = __import__(self.random_path + '.' + de['name'][:de['name'].find('.')])
         #print('EditorView run_project dir(imported_module)=', dir(imported_module))
         classes = [getattr(self.imported_module, name) for name in dir(self.imported_module)
                    if inspect.isclass(getattr(self.imported_module, name)) and
