@@ -2253,6 +2253,7 @@ print('Hello folder i={}'.format(i))
         view.get_default_module_form_classes = Mock(return_value=form_classes)
         view.write_program_to_virtual_file_system = Mock()
         view.run_project(Mock())
+        assert view.program_is_running == True
 
         assert len(view.form_stack) == 1
         assert isinstance(view.form_stack[-1].button1, bcform.Button)
@@ -2396,6 +2397,7 @@ print('Hello folder i={}'.format(i))
         view.get_default_module_form_classes = Mock(return_value=form_classes)
         view.write_program_to_virtual_file_system = Mock()
         view.run_project(Mock())
+        assert view.program_is_running == True
 
         assert len(timeouts.global_timeout_callbacks) == 1
         assert len(timeouts.global_timeout_val_to_id) == 1
@@ -2516,6 +2518,7 @@ print('Hello folder i={}'.format(i))
         view.get_default_module_form_classes = Mock(return_value=form_classes)
         view.write_program_to_virtual_file_system = Mock()
         view.run_project(Mock())
+        assert view.program_is_running == True
 
         assert len(timeouts.global_timeout_callbacks) == 1
         assert len(timeouts.global_timeout_val_to_id) == 1
@@ -2637,6 +2640,7 @@ print('Hello folder i={}'.format(i))
         view.get_default_module_form_classes = Mock(return_value=form_classes)
         view.write_program_to_virtual_file_system = Mock()
         view.run_project(Mock())
+        assert view.program_is_running == True
 
         assert len(timeouts.global_interval_callbacks) == 0
         assert len(timeouts.global_interval_val_to_id) == 0
@@ -2792,6 +2796,7 @@ historygraphfrontend.download_document_collection()
             mock_download_document_collection.assert_not_called()
             view.write_program_to_virtual_file_system()
             view.run_project(Mock())
+            assert view.program_is_running == False
 
             mock_download_document_collection.assert_called_once()
             assert sys.path[-1] == editor.python_module_dir
@@ -2885,6 +2890,7 @@ print('Hello folder i={}'.format(i))
             mock_download_document_collection.assert_not_called()
             view.write_program_to_virtual_file_system()
             view.run_project(Mock())
+            assert view.program_is_running == False
 
             mock_download_document_collection.assert_not_called()
             assert sys.path[-1] == editor.python_module_dir
@@ -2976,6 +2982,7 @@ print('Hello folder i={}'.format(i))
         view.write_program_to_virtual_file_system = Mock()
         editor.js.globals.window.alert = Mock()
         view.run_project(Mock())
+        assert view.program_is_running == True
 
 
         editor.js.globals.window.alert.assert_called_with('Error: You must select one of the files as the default to run')

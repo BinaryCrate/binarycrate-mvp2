@@ -324,6 +324,7 @@ class EditorView(BCChrome):
         else:
             #print('EditorView run_project Found  no usable class')
             js.globals.document.print_to_secondary_output = False
+            self.program_is_running = False
         #aa.tr()
         #print('EditorView run_project called 4')
 
