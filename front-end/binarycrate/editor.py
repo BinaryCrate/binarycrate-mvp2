@@ -26,6 +26,8 @@ import binarycrate
 from .urllib import urlencode
 from .uploadmodal import UploadModal
 from binarycrate.controls.bcform import get_form_item_property, FormItemPropType
+from types import ModuleType
+import sys
 
 
 HANDLE_NONE = 0
@@ -278,13 +280,34 @@ class EditorView(BCChrome):
             return des[0]
 
     def get_default_module_form_classes(self):
+        def reload_recursively(mod):
+            if not isinstance(mod, ModuleType):
+                return
+            #print('found mod= ', mod)
+            #print('found dir(mod)= ', dir(mod))
+            for mod2 in dir(mod):
+                #print('mod2=', mod2)
+                if mod2 not in sys.builtin_module_names and \
+                   mod2 != '__builtin__'  and mod2 != '__builtins__':
+                    reload_recursively(getattr(mod, mod2))
+            #print('reloading mod= ', mod)
+            reload(mod)
+
         #de = [de for de in project['directory_entry'] if de['is_default']][0]
         de = self.get_default_directory_entry()
         if de is None:
             return []
         if project['type'] == 2:
-            documents_imported_module = __import__('documents') #TODO: Make it impossible to rename or delete the documents file from the root of the proejct
-        self.imported_module = __import__(de['name'][:de['name'].find('.')])
+            if self.documents_imported_module is None:
+                self.documents_imported_module = __import__('documents') #TODO: Make it impossible to rename or delete the documents file from the root of the proejct
+            else:
+                reload(self.documents_imported_module)
+        if (self.imported_module is None):
+            self.imported_module = __import__(de['name'][:de['name'].find('.')])
+        else:
+            #print('dir(self.imported_module)=', dir(self.imported_module))
+            #reload(self.imported_module)
+            reload_recursively(self.imported_module)
         #print('EditorView run_project dir(imported_module)=', dir(imported_module))
         classes = [getattr(self.imported_module, name) for name in dir(self.imported_module)
                    if inspect.isclass(getattr(self.imported_module, name)) and
@@ -1322,6 +1345,8 @@ class """ + class_name + """(Form):
                                                   read_only=self.get_code_mirror_read_only())
         self.upload_modal = None
         self.images = []
+        self.documents_imported_module = None
+        self.imported_module = None
         #TODO: Option arguments should be kwargs
         super(EditorView, self).__init__(
                     None,
