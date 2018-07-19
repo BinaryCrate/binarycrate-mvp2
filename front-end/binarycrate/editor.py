@@ -273,7 +273,7 @@ class EditorView(BCChrome):
                     #print('write_program_to_virtual_file_system de[content]', de['content'])
                     #print('write_program_to_virtual_file_system type(de[content])', type(de['content']))
                     with open(python_module_dir + extra_path + de['name'], "w+") as fl:
-                         fl.write(de['content'])
+                         fl.write(de['content'].encode('utf-8'))
                          global project_files
                          project_files.append(python_module_dir + extra_path + de['name'])
                     #print('write_program_to_virtual_file_system 7')
@@ -353,13 +353,13 @@ class EditorView(BCChrome):
 
         #print('EditorView run_project 0.9')
         self.program_is_running = True
+        js.globals.document.print_to_secondary_output = True
         global project
         historygraphfrontend.initialise_document_collection(project['id'], self.on_historygraph_download_complete)
         #print('EditorView run_project 1')
         #historygraphfrontend.download_document_collection()
         self.write_program_to_virtual_file_system()
         #print('EditorView run_project 2')
-        js.globals.document.print_to_secondary_output = True
         #print('EditorView run_project 3')
         form_classes = self.get_default_module_form_classes()
         #print('EditorView run_project form_classes=', form_classes)
@@ -1050,8 +1050,9 @@ class EditorView(BCChrome):
     def code_mirror_change(self, content):
         #print('code_mirror_change called')
         if self.selected_file_de is not None:
-            if self.selected_file_de['content'] != str(content):
-                self.selected_file_de['content'] = str(content)
+            content = '{}'.format(content) # Deal some errors caused by pasting in formated unicode text
+            if self.selected_file_de['content'] != content:
+                self.selected_file_de['content'] = content
                 #self.mount_redraw()
                 #Router.router.ResetHashChange()
 
