@@ -304,21 +304,13 @@ class EditorView(BCChrome):
         if de is None:
             return []
         if project['type'] == 2:
-            if self.documents_imported_module is None:
-                self.documents_imported_module = __import__('documents') #TODO: Make it impossible to rename or delete the documents file from the root of the proejct
-            else:
-                reload_recursively(self.documents_imported_module)
-        if (self.imported_module is None):
-            self.imported_module = __import__(de['name'][:de['name'].find('.')])
-        else:
-            #print('dir(self.imported_module)=', dir(self.imported_module))
-            #reload(self.imported_module)
-            reload_recursively(self.imported_module)
+            documents_imported_module = __import__('documents') #TODO: Make it impossible to rename or delete the documents file from the root of the proejct
+        imported_module = __import__(de['name'][:de['name'].find('.')])
         #print('EditorView run_project dir(imported_module)=', dir(imported_module))
-        classes = [getattr(self.imported_module, name) for name in dir(self.imported_module)
-                   if inspect.isclass(getattr(self.imported_module, name)) and
-                     issubclass(getattr(self.imported_module, name), Form) and
-                     getattr(self.imported_module, name) != Form]
+        classes = [getattr(imported_module, name) for name in dir(imported_module)
+                   if inspect.isclass(getattr(imported_module, name)) and
+                     issubclass(getattr(imported_module, name), Form) and
+                     getattr(imported_module, name) != Form]
         assert len(classes) <= 1, "Only 1 Form class should exist in a module"
         return classes
 
@@ -346,9 +338,6 @@ class EditorView(BCChrome):
         for f in project_files:
             os.remove(f)
         project_files = []
-
-        self.documents_imported_module = None
-        self.imported_module = None
 
         global original_modules
         modules_to_remove = [module_name for module_name in sys.modules.keys() if module_name not in original_modules]
@@ -1370,8 +1359,6 @@ class """ + class_name + """(Form):
                                                   read_only=self.get_code_mirror_read_only())
         self.upload_modal = None
         self.images = []
-        self.documents_imported_module = None
-        self.imported_module = None
         global original_modules
         if len(original_modules) == 0:
             original_modules = set(sys.modules.keys())
