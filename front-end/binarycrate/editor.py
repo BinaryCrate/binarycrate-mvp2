@@ -40,6 +40,8 @@ python_module_dir = '/lib/pypyjs/lib_pypy/'
 
 project = { }
 
+original_modules = set()
+
 example_html = """<!doctype html>
 <html>
   <head>
@@ -301,7 +303,7 @@ class EditorView(BCChrome):
             if self.documents_imported_module is None:
                 self.documents_imported_module = __import__('documents') #TODO: Make it impossible to rename or delete the documents file from the root of the proejct
             else:
-                reload(self.documents_imported_module)
+                eload_recursively(self.documents_imported_module)
         if (self.imported_module is None):
             self.imported_module = __import__(de['name'][:de['name'].find('.')])
         else:
@@ -1347,6 +1349,10 @@ class """ + class_name + """(Form):
         self.images = []
         self.documents_imported_module = None
         self.imported_module = None
+        global original_modules
+        if len(original_modules) == 0:
+            original_modules = set(sys.modules.keys())
+            print('original_modules=', original_modules)
         #TODO: Option arguments should be kwargs
         super(EditorView, self).__init__(
                     None,
