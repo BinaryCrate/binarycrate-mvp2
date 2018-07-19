@@ -2274,6 +2274,7 @@ print('Hello folder i={}'.format(i))
         assert result['run_found'] == True
         assert result['stop_found'] == False
 
+        view.cleanup_project = Mock()
         view.run_project(Mock())
 
         # Test that while the program is running we cannot see the Dashboard Link
@@ -2447,6 +2448,7 @@ print('Hello folder i={}'.format(i))
         form_classes = [TestForm1]
         view.get_default_module_form_classes = Mock(return_value=form_classes)
         view.write_program_to_virtual_file_system = Mock()
+        view.cleanup_project = Mock()
         view.run_project(Mock())
         assert view.program_is_running == True
 
@@ -2572,6 +2574,7 @@ print('Hello folder i={}'.format(i))
         form_classes = [TestForm1]
         view.get_default_module_form_classes = Mock(return_value=form_classes)
         view.write_program_to_virtual_file_system = Mock()
+        view.cleanup_project = Mock()
         view.run_project(Mock())
         assert view.program_is_running == True
 
@@ -2685,6 +2688,7 @@ print('Hello folder i={}'.format(i))
         form_classes = [TestForm1]
         view.get_default_module_form_classes = Mock(return_value=form_classes)
         view.write_program_to_virtual_file_system = Mock()
+        view.cleanup_project = Mock()
         view.run_project(Mock())
         assert view.program_is_running == True
 
@@ -2807,6 +2811,7 @@ print('Hello folder i={}'.format(i))
         form_classes = [TestForm1]
         view.get_default_module_form_classes = Mock(return_value=form_classes)
         view.write_program_to_virtual_file_system = Mock()
+        view.cleanup_project = Mock()
         view.run_project(Mock())
         assert view.program_is_running == True
 
@@ -2940,6 +2945,7 @@ print('Hello folder i={}'.format(i))
         form_classes = [TestForm1]
         view.get_default_module_form_classes = Mock(return_value=form_classes)
         view.write_program_to_virtual_file_system = Mock()
+        view.cleanup_project = Mock()
         view.run_project(Mock())
         assert view.program_is_running == True
 
@@ -3096,6 +3102,7 @@ historygraphfrontend.download_document_collection()
             sys.path.append(editor.python_module_dir)
             mock_download_document_collection.assert_not_called()
             view.write_program_to_virtual_file_system()
+            view.cleanup_project = Mock()
             view.run_project(Mock())
             assert view.program_is_running == False
 
@@ -3190,6 +3197,7 @@ print('Hello folder i={}'.format(i))
             sys.path.append(editor.python_module_dir)
             mock_download_document_collection.assert_not_called()
             view.write_program_to_virtual_file_system()
+            view.cleanup_project = Mock()
             view.run_project(Mock())
             assert view.program_is_running == False
 
@@ -3282,6 +3290,7 @@ print('Hello folder i={}'.format(i))
         view.get_default_module_form_classes = Mock(return_value=form_classes)
         view.write_program_to_virtual_file_system = Mock()
         editor.js.globals.window.alert = Mock()
+        view.cleanup_project = Mock()
         view.run_project(Mock())
         assert view.program_is_running == True
 

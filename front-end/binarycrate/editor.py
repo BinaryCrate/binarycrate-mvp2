@@ -42,6 +42,8 @@ project = { }
 
 original_modules = set()
 
+project_files = [] #All the project files we have written to the virtual file system
+
 example_html = """<!doctype html>
 <html>
   <head>
@@ -272,6 +274,8 @@ class EditorView(BCChrome):
                     #print('write_program_to_virtual_file_system type(de[content])', type(de['content']))
                     with open(python_module_dir + extra_path + de['name'], "w+") as fl:
                          fl.write(de['content'])
+                         global project_files
+                         project_files.append(python_module_dir + extra_path + de['name'])
                     #print('write_program_to_virtual_file_system 7')
 
     def get_default_directory_entry(self):
@@ -303,7 +307,7 @@ class EditorView(BCChrome):
             if self.documents_imported_module is None:
                 self.documents_imported_module = __import__('documents') #TODO: Make it impossible to rename or delete the documents file from the root of the proejct
             else:
-                eload_recursively(self.documents_imported_module)
+                reload_recursively(self.documents_imported_module)
         if (self.imported_module is None):
             self.imported_module = __import__(de['name'][:de['name'].find('.')])
         else:
@@ -332,8 +336,26 @@ class EditorView(BCChrome):
             form.clear_all_active_intervals()
         self.form_stack = []
         js.globals.document.print_to_secondary_output = False
+        self.cleanup_project()
         self.mount_redraw()
         Router.router.ResetHashChange()
+
+    def cleanup_project(self):
+        print('cleanup_project called')
+        global project_files
+        for f in project_files:
+            os.remove(f)
+        project_files = []
+
+        self.documents_imported_module = None
+        self.imported_module = None
+
+        global original_modules
+        modules_to_remove = [module_name for module_name in sys.modules.keys() if module_name not in original_modules]
+        for module_name in modules_to_remove:
+            del sys.modules[module_name]
+        import gc
+        gc.collect()
 
     def run_project(self, e):
         print('EditorView run_project called')
@@ -361,6 +383,7 @@ class EditorView(BCChrome):
             #print('EditorView run_project Found  no usable class')
             js.globals.document.print_to_secondary_output = False
             self.program_is_running = False
+            self.cleanup_project()
         #aa.tr()
         #print('EditorView run_project called 4')
 
@@ -1352,7 +1375,7 @@ class """ + class_name + """(Form):
         global original_modules
         if len(original_modules) == 0:
             original_modules = set(sys.modules.keys())
-            print('original_modules=', original_modules)
+            #print('original_modules=', original_modules)
         #TODO: Option arguments should be kwargs
         super(EditorView, self).__init__(
                     None,
