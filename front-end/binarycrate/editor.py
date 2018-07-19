@@ -406,6 +406,10 @@ class EditorView(BCChrome):
                         de['form_items'] = []
                     else:
                         de['form_items'] = json.loads(de['form_items'])
+                        for fi in de['form_items']:
+                            # Some of the form controls in the demo content don't have visibility set
+                            if 'visible' not in fi:
+                                fi['visible'] = True
                 self.mount_redraw()
                 Router.router.ResetHashChange()
 
@@ -913,6 +917,7 @@ class EditorView(BCChrome):
              'width': 100,
              'height': 30,
              'caption': 'Button',
+             'visible': True,
              'name': self.get_next_name('button'),
             })
 
@@ -921,6 +926,7 @@ class EditorView(BCChrome):
             {'type': 'textbox',
              'width': 150,
              'height': 30,
+             'visible': True,
              'name': self.get_next_name('textbox'),
             })
 
@@ -932,6 +938,7 @@ class EditorView(BCChrome):
              'name': self.get_next_name('image'),
              'src': '',
              'preloaded_image': '',
+             'visible': True,
             })
 
     def new_label(self, e):
@@ -941,6 +948,7 @@ class EditorView(BCChrome):
              'height': 30,
              'caption': 'Label',
              'name': self.get_next_name('label'),
+             'visible': True,
             })
 
     def new_frame(self, e):
@@ -950,6 +958,7 @@ class EditorView(BCChrome):
              'height': 300,
              'caption': 'Frame',
              'name': self.get_next_name('frame'),
+             'visible': True,
             })
 
     def new_checkbox(self, e):
@@ -960,6 +969,7 @@ class EditorView(BCChrome):
              'caption': 'Checkbox',
              'name': self.get_next_name('checkbox'),
              'value': False,
+             'visible': True,
             })
 
     def new_listbox(self, e):
@@ -968,6 +978,7 @@ class EditorView(BCChrome):
              'width': 150,
              'height': 150,
              'name': self.get_next_name('listbox'),
+             'visible': True,
             })
 
     def new_rectangle(self, e):
@@ -979,6 +990,7 @@ class EditorView(BCChrome):
              'stroke_width': 5,
              'stroke': 'rgb(0,0,0)',
              'fill': 'none',
+             'visible': True,
             })
 
     def new_circle(self, e):
@@ -990,6 +1002,7 @@ class EditorView(BCChrome):
              'stroke_width': 5,
              'stroke': 'rgb(0,0,0)',
              'fill': 'none',
+             'visible': True,
             })
 
     def new_ellipse(self, e):
@@ -997,10 +1010,11 @@ class EditorView(BCChrome):
             {'type': 'ellipse',
              'width': 150,
              'height': 150,
-             'name': 'ellipse1', #TODO: Get the name correctly
+             'name': self.get_next_name('ellipse'),
              'stroke_width': 5,
              'stroke': 'rgb(0,0,0)',
              'fill': 'none',
+             'visible': True,
             })
 
     def new_line(self, e):
@@ -1008,10 +1022,11 @@ class EditorView(BCChrome):
             {'type': 'line',
              'width': 150,
              'height': 150,
-             'name': 'line1', #TODO: Get the name correctly
+             'name': self.get_next_name('line'),
              'stroke_width': 5,
              'stroke': 'rgb(0,0,0)',
              'fill': 'none',
+             'visible': True,
             })
 
     def new_hexagon(self, e):
@@ -1019,10 +1034,11 @@ class EditorView(BCChrome):
             {'type': 'hexagon',
              'width': 150,
              'height': 150,
-             'name': 'listbox1', #TODO: Get the name correctly
+             'name': self.get_next_name('hexagon'),
              'stroke_width': 5,
              'stroke': 'rgb(0,0,0)',
              'fill': 'none',
+             'visible': True,
             })
 
     def get_selected_de_content(self):

@@ -7,8 +7,8 @@ class BCMunch(Munch):
 
     def __init__(self, *args, **kwargs):
         super(BCMunch, self).__init__(*args, **kwargs)
-        #print('self._members=', set(self._members))
-        #print('self.keys()=', set(self.keys()))
-        #print('self._optional_members=', set(self._optional_members))
+        print('self._members=', set(self._members))
+        print('self.keys()=', set(self.keys()))
+        print('self._optional_members=', set(self._optional_members))
         assert set(self._members)  == set(self.keys()) - {'id', 'type'} - \
             set(self._optional_members)

@@ -146,7 +146,7 @@ class TestEditor(object):
             if de['id'] != '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a':
                 assert de['form_items'] == []
             else:
-                assert de['form_items'] == [{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]
+                assert de['form_items'] == [{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30, "visible": True}]
 
         tree = node.get_project_tree()
 
@@ -283,7 +283,7 @@ class TestEditor(object):
                 assert data['content'] == hello_world2_content
                 assert data['parent_id'] == node.selected_de['parent_id']
                 assert data['is_default'] == True
-                assert json.loads(data['form_items']) == json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]')
+                assert json.loads(data['form_items']) == json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30, "visible": true}]')
                 was_found = True
             if url == '/api/projects/directoryentry/6a05e63e-6db4-4898-a3eb-2aad50dd5f9a/':
                 assert len(data) == 7
@@ -1192,9 +1192,10 @@ class TestContextMenu(object):
         assert 'Change caption' ==  view.context_menu.menu_items[0][0]
         assert 'Change height' ==   view.context_menu.menu_items[1][0]
         assert 'Change name' ==     view.context_menu.menu_items[2][0]
-        assert 'Change width' ==    view.context_menu.menu_items[3][0]
-        assert 'Change x' ==        view.context_menu.menu_items[4][0]
-        assert 'Change y' ==        view.context_menu.menu_items[5][0]
+        assert 'Change visible' ==  view.context_menu.menu_items[3][0]
+        assert 'Change width' ==    view.context_menu.menu_items[4][0]
+        assert 'Change x' ==        view.context_menu.menu_items[5][0]
+        assert 'Change y' ==        view.context_menu.menu_items[6][0]
 
         assert view.context_menu.menu_items[-1][0] == 'Delete'
         assert callable(view.context_menu.menu_items[-1][1])
@@ -2120,7 +2121,7 @@ print('Hello folder i={}'.format(i))
                         'name': 'hello_world.py',
                         'is_file': True,
                         'content': hello_world_content,
-                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]'),
+                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30, "visible": true}]'),
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': True,
                        },
@@ -2213,7 +2214,7 @@ print('Hello folder i={}'.format(i))
                         'name': 'hello_world.py',
                         'is_file': True,
                         'content': hello_world_content,
-                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]'),
+                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30, "visible": false}]'),
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': True,
                        },
@@ -2274,6 +2275,10 @@ print('Hello folder i={}'.format(i))
         assert result['run_found'] == True
         assert result['stop_found'] == False
 
+        # Test a control marked as visible = False is still visible when not running
+        view.selected_de = view.get_project()['directory_entry'][0]
+        assert len(view.get_selected_de_form_controls()) == 1
+
         view.cleanup_project = Mock()
         view.run_project(Mock())
 
@@ -2300,12 +2305,22 @@ print('Hello folder i={}'.format(i))
 
         # Test we can add a dynamic button to the form
         form = view.form_stack[-1]
+        # Test a control marked as visible = False is not visible when running
+        assert len(form.get_form_control_elements()) == 1
+
         assert len(form.get_form_controls()) == 1
         form.add_control(bcform.Button({'x': 1, 'y': 1, 'width': 100,
                                         'height': 80, 'caption': '2nd Button',
-                                        'name':'bill',
+                                        'name':'bill', 'visible': True,
                                         'onclick': dummy_handler}))
+        assert len(form.get_form_control_elements()) == 2 # The dynamically added button should be visible but not the static
         assert len(form.get_form_controls()) == 2
+        # Mark the static button as visible and verify it appear
+        static_button_form_item = form.get_form_controls()[0]
+        assert static_button_form_item.visible == False
+        static_button_form_item.visible = True
+        assert len(form.get_form_control_elements()) == 3 # Both buttons should now be visible
+
         static_button = form.get_form_control_elements()[0]
         dynamic_button = form.get_form_control_elements()[1]
         form.handle_onclick = Mock()
@@ -2406,7 +2421,7 @@ print('Hello folder i={}'.format(i))
                         'name': 'hello_world.py',
                         'is_file': True,
                         'content': hello_world_content,
-                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]'),
+                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30, "visible": true}]'),
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': True,
                        },
@@ -2532,7 +2547,7 @@ print('Hello folder i={}'.format(i))
                         'name': 'hello_world.py',
                         'is_file': True,
                         'content': hello_world_content,
-                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]'),
+                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30, "visible": true}]'),
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': True,
                        },
@@ -2646,7 +2661,7 @@ print('Hello folder i={}'.format(i))
                         'name': 'hello_world.py',
                         'is_file': True,
                         'content': hello_world_content,
-                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]'),
+                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30, "visible": true}]'),
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': True,
                        },
@@ -2769,7 +2784,7 @@ print('Hello folder i={}'.format(i))
                         'name': 'hello_world.py',
                         'is_file': True,
                         'content': hello_world_content,
-                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]'),
+                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30, "visible": true}]'),
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': True,
                        },
@@ -2903,7 +2918,7 @@ print('Hello folder i={}'.format(i))
                         'name': 'hello_world.py',
                         'is_file': True,
                         'content': hello_world_content,
-                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]'),
+                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30, "visible": true}]'),
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': True,
                        },
@@ -3256,7 +3271,7 @@ print('Hello folder i={}'.format(i))
                         'name': 'hello_world.py',
                         'is_file': True,
                         'content': hello_world_content,
-                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]'),
+                        'form_items': json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30, "visible": true}]'),
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },

@@ -32,7 +32,7 @@ class TestBCMunch(object):
 class TestBCFormItemMunches(object):
     def test_can_create_form_item_and_assign_values(self):
         b = Button({'x': 1, 'y': 2, 'width': 100, 'height': 20,
-                    'name': 'button1', 'caption': 'Hello'})
+                    'name': 'button1', 'caption': 'Hello', 'visible': True})
         assert b.caption == 'Hello'
         assert b['caption'] == 'Hello'
         assert b['type'] == 'button'
@@ -43,7 +43,7 @@ class TestBCFormItemMunches(object):
             pass
         b = Button({'x': 1, 'y': 2, 'width': 100, 'height': 20,
                     'name': 'button1', 'caption': 'Hello',
-                    'onclick': dummy_handler})
+                    'onclick': dummy_handler, 'visible': True})
         assert b.caption == 'Hello'
         assert b['caption'] == 'Hello'
         assert b['type'] == 'button'
@@ -56,4 +56,5 @@ class TestBCFormItemMunches(object):
     def test_must_not_supply_unnecessary_values_to_form_item(self):
         with pytest.raises(AssertionError):
             m = Button({'x': 1, 'y': 2, 'width': 100, 'height': 20,
-                        'name': 'button1', 'caption': 'Hello', 'foo2': 'bar2'})
+                        'name': 'button1', 'caption': 'Hello', 'visible': True,
+                        'foo2': 'bar2'})

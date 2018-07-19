@@ -22,12 +22,14 @@ def get_form_item_property(form_item_type):
                  'y2': FormItemPropType.INT,
                  'name': FormItemPropType.STRING,
                  'stroke_width': FormItemPropType.INT,
-                 'stroke': FormItemPropType.COLOR}
+                 'stroke': FormItemPropType.COLOR,
+                 'visible': FormItemPropType.BOOLEAN}
     props = {'x': FormItemPropType.INT,
              'y': FormItemPropType.INT,
              'width': FormItemPropType.INT,
              'height': FormItemPropType.INT,
-             'name': FormItemPropType.STRING}
+             'name': FormItemPropType.STRING,
+             'visible': FormItemPropType.BOOLEAN}
     if form_item_type == 'button' or form_item_type == 'label' \
        or form_item_type == 'frame' or form_item_type == 'checkbox':
         props.update({'caption': FormItemPropType.STRING})
@@ -139,7 +141,11 @@ class Form(object):
     def get_form_control_elements(self):
         ret = list()
         html_controls = dict()
+        control = None
         for form_item in self.get_form_controls():
+            if form_item['visible'] == False:
+                # Don't write invisible items out the DOM
+                continue
             #print('initialise_form_controls form_item=', form_item)
             #TODO: Copied code from editor.py should be refactored
             style = ''.join(('position: absolute; ',
