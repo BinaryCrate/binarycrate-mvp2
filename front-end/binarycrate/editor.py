@@ -400,6 +400,8 @@ class EditorView(BCChrome):
             global project
             new_project = json.loads(str(xmlhttp.responseText))
             if project  != new_project:
+                self.selected_de = None
+                self.selected_file_de = None
                 project = new_project
                 project['deleted_directory_entries'] = list()
                 for de in project['directory_entry']:
@@ -418,6 +420,8 @@ class EditorView(BCChrome):
         global project
         project = {}
         self.context_menu = None
+        self.selected_de = None
+        self.selected_file_de = None
         super(EditorView, self).mount(element)
 
     def get_project(self):
@@ -441,6 +445,7 @@ class EditorView(BCChrome):
             ajaxget('/api/projects/image-list/' + self.get_root().url_kwargs['project_id'] + '/', images_api_ajax_result_handler2)
 
     def was_mounted(self):
+        #print('was_mounted called')
         super(EditorView, self).was_mounted()
         self.timeout_val = timeouts.set_timeout(lambda : self.query_project(), 1)
 
