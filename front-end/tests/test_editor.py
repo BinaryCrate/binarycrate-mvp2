@@ -184,13 +184,13 @@ class TestEditor(object):
         assert type(node.code_mirror.get_children()[0]) == t
         assert node.code_mirror.get_children()[0].text() == hello_world_content
 
-        # Click folder doesn't update the text
+        # Click folder should blank the text
         node.code_mirror.editor = Mock(setValue=Mock())
         folder.on_click(None)
         assert node.code_mirror.editor.setValue.call_count == 0
         assert len(node.code_mirror.get_children()) == 1
         assert type(node.code_mirror.get_children()[0]) == t
-        assert node.code_mirror.get_children()[0].text() == hello_world_content
+        assert node.code_mirror.get_children()[0].text() == ''
         folder.on_click(None)
 
         node.code_mirror.editor = Mock(setValue=Mock())
@@ -205,6 +205,7 @@ class TestEditor(object):
         # Click on hello_world and check that the UI updates correctly
         root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
         assert node.selected_de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'
+        assert node.selected_file_de == node.selected_de
         assert 'file-active' in hello_world.get_attribs().get('class', '')
         a_hello_world = hello_world.get_children()[0]
         assert a_hello_world.get_tag_name() == 'a'
@@ -221,6 +222,7 @@ class TestEditor(object):
         tree = node.get_project_tree()
         root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
         assert node.selected_de['id'] == 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+        assert node.selected_file_de == None
         assert 'file-active' not in hello_world.get_attribs().get('class', '')
         a_hello_world = hello_world.get_children()[0]
         assert a_hello_world.get_tag_name() == 'a'

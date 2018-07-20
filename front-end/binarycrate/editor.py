@@ -112,6 +112,7 @@ class BCPFolder(li):
     def on_click(self, e):
         self.editor_view.folder_state[self.de['id']] = not self.editor_view.folder_state[self.de['id']]
         self.editor_view.selected_de = self.de
+        self.editor_view.selected_file_de = None
         self.editor_view.selected_item = ''
         self.editor_view.mount_redraw()
         Router.router.ResetHashChange()
@@ -1043,14 +1044,16 @@ class EditorView(BCChrome):
 
     def get_selected_de_content(self):
         if self.selected_file_de is None:
-            return ''
+            ret = ''
         else:
-            return self.selected_file_de['content']
+            ret = self.selected_file_de['content']
+        #print('get_selected_de_content ret=', ret)
+        return ret
 
     def code_mirror_change(self, content):
         #print('code_mirror_change called')
         if self.selected_file_de is not None:
-            content = '{}'.format(content) # Deal some errors caused by pasting in formated unicode text
+            content = '{}'.format(content) # Work around some errors caused by pasting in formated unicode text
             if self.selected_file_de['content'] != content:
                 self.selected_file_de['content'] = content
                 #self.mount_redraw()
