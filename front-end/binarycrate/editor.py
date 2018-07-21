@@ -25,12 +25,14 @@ import inspect
 from binarycrate import historygraphfrontend
 import binarycrate
 from .urllib import urlencode
+import bs4
+from bs4 import BeautifulSoup
 
 HANDLE_NONE = 0
 HANDLE_TOPLEFT = 1
 HANDLE_TOPRIGHT = 2
-HANDLE_BOTTOMLEFT = 3
 HANDLE_BOTTOMRIGHT = 4
+HANDLE_BOTTOMLEFT = 3
 
 python_module_dir = '/lib/pypyjs/lib_pypy/'
 
@@ -464,7 +466,6 @@ class EditorView(BCChrome):
                                         iframe({'id': 'preview', 'class': 'col-12 code-output'}),
                                      ]
                                  if (project.get('type', None) == 1) else
-
                                      [
                                         # Generate preview for python projects
                                         div({'id': 'preview', 'class': 'col-12 code-output',
@@ -1007,6 +1008,38 @@ class EditorView(BCChrome):
         else:
             return self.selected_file_de['content']
 
+    def get_file_name_content(self, file_name):
+        global project
+        content = [de['content'] for de in project['directory_entry'] if de['name'] == file_name]
+        return content[0]
+
+    def beautiful_soup(self):
+        global project
+        # Get the content of index.html
+        html_content = self.get_file_name_content("index.html")
+        html_soup = BeautifulSoup(html_content)  # Creates a html soup out of index.html content
+        if html_soup.find('head') is not None:
+            # If index.html contains <head> insert <styles> and <scripts> in between
+            head = html_soup.head
+            if html_soup.find('style') is None:
+                style_tag = html_soup.new_tag("style")  # Creates a styles tag
+                head.append(style_tag)
+            if html_soup.find('script') is None:
+                script_tag = html_soup.new_tag("script")  # Creates a script tag
+                head.append(script_tag)
+
+            # Insert styles.css into <style> tag
+            styles_content = self.get_file_name_content("styles.css")
+            if html_soup.find_all('style') != []:   #if a <style> tag exists insert styles.css content inside
+                html_soup.style.string = styles_content
+
+            # Insert scripts.js into <script> tag
+            scripts_content = self.get_file_name_content("scripts.js")
+            if html_soup.find_all('script') != []:  #if a <script> tag exists insert scripts.js content inside
+                html_soup.script.string = scripts_content
+
+        return str(html_soup)
+
     def code_mirror_change(self, content):
         global project
         # print('code_mirror_change called')
@@ -1015,12 +1048,14 @@ class EditorView(BCChrome):
                 self.selected_file_de['content'] = str(content)
                 # self.mount_redraw()
                 # Router.router.ResetHashChange()
+
         #Update iframe if html project
         if project.get('type', None) == 1:
+            pretty_html = self.beautiful_soup()
             previewFrame = js.globals.document.getElementById('preview');
             preview = previewFrame.contentDocument or previewFrame.contentWindow.document;
             preview.open();
-            preview.write(content);
+            preview.write(pretty_html);
             preview.close();
 
     def newFile_ok(self, e, form_values):
@@ -1300,3 +1335,7 @@ class EditorView(BCChrome):
 
 def editor_view():
     return EditorView()
+
+
+
+
