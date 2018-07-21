@@ -175,7 +175,7 @@ def drop_down_item(title, icon_class, click_handler):
         attribs['onclick'] = dummy_click_handler
     return a(attribs, [
       i({'class': "fa fa-1x " + icon_class, 'aria-hidden':"true"}),
-      t(title),
+      t(' ' + title),
     ])
 
 def drop_down_submenu(title, icon_class, members):
