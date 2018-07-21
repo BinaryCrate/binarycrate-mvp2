@@ -2263,7 +2263,7 @@ print('Hello folder i={}'.format(i))
                 result['dashboard_found'] = True
             if hasattr(vnode, 'text') and vnode.text == 'Debug':
                 result['debug_found'] = True
-            if hasattr(vnode, 'text') and vnode.text == 'Run':
+            if hasattr(vnode, 'text') and vnode.text == ' Run':
                 result['run_found'] = True
             if hasattr(vnode, 'text') and vnode.text == 'Stop':
                 result['stop_found'] = True

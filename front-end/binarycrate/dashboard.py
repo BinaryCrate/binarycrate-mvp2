@@ -215,7 +215,8 @@ class DashboardView(BCChrome):
 
     def projects_api_ajax_post_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
-            self.query_projects()
+            new_project = json.loads(str(xmlhttp.responseText))
+            js.globals.document.location = '/#!editor/' + new_project['id']
 
     def projects_api_ajax_put_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
