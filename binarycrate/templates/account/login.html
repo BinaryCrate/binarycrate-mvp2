@@ -48,11 +48,14 @@
             <div class="card-body">
                 <form method="POST" action="{% url 'account_login' %}">
                     {% csrf_token %}
+                    {% include "account/_login_form_error.html" with error_list=form.non_field_errors %}
                     <div class="form-group"><label for="exampleInputEmail1">Email</label><input name='login' class="form-control" id="exampleInputEmail1" type="email" aria-describedby="emailHelp" placeholder="Enter email"></div>
+                    {% include "account/_login_form_error.html" with error_list=form.login.errors %}
                     <div class="form-group"><label for="exampleInputPassword1">Password</label><input name='password' class="form-control" id="exampleInputPassword1" type="password" placeholder="Password"></div>
+                    {% include "account/_login_form_error.html" with error_list=form.password.errors %}
                     <div class="form-group">
                         <div class="form-check"><label class="id_remember2">Remember Me</label><input name='remember' id='id_remember2' class="form-check-input" type="checkbox"></div>
-                    </div><button class="btn btn-primary btn-block" type="submit">Login</button>{#<a class="btn btn-primary btn-block" href="index.html">Login</a>#}
+                    </div><button class="btn btn-primary btn-block" type="submit">Login</button>
                 {% if redirect_field_value %}
                 <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
                 {% endif %}

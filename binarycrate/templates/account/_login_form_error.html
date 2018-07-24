@@ -1,0 +1,7 @@
+{% if error_list %}
+    <ol>
+    {% for error in error_list %}
+        <li><strong>{{ error|escape }}</strong></li>
+    {% endfor %}
+    </ol>
+{% endif %}

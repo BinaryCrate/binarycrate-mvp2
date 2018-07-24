@@ -25,6 +25,9 @@ from binarycrate import historygraphfrontend
 import binarycrate
 from .urllib import urlencode
 from .uploadmodal import UploadModal
+from binarycrate.controls.bcform import get_form_item_property, FormItemPropType
+from types import ModuleType
+import sys
 
 
 HANDLE_NONE = 0
@@ -36,6 +39,10 @@ HANDLE_BOTTOMRIGHT = 4
 python_module_dir = '/lib/pypyjs/lib_pypy/'
 
 project = { }
+
+original_modules = set()
+
+project_files = [] #All the project files we have written to the virtual file system
 
 example_html = """<!doctype html>
 <html>
@@ -105,6 +112,7 @@ class BCPFolder(li):
     def on_click(self, e):
         self.editor_view.folder_state[self.de['id']] = not self.editor_view.folder_state[self.de['id']]
         self.editor_view.selected_de = self.de
+        self.editor_view.selected_file_de = None
         self.editor_view.selected_item = ''
         self.editor_view.mount_redraw()
         Router.router.ResetHashChange()
@@ -167,7 +175,7 @@ def drop_down_item(title, icon_class, click_handler):
         attribs['onclick'] = dummy_click_handler
     return a(attribs, [
       i({'class': "fa fa-1x " + icon_class, 'aria-hidden':"true"}),
-      t(title),
+      t(' ' + title),
     ])
 
 def drop_down_submenu(title, icon_class, members):
@@ -201,43 +209,6 @@ class ContextMenu(nav):
         return              [
                               ul({'class': 'context-menu__items'}, menu_items),
                             ]
-
-class FormItemPropType(object):
-    INT = 0
-    STRING = 1
-    BOOLEAN = 2
-    COLOR = 3
-    PRELOADED_IMAGE = 4
-
-def get_form_item_property(form_item_type):
-    if form_item_type == 'line':
-        return  {'x1': FormItemPropType.INT,
-                 'y1': FormItemPropType.INT,
-                 'x2': FormItemPropType.INT,
-                 'y2': FormItemPropType.INT,
-                 'name': FormItemPropType.STRING,
-                 'stroke_width': FormItemPropType.INT,
-                 'stroke': FormItemPropType.COLOR}
-    props = {'x': FormItemPropType.INT,
-             'y': FormItemPropType.INT,
-             'width': FormItemPropType.INT,
-             'height': FormItemPropType.INT,
-             'name': FormItemPropType.STRING}
-    if form_item_type == 'button' or form_item_type == 'label' \
-       or form_item_type == 'frame' or form_item_type == 'checkbox':
-        props.update({'caption': FormItemPropType.STRING})
-    if form_item_type == 'textbox':
-        props.update({'text': FormItemPropType.STRING})
-    if form_item_type == 'image':
-        props.update({'src': FormItemPropType.STRING, 'preloaded_image': FormItemPropType.PRELOADED_IMAGE})
-    if form_item_type == 'checkbox':
-        props.update({'value': FormItemPropType.BOOLEAN})
-    if form_item_type in {'rect', 'circle', 'ellipse', 'hexagon'}:
-        props.update({'stroke_width': FormItemPropType.INT,
-                      'stroke': FormItemPropType.COLOR,
-                      'fill': FormItemPropType.COLOR,
-                     })
-    return props
 
 
 class EditorView(BCChrome):
@@ -303,7 +274,9 @@ class EditorView(BCChrome):
                     #print('write_program_to_virtual_file_system de[content]', de['content'])
                     #print('write_program_to_virtual_file_system type(de[content])', type(de['content']))
                     with open(python_module_dir + extra_path + de['name'], "w+") as fl:
-                         fl.write(de['content'])
+                         fl.write(de['content'].encode('utf-8'))
+                         global project_files
+                         project_files.append(python_module_dir + extra_path + de['name'])
                     #print('write_program_to_virtual_file_system 7')
 
     def get_default_directory_entry(self):
@@ -314,6 +287,19 @@ class EditorView(BCChrome):
             return des[0]
 
     def get_default_module_form_classes(self):
+        def reload_recursively(mod):
+            if not isinstance(mod, ModuleType):
+                return
+            #print('found mod= ', mod)
+            #print('found dir(mod)= ', dir(mod))
+            for mod2 in dir(mod):
+                #print('mod2=', mod2)
+                if mod2 not in sys.builtin_module_names and \
+                   mod2 != '__builtin__'  and mod2 != '__builtins__':
+                    reload_recursively(getattr(mod, mod2))
+            #print('reloading mod= ', mod)
+            reload(mod)
+
         #de = [de for de in project['directory_entry'] if de['is_default']][0]
         de = self.get_default_directory_entry()
         if de is None:
@@ -335,6 +321,32 @@ class EditorView(BCChrome):
         self.mount_redraw()
         Router.router.ResetHashChange()
 
+    def stop_project(self, e):
+        print('EditorView stop_project called')
+        self.program_is_running = False
+        for form in self.form_stack:
+            form.clear_all_active_timeouts()
+            form.clear_all_active_intervals()
+        self.form_stack = []
+        js.globals.document.print_to_secondary_output = False
+        self.cleanup_project()
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
+    def cleanup_project(self):
+        print('cleanup_project called')
+        global project_files
+        for f in project_files:
+            os.remove(f)
+        project_files = []
+
+        global original_modules
+        modules_to_remove = [module_name for module_name in sys.modules.keys() if module_name not in original_modules]
+        for module_name in modules_to_remove:
+            del sys.modules[module_name]
+        import gc
+        gc.collect()
+
     def run_project(self, e):
         print('EditorView run_project called')
         if self.get_default_directory_entry() is None:
@@ -342,26 +354,34 @@ class EditorView(BCChrome):
 
         #print('EditorView run_project 0.9')
         self.program_is_running = True
+        js.globals.document.print_to_secondary_output = True
         global project
         historygraphfrontend.initialise_document_collection(project['id'], self.on_historygraph_download_complete)
         #print('EditorView run_project 1')
         #historygraphfrontend.download_document_collection()
         self.write_program_to_virtual_file_system()
         #print('EditorView run_project 2')
-        js.globals.document.print_to_secondary_output = True
         #print('EditorView run_project 3')
         form_classes = self.get_default_module_form_classes()
         #print('EditorView run_project form_classes=', form_classes)
         if len(form_classes) > 0:
             #print('EditorView run_project Found usable class name=' + form_classes[0].__name__)
-            self.form_stack.append(form_classes[0](self))
+            self.form_stack.append(form_classes[0](editorview=self))
             self.mount_redraw()
             Router.router.ResetHashChange()
         else:
             #print('EditorView run_project Found  no usable class')
             js.globals.document.print_to_secondary_output = False
+            self.program_is_running = False
+            self.cleanup_project()
         #aa.tr()
         #print('EditorView run_project called 4')
+
+    def get_sidebar_nav_items(self):
+        if self.program_is_running:
+            return []
+        else:
+            return super(EditorView, self).get_sidebar_nav_items()
 
     def set_current_file_as_default(self, e):
         #print('set_current_file_as_default called')
@@ -380,6 +400,8 @@ class EditorView(BCChrome):
             global project
             new_project = json.loads(str(xmlhttp.responseText))
             if project  != new_project:
+                self.selected_de = None
+                self.selected_file_de = None
                 project = new_project
                 project['deleted_directory_entries'] = list()
                 for de in project['directory_entry']:
@@ -387,6 +409,10 @@ class EditorView(BCChrome):
                         de['form_items'] = []
                     else:
                         de['form_items'] = json.loads(de['form_items'])
+                        for fi in de['form_items']:
+                            # Some of the form controls in the demo content don't have visibility set
+                            if 'visible' not in fi:
+                                fi['visible'] = True
                 self.mount_redraw()
                 Router.router.ResetHashChange()
 
@@ -394,6 +420,8 @@ class EditorView(BCChrome):
         global project
         project = {}
         self.context_menu = None
+        self.selected_de = None
+        self.selected_file_de = None
         super(EditorView, self).mount(element)
 
     def get_project(self):
@@ -417,6 +445,7 @@ class EditorView(BCChrome):
             ajaxget('/api/projects/image-list/' + self.get_root().url_kwargs['project_id'] + '/', images_api_ajax_result_handler2)
 
     def was_mounted(self):
+        #print('was_mounted called')
         super(EditorView, self).was_mounted()
         self.timeout_val = timeouts.set_timeout(lambda : self.query_project(), 1)
 
@@ -840,7 +869,7 @@ class EditorView(BCChrome):
             ret.append(svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%', 'oncontextmenu': self.contextmenu_preview, 'z-index':-5, 'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up}, svg_list))
         if self.program_is_running and len(self.form_stack) > 0:
             #print('get_selected_de_form_controls getting form controls from from_stack')
-            ret = self.form_stack[-1].get_form_controls()
+            ret = self.form_stack[-1].get_form_control_elements()
         return ret
 
     def clear_selected_item(self, e):
@@ -894,6 +923,7 @@ class EditorView(BCChrome):
              'width': 100,
              'height': 30,
              'caption': 'Button',
+             'visible': True,
              'name': self.get_next_name('button'),
             })
 
@@ -902,6 +932,7 @@ class EditorView(BCChrome):
             {'type': 'textbox',
              'width': 150,
              'height': 30,
+             'visible': True,
              'name': self.get_next_name('textbox'),
             })
 
@@ -913,6 +944,7 @@ class EditorView(BCChrome):
              'name': self.get_next_name('image'),
              'src': '',
              'preloaded_image': '',
+             'visible': True,
             })
 
     def new_label(self, e):
@@ -922,6 +954,7 @@ class EditorView(BCChrome):
              'height': 30,
              'caption': 'Label',
              'name': self.get_next_name('label'),
+             'visible': True,
             })
 
     def new_frame(self, e):
@@ -931,6 +964,7 @@ class EditorView(BCChrome):
              'height': 300,
              'caption': 'Frame',
              'name': self.get_next_name('frame'),
+             'visible': True,
             })
 
     def new_checkbox(self, e):
@@ -941,6 +975,7 @@ class EditorView(BCChrome):
              'caption': 'Checkbox',
              'name': self.get_next_name('checkbox'),
              'value': False,
+             'visible': True,
             })
 
     def new_listbox(self, e):
@@ -949,6 +984,7 @@ class EditorView(BCChrome):
              'width': 150,
              'height': 150,
              'name': self.get_next_name('listbox'),
+             'visible': True,
             })
 
     def new_rectangle(self, e):
@@ -960,6 +996,7 @@ class EditorView(BCChrome):
              'stroke_width': 5,
              'stroke': 'rgb(0,0,0)',
              'fill': 'none',
+             'visible': True,
             })
 
     def new_circle(self, e):
@@ -971,6 +1008,7 @@ class EditorView(BCChrome):
              'stroke_width': 5,
              'stroke': 'rgb(0,0,0)',
              'fill': 'none',
+             'visible': True,
             })
 
     def new_ellipse(self, e):
@@ -978,10 +1016,11 @@ class EditorView(BCChrome):
             {'type': 'ellipse',
              'width': 150,
              'height': 150,
-             'name': 'ellipse1', #TODO: Get the name correctly
+             'name': self.get_next_name('ellipse'),
              'stroke_width': 5,
              'stroke': 'rgb(0,0,0)',
              'fill': 'none',
+             'visible': True,
             })
 
     def new_line(self, e):
@@ -989,10 +1028,11 @@ class EditorView(BCChrome):
             {'type': 'line',
              'width': 150,
              'height': 150,
-             'name': 'line1', #TODO: Get the name correctly
+             'name': self.get_next_name('line'),
              'stroke_width': 5,
              'stroke': 'rgb(0,0,0)',
              'fill': 'none',
+             'visible': True,
             })
 
     def new_hexagon(self, e):
@@ -1000,23 +1040,27 @@ class EditorView(BCChrome):
             {'type': 'hexagon',
              'width': 150,
              'height': 150,
-             'name': 'listbox1', #TODO: Get the name correctly
+             'name': self.get_next_name('hexagon'),
              'stroke_width': 5,
              'stroke': 'rgb(0,0,0)',
              'fill': 'none',
+             'visible': True,
             })
 
     def get_selected_de_content(self):
         if self.selected_file_de is None:
-            return ''
+            ret = ''
         else:
-            return self.selected_file_de['content']
+            ret = self.selected_file_de['content']
+        #print('get_selected_de_content ret=', ret)
+        return ret
 
     def code_mirror_change(self, content):
         #print('code_mirror_change called')
         if self.selected_file_de is not None:
-            if self.selected_file_de['content'] != str(content):
-                self.selected_file_de['content'] = str(content)
+            content = '{}'.format(content) # Work around some errors caused by pasting in formated unicode text
+            if self.selected_file_de['content'] != content:
+                self.selected_file_de['content'] = content
                 #self.mount_redraw()
                 #Router.router.ResetHashChange()
 
@@ -1030,7 +1074,7 @@ class EditorView(BCChrome):
         print("""str(form_values['selFileType'])=""", str(form_values['selFileType']))
         if str(form_values['selFileType']) == 'graphical-py-file':
             content += """from binarycrate.controls import Form
-
+""" + ('from binarycrate.historygraphfrontend.documentcollection import dc\n' if project['type'] == 2 else '' ) + """
 class """ + class_name + """(Form):
     file_location = __file__
 """
@@ -1043,6 +1087,8 @@ class """ + class_name + """(Form):
                    'is_default': False,
                   }
         project['directory_entry'].append(new_de)
+        self.selected_de = new_de
+        self.selected_file_de = new_de
         self.mount_redraw()
         Router.router.ResetHashChange()
 
@@ -1109,7 +1155,22 @@ class """ + class_name + """(Form):
         Router.router.ResetHashChange()
 
     def get_top_navbar_items(self):
-        return [
+        if self.program_is_running:
+            return [
+                     #drop_down_item('Stop', 'fa-square', self.stop_project),
+                      li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
+                        form({'action': '#'}, [
+                          a({'class': "btn btn-default navbar-btn crt-btn",
+                             'href': get_current_hash(), 'onclick': self.stop_project}, [
+                            i({'class': "fa fa-1x fa-square'", 'aria-hidden':"true"}),
+                            t('Stop'),
+                          ]),
+                        ]),
+                      ]),
+
+                   ]
+        else:
+            return [
                       drop_down_menu('File', [
                         #drop_down_item('Run', 'fa-caret-right', self.run_project),
                         drop_down_item('Save Project', '', self.save_project),
@@ -1139,6 +1200,11 @@ class """ + class_name + """(Form):
                           ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
                         ]),
                       ]),
+                      span({'style':{'color': 'white', # TODO: This is a really hacky way to display this. Add better styling
+                                     'padding-top': '7px',
+                                     'margin-left': '5px'}}, [
+                        t(lambda: self.get_project().get('name', ''))
+                      ])
                     ]
 
     def get_modals(self):
@@ -1325,6 +1391,10 @@ class """ + class_name + """(Form):
                                                   read_only=self.get_code_mirror_read_only())
         self.upload_modal = None
         self.images = []
+        global original_modules
+        if len(original_modules) == 0:
+            original_modules = set(sys.modules.keys())
+            #print('original_modules=', original_modules)
         #TODO: Option arguments should be kwargs
         super(EditorView, self).__init__(
                     None,

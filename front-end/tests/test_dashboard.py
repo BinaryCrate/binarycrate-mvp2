@@ -115,9 +115,12 @@ class TestDashboard(object):
 
         js.globals.cavorite_ajaxPost.assert_called_with('/api/projects/', str(dummy_uuid()), {'name':'Test 2', 'type':0, 'public':True })
 
-        node.projects_api_ajax_post_result_handler(Mock(status=200, responseText=json.dumps('OK')), 'OK')
+        project_id = str(uuid.uuid4())
 
-        js.globals.cavorite_ajaxGet.assert_called_with('/api/projects/', str(dummy_uuid()))
+        node.projects_api_ajax_post_result_handler(Mock(status=200,
+            responseText=json.dumps({'id': project_id})), {'id': project_id})
+
+        assert js.globals.document.location == '/#!editor/' + project_id
 
     def test_calls_ajax_put_rename_correctly(self, monkeypatch):
         def dummy_uuid():
