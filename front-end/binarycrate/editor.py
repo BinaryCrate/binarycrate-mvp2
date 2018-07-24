@@ -1087,6 +1087,8 @@ class """ + class_name + """(Form):
                    'is_default': False,
                   }
         project['directory_entry'].append(new_de)
+        self.selected_de = new_de
+        self.selected_file_de = new_de
         self.mount_redraw()
         Router.router.ResetHashChange()
 
