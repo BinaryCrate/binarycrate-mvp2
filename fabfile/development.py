@@ -62,6 +62,8 @@ def run(**kwargs):
 
 @task
 def migrate():
+    print(yellow('Updating version file...'))
+    create_version_file()
     print(yellow('Reseting pypyjs environment...'))
     with lcd('./pypyjs-release/pypyjs-release'):
         local('git checkout -- .')#, capture=True)
