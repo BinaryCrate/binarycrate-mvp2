@@ -112,7 +112,7 @@ sudo git checkout Build000004
 
 sudo git submodule sync
 
-sudo git submodule update
+sudo git submodule update --init
 ```
 
 We need to go into the pypyjs directory and undo any updates caused by previous preloads.
@@ -151,6 +151,8 @@ We now load the new frontend code into the pypysjs-release area.
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ cavorite/cavorite/
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ front-end/binarycrate/
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ historygraph/historygraph/
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ munch/munch/
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ six/six.py
 ```
 
 Next we tell pypyjs to preload all of our modules - this greatly improves the load time
@@ -159,6 +161,8 @@ Next we tell pypyjs to preload all of our modules - this greatly improves the lo
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ cavorite
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ binarycrate
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ historygraph
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ munch
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ six
 ```
 
 We now update the django static. Note this is different to the above step in that we put all pypyjs files including standard modules and the pypyjs interpreter
