@@ -9,7 +9,7 @@ except ImportError:
 import copy
 from .controls import CodeMirrorHandlerVNode
 import uuid
-from .navigation import BCChrome
+from .navigation import BCChrome, navitem
 import cavorite.bootstrap.modals as modals
 from cavorite.bootstrap.modals import ModalTrigger, Modal
 from cavorite.ajaxget import ajaxget, ajaxput, ajaxdelete
@@ -215,10 +215,10 @@ class EditorView(BCChrome):
     def save_project(self, e):
         print('save_project called')
         def dummy_put_result_handler(xmlhttp, response):
-            pass
+            self.save_progress -= 1
 
         def dummy_delete_result_handler(xmlhttp, response):
-            pass
+            self.save_progress -= 1
 
         for de in project['directory_entry']:
             if de['name'] != '': # Don't try to save the root folder
@@ -226,8 +226,10 @@ class EditorView(BCChrome):
                 #print('de_copy[form_items]=', de_copy['form_items'])
                 de_copy['form_items'] = json.dumps(de_copy['form_items'])
                 ajaxput('/api/projects/directoryentry/' + de['id'] + '/', de_copy, dummy_put_result_handler)
+                self.save_progress += 1
         for de_id in project['deleted_directory_entries']:
             ajaxdelete('/api/projects/directoryentry/' + de_id + '/', dummy_delete_result_handler)
+            self.save_progress += 1
 
 
     def delete_selected_de(self, e):
@@ -379,10 +381,19 @@ class EditorView(BCChrome):
         #print('EditorView run_project called 4')
 
     def get_sidebar_nav_items(self):
+        def dashboad_click_handler(e):
+            if self.save_progress == 0:
+                # If there is no running save process save the project
+                self.save_project(e)
+
+
         if self.program_is_running:
             return []
         else:
-            return super(EditorView, self).get_sidebar_nav_items()
+            return [
+                     navitem('Dashboard', 'fa-dashboard', '#!', onclick=dashboad_click_handler),
+                   ]
+            #return super(EditorView, self).get_sidebar_nav_items()
 
     def set_current_file_as_default(self, e):
         #print('set_current_file_as_default called')
@@ -1397,6 +1408,7 @@ class """ + class_name + """(Form):
             original_modules = set(sys.modules.keys())
             #print('original_modules=', original_modules)
         #TODO: Option arguments should be kwargs
+        self.save_progress = 0 # The number of number processes to save a project.
         super(EditorView, self).__init__(
                     None,
                     None,
