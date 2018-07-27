@@ -466,6 +466,9 @@ class TestEditor(object):
         root_de = [de for de in editor.project['directory_entry'] if de['parent_id'] is None][0]
         new_file = [de for de in editor.project['directory_entry'] if de['name'] == 'hello_file.py'][0]
 
+        assert node.selected_de == new_file
+        assert node.selected_file_de == new_file
+
         folder.on_click(None)
 
         # Call the modal handler
@@ -2263,7 +2266,7 @@ print('Hello folder i={}'.format(i))
                 result['dashboard_found'] = True
             if hasattr(vnode, 'text') and vnode.text == 'Debug':
                 result['debug_found'] = True
-            if hasattr(vnode, 'text') and vnode.text == 'Run':
+            if hasattr(vnode, 'text') and vnode.text == ' Run':
                 result['run_found'] = True
             if hasattr(vnode, 'text') and vnode.text == 'Stop':
                 result['stop_found'] = True

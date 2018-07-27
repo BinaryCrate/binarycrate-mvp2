@@ -32,7 +32,7 @@ cd binarycrate-mvp2
 
 git checkout develop
 
-git submodle update --init --recursive
+git submodule update --init --recursive
 ```
 
 This will check out the project onthe develop branch and retrieve all of the submodules.

@@ -175,7 +175,7 @@ def drop_down_item(title, icon_class, click_handler):
         attribs['onclick'] = dummy_click_handler
     return a(attribs, [
       i({'class': "fa fa-1x " + icon_class, 'aria-hidden':"true"}),
-      t(title),
+      t(' ' + title),
     ])
 
 def drop_down_submenu(title, icon_class, members):
@@ -1087,6 +1087,8 @@ class """ + class_name + """(Form):
                    'is_default': False,
                   }
         project['directory_entry'].append(new_de)
+        self.selected_de = new_de
+        self.selected_file_de = new_de
         self.mount_redraw()
         Router.router.ResetHashChange()
 
@@ -1198,6 +1200,11 @@ class """ + class_name + """(Form):
                           ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
                         ]),
                       ]),
+                      span({'style':{'color': 'white', # TODO: This is a really hacky way to display this. Add better styling
+                                     'padding-top': '7px',
+                                     'margin-left': '5px'}}, [
+                        t(lambda: self.get_project().get('name', ''))
+                      ])
                     ]
 
     def get_modals(self):
