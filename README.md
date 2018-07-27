@@ -35,7 +35,7 @@ git checkout develop
 git submodule update --init --recursive
 ```
 
-This will check out the project onthe develop branch and retrieve all of the submodules.
+This will check out the project on the develop branch and retrieve all of the submodules.
 
 Note in Windows we win need to have different console open for git and python.
 
