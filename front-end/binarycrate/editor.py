@@ -352,6 +352,7 @@ class EditorView(BCChrome):
         if self.get_default_directory_entry() is None:
             js.globals.window.alert('Error: You must select one of the files as the default to run')
 
+        self.save_project(e)
         #print('EditorView run_project 0.9')
         self.program_is_running = True
         js.globals.document.print_to_secondary_output = True
