@@ -20,6 +20,7 @@ import os
 from cavorite.HTML import *
 from binarycrate import historygraphfrontend
 import sys
+import pytest
 
 
 class TestEditor(object):
@@ -2256,6 +2257,9 @@ print('Hello folder i={}'.format(i))
                      ]
                     }
 
+        view.images = [{'id': '4a88ff77-5969-40b8-a1da-8fefc5477f44', 'name': 'space-rocket.jpg'},
+                         {'id': '4ee4576a-c5f8-450b-bf8f-3a77f87632f3', 'name': 'my-image.jpg'}]
+
         assert len(view.form_stack) == 0
 
         class TestForm2(Form):
@@ -2370,6 +2374,14 @@ print('Hello folder i={}'.format(i))
         view.form_stack[-1].close()
         assert len(view.form_stack) == 1
         view.form_stack[0].on_child_form_closed.assert_called()
+
+        # Assert we can access the list of preloaded images
+        form = view.form_stack[0]
+        assert form.get_preloaded_images() == view.images
+        assert form.get_preloaded_image_id('space-rocket.jpg') == \
+            '4a88ff77-5969-40b8-a1da-8fefc5477f44'
+        with pytest.raises(AssertionError):
+            form.get_preloaded_image_id('invalid.jpg')
 
         result = defaultdict(bool)
         view.stop_project(Mock())
