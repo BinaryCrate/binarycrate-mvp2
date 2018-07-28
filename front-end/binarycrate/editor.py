@@ -97,8 +97,8 @@ class BCPFolder(li):
         return self.de['name'] if self.de['parent_id'] is not None else '/'
 
     def get_children(self):
-        input_attribs = {'type': 'checkbox', 'id':self.id, 'onclick': self.on_click}
-        label_attribs = {'for': self.id}
+        input_attribs = {'type': 'checkbox', 'id':self.id, 'onclick': self.on_click, 'oncontextmenu': self.on_contextmenu}
+        label_attribs = {'for': self.id, 'oncontextmenu': self.on_contextmenu}
         if self.get_is_checked():
             input_attribs.update({'checked': 'checked'})
         if self.get_is_active():
@@ -115,6 +115,27 @@ class BCPFolder(li):
         self.editor_view.selected_de = self.de
         self.editor_view.selected_file_de = None
         self.editor_view.selected_item = ''
+        self.editor_view.mount_redraw()
+        Router.router.ResetHashChange()
+
+    def delete_file(self, e):
+        print('delete_file called')
+        #e.stopPropagation()
+        #e.preventDefault()
+        self.editor_view.delete_selected_de(e)
+
+    def on_contextmenu(self, e):
+        posx, posy = ContextMenu.xy_from_e(e)
+        self.editor_view.context_menu = ContextMenu(self, posx, posy, (
+                                        ('Delete Folder', self.delete_file),
+                                        ))
+        self.editor_view.mount_redraw()
+        Router.router.ResetHashChange()
+        e.stopPropagation()
+        e.preventDefault()
+
+    def close_context_menu(self, e):
+        self.editor_view.context_menu = None
         self.editor_view.mount_redraw()
         Router.router.ResetHashChange()
 
@@ -159,13 +180,15 @@ class BCPFile(li):
 
     def delete_file(self, e):
         print('delete_file called')
-        e.stopPropagation()
-        e.preventDefault()
+        #e.stopPropagation()
+        #e.preventDefault()
+        self.editor_view.delete_selected_de(e)
 
     def set_default(self, e):
         print('set_default called')
-        e.stopPropagation()
-        e.preventDefault()
+        #e.stopPropagation()
+        #e.preventDefault()
+        self.editor_view.set_current_file_as_default(e)
 
     def on_contextmenu(self, e):
         posx, posy = ContextMenu.xy_from_e(e)
