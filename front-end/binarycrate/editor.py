@@ -289,6 +289,7 @@ class EditorView(BCChrome):
             return des[0]
 
     def get_default_module_form_classes(self):
+        #TODO: There are no unit tests for inspecting the module and pulling out the forms please create
         def reload_recursively(mod):
             if not isinstance(mod, ModuleType):
                 return
@@ -308,12 +309,20 @@ class EditorView(BCChrome):
             return []
         if project['type'] == 2:
             documents_imported_module = __import__('documents') #TODO: Make it impossible to rename or delete the documents file from the root of the proejct
-        imported_module = __import__(de['name'][:de['name'].find('.')])
+        file_name = de['name'][:de['name'].find('.')]
+        imported_module = __import__(file_name)
+        class_name = file_name[0].upper() + file_name[1:]
+        if class_name in dir(imported_module):
+            # First look for a class with the given name
+            return [getattr(imported_module, class_name)]
+
         #print('EditorView run_project dir(imported_module)=', dir(imported_module))
+        # If we don't have a class with a match name and there are only one class return it
         classes = [getattr(imported_module, name) for name in dir(imported_module)
                    if inspect.isclass(getattr(imported_module, name)) and
                      issubclass(getattr(imported_module, name), Form) and
                      getattr(imported_module, name) != Form]
+        # This should be a user visible error message instead of this assertion which will just get buried
         assert len(classes) <= 1, "Only 1 Form class should exist in a module"
         return classes
 
