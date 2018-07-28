@@ -192,10 +192,10 @@ def test_click_handler(e):
     e.stopPropagation()
     e.preventDefault()
 
-class ContextMenu(nav):
+class ContextMenuFormItems(nav):
     def __init__(self, posx, posy, menu_items, *args, **kwargs):
         self.menu_items = menu_items
-        super(ContextMenu, self).__init__({'class': "context-menu", 'style': 'left: {}px; top:{}px'.format(posx, posy)}, *args, **kwargs)
+        super(ContextMenuFormItems, self).__init__({'class': "context-menu", 'style': 'left: {}px; top:{}px'.format(posx, posy)}, *args, **kwargs)
 
     def get_children(self):
         menu_items = [
@@ -588,7 +588,7 @@ class EditorView(BCChrome):
 
     def contextmenu_preview(self, e):
         posx, posy = self.xy_from_e(e)
-        self.context_menu = ContextMenu(posx, posy, (
+        self.context_menu = ContextMenuFormItems(posx, posy, (
                                         ('New Button', self.new_button),
                                         ('New Textbox', self.new_textbox),
                                         ('New Image', self.new_image),
@@ -713,7 +713,7 @@ class EditorView(BCChrome):
         change_items = tuple(sorted([('Change {}'.format(prop_name),
                                       lambda e, prop_name=prop_name: self.display_property_change_modal(e, form_item, prop_name)) for prop_name in get_form_item_property(form_item['type'])],
                                     key=itemgetter(0)))
-        self.context_menu = ContextMenu(posx, posy, change_items + (
+        self.context_menu = ContextMenuFormItems(posx, posy, change_items + (
                                         ('Delete', lambda e: self.delete_selected_form_item(form_item_id, e)),
                                         ))
         self.mount_redraw()

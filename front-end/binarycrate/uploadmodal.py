@@ -11,6 +11,8 @@ import traceback
 import sys
 import uuid
 
+#TODO: There appear to be no unit tests for anything in this file. Please make them
+
 
 class ContextMenu2(div):
     # An improved context menu which can hopefully take care of collapsing itself
@@ -102,8 +104,8 @@ class ConfirmRenamePopup(div):
               ]),
             ]),
           ]
-          
-        
+
+
 
 class ConfirmDeletePopup(div):
     # This pops up a deletion confirmation dialog over this popup to confirm this
@@ -146,8 +148,8 @@ class ConfirmDeletePopup(div):
               ]),
             ]),
           ]
-          
-        
+
+
 
 class UploadedImage(div):
     def __init__(self, owner, image):
@@ -155,7 +157,7 @@ class UploadedImage(div):
         self.context_menu = None
         self.owner = owner
         super(UploadedImage, self).__init__({'oncontextmenu': self.popup_contextmenu,
-                                             'style': {'width':'165px', 
+                                             'style': {'width':'165px',
                                                        'height': '150px',
                                                        #'border': '1px solid red'
                                                        'overflow': 'hidden',
@@ -197,7 +199,7 @@ class UploadedImage(div):
     def popup_contextmenu(self, e):
         posx, posy = self.xy_from_e(e)
         self.owner.ownerview.context_menu = ContextMenu2(self, posx, posy, (
-                                        ('Rename Image', self.rename_image), 
+                                        ('Rename Image', self.rename_image),
                                         ('Delete Image', self.delete_image),
                                         ))
         self.owner.ownerview.mount_redraw()
@@ -209,7 +211,7 @@ class UploadedImage(div):
         self.owner.ownerview.context_menu = None
         self.owner.ownerview.mount_redraw()
         Router.router.ResetHashChange()
-                                           
+
     def get_children(self):
         return [
                  img({'src': self.image['image_url'],
@@ -218,7 +220,7 @@ class UploadedImage(div):
                                 'height': '95px',
                                 'margin': '10px',
                                 }
-                      }), 
+                      }),
                  p({'oncontextmenu': self.popup_contextmenu,
                     'style': {'font-size': '12px',
                               'margin': '4px'
@@ -242,7 +244,7 @@ class UploadModal(object):
             Router.router.ResetHashChange()
 
     def get_images_for_display(self):
-        return [UploadedImage(self, image) for image in self.images]      
+        return [UploadedImage(self, image) for image in self.images]
 
     def query_images(self):
         ajaxget('/api/projects/image-list/' + self.ownerview.get_project()['id'],
@@ -293,5 +295,3 @@ class UploadModal(object):
         self.context_menu = None
         self.ownerview.mount_redraw()
         Router.router.ResetHashChange()
-
-

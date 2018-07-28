@@ -7,7 +7,7 @@ from collections import defaultdict
 import uuid
 from mock import Mock
 import json
-from binarycrate.editor import BCProjectTree, BCPFolder, BCPFile, ContextMenu
+from binarycrate.editor import BCProjectTree, BCPFolder, BCPFile, ContextMenuFormItems
 from binarycrate.controls import codemirror, Form
 from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode, style_to_dict, get_vnode_by_id, get_vnode_by_css_class, get_matching_vnodes
 import cavorite.bootstrap.modals
@@ -923,7 +923,7 @@ class TestEditor(object):
         assert root_folder.folder_children[0].de['name'] == 'hello_world.py'
 
 
-class TestContextMenu(object):
+class TestContextMenuFormItems(object):
     def test_context_menu_appears(self, monkeypatch):
         monkeypatch.setattr(Router, 'ResetHashChange', Mock())
         monkeypatch.setattr(editor.cavorite, 'js', js)
@@ -1007,7 +1007,7 @@ class TestContextMenu(object):
         assert view.context_menu is None
         Router.router.ResetHashChange.reset_mock()
         view.contextmenu_preview(Mock(pageX=10, pageY=10))
-        assert type(view.context_menu) == ContextMenu
+        assert type(view.context_menu) == ContextMenuFormItems
         assert len(view.context_menu.menu_items) >= 1
         assert view.context_menu.menu_items[0][0] == 'New Button'
         assert callable(view.context_menu.menu_items[0][1])
@@ -1203,7 +1203,7 @@ class TestContextMenu(object):
         assert view.context_menu is None
         Router.router.ResetHashChange.reset_mock()
         vnode_button.get_attribs()['oncontextmenu'](Mock())
-        assert type(view.context_menu) == ContextMenu
+        assert type(view.context_menu) == ContextMenuFormItems
         assert len(view.context_menu.menu_items) >= 1
 
         assert 'Change caption' ==  view.context_menu.menu_items[0][0]
