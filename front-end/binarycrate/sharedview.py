@@ -33,9 +33,9 @@ class SharedView(EditorView):
     def projects_api_ajax_result_handler(self, xmlhttp, response):
         super(SharedView, self).projects_api_ajax_result_handler(xmlhttp, response) #unpacks self object and calls super class version of it (inhertied from)
         project = self.get_project()
-        print('projects_api_ajax_result_handler project.get(type)=', project.get('type'))
         if project.get('type', None) == 1:
             self.update_html_preview()
+        #Run program for python projects
         elif project.get('type', None) == 0:
             self.run_project(None)
 
