@@ -590,7 +590,8 @@ class EditorView(BCChrome):
                         ]),
                       ]),
                     ]),
-                  ])
+                  ] +
+                  ([style('.CodeMirror { background-color: darkgrey;}')] if self.get_code_mirror_read_only() else []))
 
     def on_body_click(self, e):
         if self.context_menu is not None:
