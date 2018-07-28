@@ -175,8 +175,12 @@ class BCPFile(li):
 
     def rename_file(self, e):
         print('rename_file called')
-        e.stopPropagation()
-        e.preventDefault()
+        #e.stopPropagation()
+        #e.preventDefault()
+        self.editor_view.context_menu = None
+        self.editor_view.mount_redraw()
+        Router.router.ResetHashChange()
+        self.editor_view.display_rename_file_modal(e)
 
     def delete_file(self, e):
         print('delete_file called')
@@ -702,6 +706,17 @@ class EditorView(BCChrome):
         e.stopPropagation()
         e.preventDefault()
 
+    def display_rename_file_modal(self, e):
+        if self.selected_de is not None and self.selected_de['is_file'] == False:
+            js.globals.window.alert('Error: File not selected')
+            e.stopPropagation()
+            e.preventDefault()
+            return
+        jquery = js.globals['$']
+        jquery('#renameFile').modal('show')
+        e.stopPropagation()
+        e.preventDefault()
+
     def display_new_folder_modal(self, e):
         if self.selected_de is not None and self.selected_de['is_file']:
             js.globals.window.alert('Error: You must select a folder to insert this folder in')
@@ -1179,6 +1194,13 @@ class """ + class_name + """(Form):
         self.mount_redraw()
         Router.router.ResetHashChange()
 
+    def renameFile_ok(self, e, form_values):
+        print('renameFile_ok called')
+        file_name = str(form_values['txtFileName'])
+        self.selected_de['name'] = file_name
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
     def newFolder_ok(self, e, form_values):
         root_folder = [de for de in project['directory_entry'] if de['parent_id'] is None][0]
         parent_de = root_folder if self.selected_de is None else self.selected_de
@@ -1262,8 +1284,10 @@ class """ + class_name + """(Form):
                         #drop_down_item('Run', 'fa-caret-right', self.run_project),
                         drop_down_item('Save Project', '', self.save_project),
                         drop_down_item('Delete File/Folder', '', self.delete_selected_de),
+                        drop_down_item('Rename File', '', self.display_rename_file_modal),
                         drop_down_item('Set Default', '', self.set_current_file_as_default),
                         drop_down_item('Upload images...', '', self.upload_images),
+
                         #drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
                         #drop_down_item('Square', 'fa-square', None),
                         #drop_down_item('Something else here', 'fa-btc', None),
@@ -1447,6 +1471,14 @@ class """ + class_name + """(Form):
                           ]),
                         ]),
                       ], self.changeProperty_ok),
+                      Modal("renameFile", "Rename File", [
+                        form([
+                          div({'class': 'form-group'}, [
+                            label({'class':"col-form-label", 'for':"txtFileName"}, 'File name'),
+                            html_input({'type': "text", 'class':"form-control", 'id':"txtFileName", 'value':lambda : self.selected_de['name'] if self.selected_de is not None else ''}),
+                          ]),
+                        ]),
+                      ], self.renameFile_ok),
                     ] + \
                     (self.upload_modal.get_modal_vnodes() if self.upload_modal else [])
 
