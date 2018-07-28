@@ -699,11 +699,13 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
 
     def display_new_file_modal(self, e):
+        """
         if self.selected_de is not None and self.selected_de['is_file']:
             js.globals.window.alert('Error: You must select a folder to insert this file in')
             e.stopPropagation()
             e.preventDefault()
             return
+        """
         jquery = js.globals['$']
         jquery('#newFile').modal('show')
         e.stopPropagation()
@@ -1180,6 +1182,8 @@ class EditorView(BCChrome):
     def newFile_ok(self, e, form_values):
         root_folder = [de for de in project['directory_entry'] if de['parent_id'] is None][0]
         parent_de = root_folder if self.selected_de is None else self.selected_de
+        if parent_de['is_file']:
+            parent_de = [de for de in project['directory_entry'] if de['id'] == parent_de['parent_id']][0]
         file_name = str(form_values['txtFileName'])
         class_name = file_name[:file_name.find('.')]
         class_name = class_name[0].upper() + class_name[1:]

@@ -412,7 +412,7 @@ class TestEditor(object):
         #add_folder_link.get_attribs()['onclick'](Mock())
         node.display_new_file_modal(Mock())
 
-        editor.js.globals.window.alert.assert_called_with('Error: You must select a folder to insert this file in')
+        editor.js.globals.window.alert.assert_not_called()
 
         editor.js.globals.window.alert = Mock()
         root_folder.on_click(Mock())
