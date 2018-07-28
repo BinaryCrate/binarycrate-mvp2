@@ -2261,6 +2261,7 @@ print('Hello folder i={}'.format(i))
                          {'id': '4ee4576a-c5f8-450b-bf8f-3a77f87632f3', 'name': 'my-image.jpg'}]
 
         assert len(view.form_stack) == 0
+        js.return_get_element_by_id = {'secondary-output': Mock()}
 
         class TestForm2(Form):
             file_location = '/lib/pypyjs/lib_pypy/folder/hello_folder.py'
@@ -2480,6 +2481,7 @@ print('Hello folder i={}'.format(i))
                     }
 
         assert len(view.form_stack) == 0
+        js.return_get_element_by_id = {'secondary-output': Mock()}
 
         counter = dict()
         counter['count'] = 0
@@ -2607,6 +2609,7 @@ print('Hello folder i={}'.format(i))
                     }
 
         assert len(view.form_stack) == 0
+        js.return_get_element_by_id = {'secondary-output': Mock()}
 
         counter = dict()
         counter['count'] = 0
@@ -2722,6 +2725,7 @@ print('Hello folder i={}'.format(i))
                     }
 
         assert len(view.form_stack) == 0
+        js.return_get_element_by_id = {'secondary-output': Mock()}
 
         counter = dict()
         counter['count'] = 0
@@ -2846,6 +2850,7 @@ print('Hello folder i={}'.format(i))
                     }
 
         assert len(view.form_stack) == 0
+        js.return_get_element_by_id = {'secondary-output': Mock()}
 
         counter = dict()
         counter['count'] = 0
@@ -2981,6 +2986,7 @@ print('Hello folder i={}'.format(i))
                     }
 
         assert len(view.form_stack) == 0
+        js.return_get_element_by_id = {'secondary-output': Mock()}
 
         counter = dict()
         counter['count'] = 0
@@ -3148,6 +3154,8 @@ historygraphfrontend.download_document_collection()
         #view.get_default_module_form_classes = Mock(return_value=form_classes)
         #view.write_program_to_virtual_file_system = Mock()
 
+        js.return_get_element_by_id = {'secondary-output': Mock()}
+
         old_python_module_dir = editor.python_module_dir
         with TemporaryDirectory() as temp_dir:
             assert os.path.isdir(temp_dir)
@@ -3243,6 +3251,8 @@ print('Hello folder i={}'.format(i))
                     }
 
         assert len(view.form_stack) == 0
+
+        js.return_get_element_by_id = {'secondary-output': Mock()}
 
         old_python_module_dir = editor.python_module_dir
         with TemporaryDirectory() as temp_dir:
@@ -3345,6 +3355,8 @@ print('Hello folder i={}'.format(i))
         view.get_default_module_form_classes = Mock(return_value=form_classes)
         view.write_program_to_virtual_file_system = Mock()
         editor.js.globals.window.alert = Mock()
+        js.return_get_element_by_id = {'secondary-output': Mock()}
+
         view.cleanup_project = Mock()
         view.save_project = Mock()
         view.run_project(Mock())
