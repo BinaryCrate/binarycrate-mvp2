@@ -108,6 +108,7 @@ class BCPFolder(li):
         self.editor_view.selected_de = self.de
         self.editor_view.selected_item = ''
         self.editor_view.mount_redraw()
+        self.editor_view.update_html_preview()
         Router.router.ResetHashChange()
 
 
@@ -143,6 +144,7 @@ class BCPFile(li):
         self.editor_view.selected_file_de = self.de
         self.editor_view.selected_item = ''
         self.editor_view.mount_redraw()
+        self.editor_view.update_html_preview()
         Router.router.ResetHashChange()
 
 
@@ -1040,6 +1042,15 @@ class EditorView(BCChrome):
 
         return str(html_soup)
 
+    def update_html_preview(self):
+        pretty_html = self.beautiful_soup()
+        previewFrame = js.globals.document.getElementById('preview');
+        preview = previewFrame.contentDocument or previewFrame.contentWindow.document;
+        preview.open();
+        preview.write(pretty_html);
+        preview.close();
+        print("update_html_preview called")
+
     def code_mirror_change(self, content):
         global project
         # print('code_mirror_change called')
@@ -1051,12 +1062,7 @@ class EditorView(BCChrome):
 
         #Update iframe if html project
         if project.get('type', None) == 1:
-            pretty_html = self.beautiful_soup()
-            previewFrame = js.globals.document.getElementById('preview');
-            preview = previewFrame.contentDocument or previewFrame.contentWindow.document;
-            preview.open();
-            preview.write(pretty_html);
-            preview.close();
+            self.update_html_preview()
 
     def newFile_ok(self, e, form_values):
         root_folder = [de for de in project['directory_entry'] if de['parent_id'] is None][0]
