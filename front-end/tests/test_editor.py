@@ -3481,6 +3481,7 @@ print('Hello folder i={}'.format(i))
         view.context_menu.menu_items[fill_index][1](Mock())
 
         result = dict()
+        result['available_images'] = []
 
         def mock_element_iterator_callback(vnode):
             #if hasattr(vnode, 'get_attribs'):
@@ -3496,6 +3497,8 @@ print('Hello folder i={}'.format(i))
                             result['changePropertyPreloadedImage_OK_handler'] = vnode.get_attribs()['onclick']
                         if vnode.get_tag_name() == 'select' and vnode.get_attribs().get('id') == "selChosenImage":
                             result['chosen_image'] = vnode.get_attribs().get('value', '')
+                        if vnode.get_tag_name() == 'option':
+                            result['available_images'] += [ vnode.get_children()[0].text ]
                 IterateVirtualDOM(vnode, mock_element_iterator_callback2)
 
         view.mount_redraw = Mock()
@@ -3504,6 +3507,7 @@ print('Hello folder i={}'.format(i))
         IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
 
         assert result['chosen_image'] == ''
+        assert result['available_images'] == ['(none)', 'space-rocket.jpg', 'my-image.jpg']
 
         # Call the modal handler
         rendered_modal = view._render(None)
@@ -3513,11 +3517,13 @@ print('Hello folder i={}'.format(i))
             if isinstance(node, js.MockElement) and node.getAttribute('id') == 'selChosenImage':
                 #print('setup_mock_modal_callback setting selChosenImage=', choice)
                 # Verify that the select element contains options from the server
-                assert node.options.length == 2
-                assert node.options.item(0).getAttribute('value') == '4a88ff77-5969-40b8-a1da-8fefc5477f44'
-                assert node.options.item(0).children.item(0)._text == 'space-rocket.jpg'
-                assert node.options.item(1).getAttribute('value') == '4ee4576a-c5f8-450b-bf8f-3a77f87632f3'
-                assert node.options.item(1).children.item(0)._text == 'my-image.jpg'
+                assert node.options.length == 3
+                assert node.options.item(0).getAttribute('value') == ''
+                assert node.options.item(0).children.item(0)._text == '(none)'
+                assert node.options.item(1).getAttribute('value') == '4a88ff77-5969-40b8-a1da-8fefc5477f44'
+                assert node.options.item(1).children.item(0)._text == 'space-rocket.jpg'
+                assert node.options.item(2).getAttribute('value') == '4ee4576a-c5f8-450b-bf8f-3a77f87632f3'
+                assert node.options.item(2).children.item(0)._text == 'my-image.jpg'
                 node.value = choice
 
         js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, '4ee4576a-c5f8-450b-bf8f-3a77f87632f3'))

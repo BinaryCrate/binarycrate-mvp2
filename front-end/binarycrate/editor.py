@@ -1466,7 +1466,7 @@ class """ + class_name + """(Form):
                           div({'class': 'form-group'}, [
                             label({'class':"col-form-label", 'for':"selChosenImage"}, 'Preloaded Image'),
                             select({'class':"form-control", 'id':"selChosenImage", 'value': get_current_form_item_prop_val()},
-                              [option({'value': image['id']}, image['name']) for image in self.images]
+                              [option({'value': ''}, '(none)')] + [option({'value': image['id']}, image['name']) for image in self.images]
                               ),
                           ]),
                         ]),
