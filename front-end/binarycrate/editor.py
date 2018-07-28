@@ -1496,7 +1496,7 @@ class """ + class_name + """(Form):
                     (self.upload_modal.get_modal_vnodes() if self.upload_modal else [])
 
     def get_code_mirror_read_only(self):
-        return False
+        return self.selected_file_de is None
 
     def images_api_ajax_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
@@ -1520,7 +1520,7 @@ class """ + class_name + """(Form):
                                                    'class': 'col-md-5 CodeMirror'},
                                                   [t(self.get_selected_de_content)],
                                                   change_handler=self.code_mirror_change,
-                                                  read_only=self.get_code_mirror_read_only())
+                                                  read_only=self.get_code_mirror_read_only)
         self.upload_modal = None
         self.images = []
         global original_modules

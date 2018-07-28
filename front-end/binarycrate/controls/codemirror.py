@@ -1,5 +1,5 @@
 from __future__ import absolute_import, print_function
-from cavorite import c, t, Router, callbacks, timeouts
+from cavorite import c, t, Router, callbacks, timeouts, lazy_eval
 from cavorite.HTML import *
 try:
     import js
@@ -54,13 +54,14 @@ class CodeMirrorHandlerVNode(textarea):
         should_init = js.globals.document.getElementsByClassName('CodeMirror').length < 2
         if should_init:
             textarea = js.globals.document.getElementById("code")
+            read_only = lazy_eval(self.read_only)
             self.editor = js.globals.CodeMirror.fromTextArea(textarea, {
                 'lineNumbers': True,
                 #'mode': 'text/html',
                 'mode': 'python',
                 'indentUnit': 4,
                 'viewportMargin': js.globals.Infinity,
-                'readOnly': self.read_only,
+                'readOnly': read_only,
               })
             self.editor.addKeyMap({'Tab': global_on_tab,})
 
@@ -108,6 +109,3 @@ class CodeMirrorHandlerVNode(textarea):
             self.change_handler(content)
         #e.stopPropagation()
         #e.preventDefault()
-
-
-
