@@ -28,6 +28,7 @@ from .uploadmodal import UploadModal
 from binarycrate.controls.bcform import get_form_item_property, FormItemPropType
 from types import ModuleType
 import sys
+from binarycrate.controls import ContextMenu
 
 
 HANDLE_NONE = 0
@@ -128,7 +129,7 @@ class BCPFile(li):
         href = str(js.globals.window.location.href)
         if href.find('#') < 0:
             href = '#'
-        a_attribs = {'href': href, 'onclick': self.on_click}
+        a_attribs = {'href': href, 'onclick': self.on_click, 'oncontextmenu': self.on_contextmenu}
         if self.get_is_active():
             a_attribs.update({'class': 'file-active'})
         return [
@@ -148,6 +149,38 @@ class BCPFile(li):
         self.editor_view.selected_de = self.de
         self.editor_view.selected_file_de = self.de
         self.editor_view.selected_item = ''
+        self.editor_view.mount_redraw()
+        Router.router.ResetHashChange()
+
+    def rename_file(self, e):
+        print('rename_file called')
+        e.stopPropagation()
+        e.preventDefault()
+
+    def delete_file(self, e):
+        print('delete_file called')
+        e.stopPropagation()
+        e.preventDefault()
+
+    def set_default(self, e):
+        print('set_default called')
+        e.stopPropagation()
+        e.preventDefault()
+
+    def on_contextmenu(self, e):
+        posx, posy = ContextMenu.xy_from_e(e)
+        self.editor_view.context_menu = ContextMenu(self, posx, posy, (
+                                        ('Rename File', self.rename_file),
+                                        ('Delete File', self.delete_file),
+                                        ('Set as Default', self.set_default),
+                                        ))
+        self.editor_view.mount_redraw()
+        Router.router.ResetHashChange()
+        e.stopPropagation()
+        e.preventDefault()
+
+    def close_context_menu(self, e):
+        self.editor_view.context_menu = None
         self.editor_view.mount_redraw()
         Router.router.ResetHashChange()
 
