@@ -1332,7 +1332,7 @@ class """ + class_name + """(Form):
             #print('EditorView self.current_prop_name=', self.current_prop_name)
             #print('EditorView fis[0]=', fis[0])
             ret = str(fis[0][self.current_prop_name])
-            #print('EditorView get_current_form_item_prop_vals exited ret=', ret)
+            print('EditorView get_current_form_item_prop_vals exited ret=', ret)
             return ret
         def get_current_form_item_checked():
             #print ('get_current_form_item_checked 1')
@@ -1466,7 +1466,9 @@ class """ + class_name + """(Form):
                           div({'class': 'form-group'}, [
                             label({'class':"col-form-label", 'for':"selChosenImage"}, 'Preloaded Image'),
                             select({'class':"form-control", 'id':"selChosenImage", 'value': get_current_form_item_prop_val()},
-                              [option({'value': ''}, '(none)')] + [option({'value': image['id']}, image['name']) for image in self.images]
+                              [option(merge_dicts({'value': ''}, {'selected':'selected'} if get_current_form_item_prop_val() == '' else {}), '(none)')] +
+                                [option(merge_dicts({'value': image['id']}, {'selected':'selected'} if get_current_form_item_prop_val() == image['id'] else {}), image['name'])
+                                for image in self.images]
                               ),
                           ]),
                         ]),
