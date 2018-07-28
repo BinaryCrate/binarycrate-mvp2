@@ -365,29 +365,39 @@ class EditorView(BCChrome):
 
         self.save_project(e)
         #print('EditorView run_project 0.9')
-        self.program_is_running = True
-        js.globals.document.print_to_secondary_output = True
-        global project
-        historygraphfrontend.initialise_document_collection(project['id'], self.on_historygraph_download_complete)
-        #print('EditorView run_project 1')
-        #historygraphfrontend.download_document_collection()
-        self.write_program_to_virtual_file_system()
-        #print('EditorView run_project 2')
-        #print('EditorView run_project 3')
-        form_classes = self.get_default_module_form_classes()
-        #print('EditorView run_project form_classes=', form_classes)
-        if len(form_classes) > 0:
-            #print('EditorView run_project Found usable class name=' + form_classes[0].__name__)
-            self.form_stack.append(form_classes[0](editorview=self))
-            self.mount_redraw()
-            Router.router.ResetHashChange()
-        else:
-            #print('EditorView run_project Found  no usable class')
-            js.globals.document.print_to_secondary_output = False
-            self.program_is_running = False
-            self.cleanup_project()
-        #aa.tr()
-        #print('EditorView run_project called 4')
+        try:
+            self.program_is_running = True
+            js.globals.document.print_to_secondary_output = True
+            global project
+            historygraphfrontend.initialise_document_collection(project['id'], self.on_historygraph_download_complete)
+            #print('EditorView run_project 1')
+            #historygraphfrontend.download_document_collection()
+            self.write_program_to_virtual_file_system()
+            #print('EditorView run_project 2')
+            #print('EditorView run_project 3')
+            form_classes = self.get_default_module_form_classes()
+            #print('EditorView run_project form_classes=', form_classes)
+            if len(form_classes) > 0:
+                #print('EditorView run_project Found usable class name=' + form_classes[0].__name__)
+                self.form_stack.append(form_classes[0](editorview=self))
+                self.mount_redraw()
+                Router.router.ResetHashChange()
+            else:
+                #print('EditorView run_project Found  no usable class')
+                js.globals.document.print_to_secondary_output = False
+                self.program_is_running = False
+                self.cleanup_project()
+            #aa.tr()
+            #print('EditorView run_project called 4')
+        except Exception as e:
+            #TODO: There is no unit test for this please make one. This is to solve issue #M21-155 https://binarycrate.atlassian.net/browse/M21-155
+            def finish_running():
+                js.globals.document.print_to_secondary_output = False
+                self.program_is_running = False
+                self.cleanup_project()
+            # Cleanup in the timeout because we need to be running when the exception is handled to print the output
+            timeouts.set_timeout(finish_running, 1)
+            raise
 
     def get_sidebar_nav_items(self):
         def dashboad_click_handler(e):
