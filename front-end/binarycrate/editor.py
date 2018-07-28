@@ -706,6 +706,14 @@ class EditorView(BCChrome):
         e.stopPropagation()
         e.preventDefault()
 
+    def display_share_project_modal(self, e):
+        print("display_share_project_modal called")
+        self.save_project(e)
+        jquery = js.globals['$']
+        jquery('#shareProj').modal('show')
+        e.stopPropagation()
+        e.preventDefault()
+
     def display_rename_file_modal(self, e):
         if self.selected_de is not None and self.selected_de['is_file'] == False:
             js.globals.window.alert('Error: File not selected')
@@ -1308,7 +1316,8 @@ class """ + class_name + """(Form):
                       ]),
                       li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
                         form({'action': '#'}, [
-                          ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
+                          #ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
+                          a({'class': "btn btn-default navbar-btn crt-btn", 'href': get_current_hash(), 'onclick': self.display_share_project_modal}, "Share")
                         ]),
                       ]),
                       span({'style':{'color': 'white', # TODO: This is a really hacky way to display this. Add better styling
