@@ -407,7 +407,7 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
 
     def projects_api_ajax_result_handler(self, xmlhttp, response):
-        print('projects_api_ajax_result_handler called')
+        #print('projects_api_ajax_result_handler called')
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             global project
             new_project = json.loads(str(xmlhttp.responseText))
@@ -446,7 +446,7 @@ class EditorView(BCChrome):
             def images_api_ajax_result_handler2(xmlhttp, response):
                 # Get the images first then the projects
                 #TODO: Do this all in one query. Otherwise it get brittle
-                print('images_api_ajax_result_handler2')
+                #print('images_api_ajax_result_handler2')
                 #self.images_api_ajax_result_handler(xmlhttp, response)
                 if xmlhttp.status >= 200 and xmlhttp.status <= 299:
                     self.images = json.loads(str(xmlhttp.responseText))
@@ -589,11 +589,11 @@ class EditorView(BCChrome):
         e.preventDefault()
 
     def select_new_item(self, form_item_id, e):
+        #print('select_new_item mouse is down')
+        self.selected_item = form_item_id
         if e.button == 0:
             self.mouse_is_down = True
             self.selected_handler = HANDLE_NONE
-            #print('select_new_item mouse is down')
-            self.selected_item = form_item_id
             self.mount_redraw()
             Router.router.ResetHashChange()
             e.stopPropagation()
@@ -667,7 +667,7 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
         #e.stopPropagation()
         #e.preventDefault()
-        print('display_property_change_modal prop_type=', prop_type)
+        #print('display_property_change_modal prop_type=', prop_type)
 
         def images_handler2(xmlhttp, response):
             print('images halndler2')
@@ -733,7 +733,7 @@ class EditorView(BCChrome):
                 elif form_item['type'] == 'image':
                     control_class = img
                     preloaded_image = form_item['preloaded_image']
-                    print('get_selected_de_form_controls preloaded_image=', preloaded_image)
+                    #print('get_selected_de_form_controls preloaded_image=', preloaded_image)
                     if preloaded_image == '':
                         attribs_extra = {'src': form_item['src'], 'preloaded_image': '' }
                     else:
@@ -1144,13 +1144,13 @@ class """ + class_name + """(Form):
             #print('changeProperty_ok form_values[chkEmpty]=', form_values['chkEmpty'])
             value = 'none' if form_values['chkEmpty'] else 'rgb({},{},{})'.format(form_values['txtRed'], form_values['txtGreen'], form_values['txtBlue'])
         elif get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.PRELOADED_IMAGE:
-            print('changeProperty_ok type is FormItemPropType.PRELOADED_IMAGE')
+            #print('changeProperty_ok type is FormItemPropType.PRELOADED_IMAGE')
             value = str(form_values['selChosenImage'])
         else:
             assert False # Unknown property type
         fi[self.current_prop_name] = value
-        print('changeProperty_ok self.current_prop_name=', self.current_prop_name, ', form_values[selChosenImage]', form_values.get('selChosenImage', None))
-        print('changeProperty_ok fi[self.current_prop_name]', fi[self.current_prop_name])
+        #print('changeProperty_ok self.current_prop_name=', self.current_prop_name, ', form_values[selChosenImage]', form_values.get('selChosenImage', None))
+        #print('changeProperty_ok fi[self.current_prop_name]', fi[self.current_prop_name])
         self.current_prop_name = None
         self.mount_redraw()
         Router.router.ResetHashChange()

@@ -1072,6 +1072,18 @@ class TestContextMenu(object):
         assert view.selected_item == button['id']
         assert view.mouse_is_down == False
 
+        # Test clicking with the right mouse button selects an item but doesnt allow us to drag it
+        # First deselect it
+        preview_node = get_matching_vnode(view, find_preview)
+        assert preview_node is not None
+        preview_node.get_attribs()['onmousedown'](Mock(button=0))
+        assert view.selected_item == ''
+
+        # Then click with the right hand mouse button
+        vnode_button.get_attribs()['onmousedown'](Mock(button=1))
+        assert view.selected_item == button['id']
+        assert view.mouse_is_down == False
+
         # Click again
         vnode_button.get_attribs()['onmousedown'](Mock(button=0))
         assert view.selected_item == button['id']
