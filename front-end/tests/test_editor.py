@@ -444,9 +444,16 @@ class TestEditor(object):
             if isinstance(node, js.MockElement) and node.getAttribute('id') == 'txtFileName':
                 node.value = file_name
 
+        js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, 'hello_file.py2'))
+
+        editor.js.globals.window.alert = Mock()
+
+        result['newFile_OK_handler'](Mock())
+
+        editor.js.globals.window.alert.assert_called_with('Error: python files must end with .py')
+
         js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, 'hello_file.py'))
 
-        #print('test_editor result[newFile_OK_handler]=', result['newFile_OK_handler'])
         result['newFile_OK_handler'](Mock())
 
         rendered = node._render(None)
