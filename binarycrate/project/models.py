@@ -41,10 +41,7 @@ class DirectoryEntry(MPTTModel):
 class ProjectTypes(ChoiceEnum):
     python = 0
     webpage = 1
-<<<<<<< HEAD
-=======
     python_with_storage = 2
->>>>>>> develop
 
 class Project(models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
@@ -57,12 +54,10 @@ class Project(models.Model):
     def get_directory_entries(self):
         return self.root_folder.get_descendants(include_self=True)
 
-<<<<<<< HEAD
     def create_files(self):
         DirectoryEntry.objects.create(parent=self.root_folder, name='index.html', is_file=True)
         DirectoryEntry.objects.create(parent=self.root_folder, name='styles.css', is_file=True)
         DirectoryEntry.objects.create(parent=self.root_folder, name='scripts.js', is_file=True)
-=======
 
 class Image(models.Model):
     # Represents an image uploaded by a user
@@ -94,4 +89,3 @@ class Image(models.Model):
     @property
     def image_url(self):
         return self.get_url()
->>>>>>> develop

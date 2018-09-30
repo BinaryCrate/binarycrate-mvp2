@@ -119,13 +119,15 @@ class TestPythonWithStorageProject(APITestCase):
             self.project_id = uuid.uuid4()
             u = UserFactory()
             de = DirectoryEntry.objects.create(name='', is_file=False)
-            Project.objects.create(id=self.project_id, name='Test Python', type=ProjectTypes.python_with_storage.value, public=False,
+            Project.objects.create(id=self.project_id, name='Test Python',
+                                type=ProjectTypes.python_with_storage.value, public=False,
                                    root_folder=de, owner=u)
 
             self.assertEqual(Project.objects.count(), 1)
             p = Project.objects.all().first()
             self.assertEqual(p.type, 2)
 
+            print('Dir entries=', p.get_directory_entries().values_list('name', flat=True))
             self.assertEqual(set(p.get_directory_entries().values_list('name', flat=True)),
                 {'', 'documents.py'})
 

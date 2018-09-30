@@ -23,12 +23,10 @@ def load_de_content(sender, instance, **kwargs):
             instance._form_items = project_file.read()
 
 
-def create_html_files(sender, instance, created, raw, **kwargs):
+def save_project(sender, instance, created, raw, **kwargs):
     if created is True:
         if instance.type == 1:
             instance.create_files()
-
-def save_project(sender, instance, created, raw, **kwargs):
     from .models import DirectoryEntry, ProjectTypes
     if raw is False and created is True and instance.type == ProjectTypes.python_with_storage.value:
         DirectoryEntry.objects.create(name='documents.py', is_file=True,
