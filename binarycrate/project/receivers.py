@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, unicode_literals, print_function
 from binarycrate.storage import project_media_storage
 from cStringIO import StringIO
 from .models import Project, ProjectTypes
@@ -22,7 +22,35 @@ def load_de_content(sender, instance, **kwargs):
         with project_media_storage.open(str(instance.id) + '-form-items', 'r') as project_file:
             instance._form_items = project_file.read()
 
+
 def create_html_files(sender, instance, created, raw, **kwargs):
     if created is True:
         if instance.type == 1:
             instance.create_files()
+
+def save_project(sender, instance, created, raw, **kwargs):
+    from .models import DirectoryEntry, ProjectTypes
+    if raw is False and created is True and instance.type == ProjectTypes.python_with_storage.value:
+        DirectoryEntry.objects.create(name='documents.py', is_file=True,
+            parent=instance.get_directory_entries().first(),
+            content="""from __future__ import absolute_import, unicode_literals, print_function
+from binarycrate import historygraphfrontend
+from historygraph import Document, DocumentObject
+from historygraph import fields
+import inspect
+import copy
+
+# Don't change anything above this line
+# Your Document definition go here
+
+
+
+
+
+# Don't change anything below this line
+for c in copy.copy(globals().values()):
+    if inspect.isclass(c) and issubclass(c, DocumentObject) and c != Document and c != DocumentObject:
+        historygraphfrontend.documentcollection.register(c)
+
+historygraphfrontend.download_document_collection()
+""")

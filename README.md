@@ -17,7 +17,7 @@ cd binarycrate-mvp2
 
 git checkout develop
 
-git submodle update --init --recursive
+git submodule update --init --recursive
 ```
 
 ## Checkout the software Windows
@@ -32,10 +32,10 @@ cd binarycrate-mvp2
 
 git checkout develop
 
-git submodle update --init --recursive
+git submodule update --init --recursive
 ```
 
-This will check out the project onthe develop branch and retrieve all of the submodules.
+This will check out the project on the develop branch and retrieve all of the submodules.
 
 Note in Windows we win need to have different console open for git and python.
 
@@ -46,17 +46,15 @@ Open a console and cs to the binarcrate-mvp2 directory which the code is checked
 Type in
 
 ```
-virtualenv venv 
+virtualenv venv
 
 source venv/bin/activate
 
-pip install --upgrade pip 
+pip install --upgrade pip
 
 pip install --upgrade setuptools urllib3[secure]
 
 pip install fabric3==1.13.1.post1  # We use fabric3 to automate tasks
-
-pip install django==1.11.10  # We need django in the venv to create apps in our project
 ```
 
 This will create a standard python virtual environment for us a install all of the tools used outside of the docker container into it.
@@ -69,17 +67,15 @@ These instructions assume you have install Python 2.7 into the c:\python27 folde
 Type in
 
 ```
-c:\python27\scripts\virtualenv venv 
+c:\python27\scripts\virtualenv venv
 
 venv\scripts\activate.bat
 
-pip install --upgrade pip 
+pip install --upgrade pip
 
 pip install --upgrade setuptools urllib3[secure]
 
 pip install fabric3==1.13.1.post1  # We use fabric3 to automate tasks
-
-pip install django==1.11.10  # We need django in the venv to create apps in our project
 ```
 
 This will create a standard python virtual environment for us a install all of the tools used outside of the docker container into it.
@@ -160,10 +156,10 @@ To run unit tests for the backend
 fab development.frontend_test
 ```
 
-To run frontend unit tests 
+To run frontend unit tests
 
 ```
 fab development.behave
 ```
 
-To run BDD tests 
+To run BDD tests

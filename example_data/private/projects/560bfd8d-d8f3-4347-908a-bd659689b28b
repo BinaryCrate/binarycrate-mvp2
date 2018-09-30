@@ -1,0 +1,35 @@
+from __future__ import unicode_literals, absolute_import, print_function
+from binarycrate.controls import Form
+from binarycrate import historygraphfrontend
+
+class Zz(Form):
+    file_location = __file__
+
+    def get_score(self):
+        dc = historygraphfrontend.documentcollection
+        from documents import Score
+        scores = dc.get_by_class(Score)
+        if len(scores) == 0:
+            score = Score(None)
+            dc.add_document_object(score)
+            historygraphfrontend.post_document_collection()
+            return score
+        else:
+            return scores[0]
+
+    def btn_increment_onclick(self, e):
+        score = self.get_score()
+        score.score.add(1)
+        self.lbl_total['caption'] = '{}'.format(score.score.get())
+        historygraphfrontend.post_document_collection()
+
+    def btn_decrement_onclick(self, e):
+        score = self.get_score()
+        score.score.add(-1)
+        self.lbl_total['caption'] = '{}'.format(score.score.get())
+        historygraphfrontend.post_document_collection()
+
+    def on_historygraph_download_complete(self):
+        score = self.get_score()
+        self.lbl_total['caption'] = '{}'.format(score.score.get())
+

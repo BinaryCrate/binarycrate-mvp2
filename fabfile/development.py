@@ -30,6 +30,11 @@ def shell():
 
 @task
 def run(**kwargs):
+    print(yellow('Updating version file...'))
+    create_version_file()
+    print(yellow('Reseting pypyjs environment...'))
+    with lcd('./pypyjs-release/pypyjs-release'):
+        local('git checkout -- .')#, capture=True)
     command = kwargs.get('command', 'check')
     print(yellow('Running docker process...'))
     with lcd('.'):
@@ -57,6 +62,11 @@ def run(**kwargs):
 
 @task
 def migrate():
+    print(yellow('Updating version file...'))
+    create_version_file()
+    print(yellow('Reseting pypyjs environment...'))
+    with lcd('./pypyjs-release/pypyjs-release'):
+        local('git checkout -- .')#, capture=True)
     print(yellow('Running docker process...'))
     with lcd('.'):
         local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --publish=8000:8000 "' + project_name + '" migrate')
@@ -132,3 +142,14 @@ def create_symlinks():
     print(yellow('Running docker process...'))
     with lcd('.'):
         local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --entrypoint="/opt/project/run-create-symlinks" --publish=8000:8000 "' + project_name + '"')
+
+@task
+def create_version_file():
+    with lcd('.'):
+        output = local('git rev-parse HEAD', capture=True)
+        with open('binarycrate/binarycrate/settings/version_hash.py', 'w') as f:
+            f.write('''# -*- coding: utf-8 -*-
+from __future__ import absolute_import, unicode_literals, print_function
+
+VERSION_HASH = '{}'
+'''.format(output.stdout))

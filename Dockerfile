@@ -21,24 +21,14 @@ RUN apt-get update --quiet --yes && apt-get install --quiet --yes --force-yes ca
     python-setuptools \
     curl \
     unzip \
-    git \ 
+    git \
     python
 
 # Install required packages
 ADD requirements.txt /root/requirements.txt
-RUN pip install --upgrade pip 
+RUN pip install --upgrade pip
 RUN pip install --upgrade setuptools urllib3[secure]
 RUN pip install -r /root/requirements.txt
-
-# These are stored in https://chromedriver.storage.googleapis.com/index.html
-# from time to time they will need to be updated
-ENV CHROMEDRIVER_VERSION 2.35
-ENV CHROMEDRIVER_SHA256 67fad24c4a85e3f33f51c97924a98b619722db15ce92dcd27484fb748af93e8e
-
-#RUN curl -SLO "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip" \
-#  && echo "$CHROMEDRIVER_SHA256  chromedriver_linux64.zip" | sha256sum -c - \
-#  && unzip "chromedriver_linux64.zip" -d /usr/local/bin \
-#  && rm "chromedriver_linux64.zip"
 
 # Configure environment
 ENV PYTHONDONTWRITEBYTECODE 1

@@ -22,3 +22,6 @@ class ProjectConfig(AppConfig):
         signals.post_save.connect(
             receivers.create_html_files, sender='project.Project',
             dispatch_uid='project.Project.save')
+        signals.post_save.connect(
+            receivers.save_project, sender='project.Project',
+            dispatch_uid='project.Project.save')

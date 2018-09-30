@@ -4,6 +4,7 @@ import sys
 import tempfile
 
 from .build_number import BUILD_NUMBER
+from .version_hash import VERSION_HASH
 
 """
 Django settings for binarycrate project.
@@ -35,7 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.sites', 
+    'django.contrib.sites',
 
     'allauth',
     'allauth.account',
@@ -55,17 +56,50 @@ INSTALLED_APPS = [
     'landingpage',
     'project',
     'share',
+    'content',
+    'labs',
+    'search',
+
+    'wagtail.wagtailforms',
+    'wagtail.wagtailredirects',
+    'wagtail.wagtailembeds',
+    'wagtail.wagtailsites',
+    'wagtail.wagtailusers',
+    'wagtail.wagtailsnippets',
+    'wagtail.wagtaildocs',
+    'wagtail.wagtailimages',
+    'wagtail.wagtailsearch',
+    'wagtail.wagtailadmin',
+    'wagtail.wagtailcore',
+
+    'modelcluster',
+    'taggit',
+
+
+
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+
+    'wagtail.wagtailcore.middleware.SiteMiddleware',
+    'wagtail.wagtailredirects.middleware.RedirectMiddleware',
+
+
+
 ]
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = '/static/{}/'.format(VERSION_HASH)
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
 ROOT_URLCONF = 'binarycrate.urls'
 
@@ -129,7 +163,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
-STATIC_URL = '/static/'
+WAGTAIL_SITE_NAME = 'Content'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, '..', 'pypyjs-release'),
@@ -212,7 +246,11 @@ if 'pytest' in sys.modules:
 else:
     PROJECT_FILES_ROOT = os.path.join(BASE_DIR, 'private/projects')
 
+if 'pytest' in sys.modules:
+    IMAGE_FILES_ROOT = tempfile.mkdtemp()
+else:
+    IMAGE_FILES_ROOT = os.path.join(BASE_DIR, 'private/images')
+
 # Email
 
 DEFAULT_FROM_EMAIL = 'noreply@dev.binarycrate.com'
-

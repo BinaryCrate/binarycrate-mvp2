@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals, print_function
 from rest_framework.test import APITestCase
-from project.models import Project, DirectoryEntry, ProjectTypes
+from project.models import Project, DirectoryEntry, Image, ProjectTypes
 import uuid
 import tempfile
 import shutil
 import os
 from django.conf import settings
-import pytest
-
+from accounts.factories import UserFactory
 
 #added additional imports from test apis
 from django.urls import reverse
@@ -45,8 +44,31 @@ class TestModels(APITestCase):
         assert de.form_items == de2.form_items
         assert de.is_default == de2.is_default
 
+
+class TestImageModel(APITestCase):
+    def test_image_saving_saves_the_file(self):
+        u = UserFactory()
+        de = DirectoryEntry.objects.create(name='', is_file=False)
+        project = Project.objects.create(name='Test 1', type=0, public=False,
+                       root_folder=de, owner=u)
+        image = Image.objects.create(name='Natural-red-apple.jpg', project=project)
+
+        with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
+            image.save_file(f)
+
+        with open(settings.PROJECT_FILES_ROOT + '/images-{0}/{1}'.format(project.id, image.id), 'rb') as saved_file:
+            with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as original_file:
+                saved_content = saved_file.read()
+                original_content = original_file.read()
+
+                assert saved_content == original_content
+
+        assert image.get_url() == '/images/images-{0}/{1}.jpg'.format(project.id, image.id)
+
+
+
 class TestPythonProject(APITestCase):
-        def test_create_python_project__type(self):
+        def test_python_project_correct_type(self):
             self.project_id = uuid.uuid4()
             u = UserFactory()
             de = DirectoryEntry.objects.create(name='', is_file=False)
@@ -54,10 +76,13 @@ class TestPythonProject(APITestCase):
                                    root_folder=de, owner=u)
 
             self.assertEqual(Project.objects.count(), 1)
-            self.assertEqual(Project.objects.all().first().type, 0)
+            p = Project.objects.all().first()
+            self.assertEqual(p.type, 0)
+
+            self.assertEqual(set(p.get_directory_entries().values_list('name', flat=True)), {''})
 
 class TestWebpageProject(APITestCase):
-    def test_create_webpage_project_type(self):
+    def test_creating_webpage_project_type(self):
             self.project_id = uuid.uuid4()
             u = UserFactory()
             de = DirectoryEntry.objects.create(name='', is_file=False)
@@ -87,3 +112,42 @@ class TestWebpageFiles(APITestCase):
             self.assertEqual(p.get_directory_entries().count(), 4)
             self.assertEqual(set(p.get_directory_entries().values_list('name', flat=True)),
             {u'', u'scripts.js', u'index.html', u'styles.css'})
+
+
+class TestPythonWithStorageProject(APITestCase):
+        def test_python_project_correct_type(self):
+            self.project_id = uuid.uuid4()
+            u = UserFactory()
+            de = DirectoryEntry.objects.create(name='', is_file=False)
+            Project.objects.create(id=self.project_id, name='Test Python', type=ProjectTypes.python_with_storage.value, public=False,
+                                   root_folder=de, owner=u)
+
+            self.assertEqual(Project.objects.count(), 1)
+            p = Project.objects.all().first()
+            self.assertEqual(p.type, 2)
+
+            self.assertEqual(set(p.get_directory_entries().values_list('name', flat=True)),
+                {'', 'documents.py'})
+
+            de = p.get_directory_entries().get(name='documents.py')
+            self.assertEqual(de.content, """from __future__ import absolute_import, unicode_literals, print_function
+from binarycrate import historygraphfrontend
+from historygraph import Document, DocumentObject
+from historygraph import fields
+import inspect
+import copy
+
+# Don't change anything above this line
+# Your Document definition go here
+
+
+
+
+
+# Don't change anything below this line
+for c in copy.copy(globals().values()):
+    if inspect.isclass(c) and issubclass(c, DocumentObject) and c != Document and c != DocumentObject:
+        historygraphfrontend.documentcollection.register(c)
+
+historygraphfrontend.download_document_collection()
+""")

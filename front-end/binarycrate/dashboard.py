@@ -16,6 +16,7 @@ import json
 from . import editor
 import traceback
 import sys
+from .urllib import urlencode
 
 
 projects = []
@@ -118,6 +119,20 @@ class DashboardView(BCChrome):
     def get_project_name(self):
         return self.selected_project['name'] if self.selected_project is not None else 'No project'
 
+    def get_share_url(self):
+        return str(js.globals.window.location.origin) + "/share/" + \
+            self.selected_project.get('id', '') + "/" \
+            if self.selected_project is not None else 'No project'
+
+    def get_facebook_iframe_src(self):
+        return  'https://www.facebook.com/plugins/share_button.php?' + \
+                              urlencode({'href': self.get_share_url(),
+                                         'layout':'button',
+                                         'size':'small',
+                                         'mobile_iframe':'true',
+                                         'width':'59',
+                                         'height':'20'})  + "&appId"
+
     def projects_api_ajax_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             self.projects_loaded = True
@@ -163,13 +178,18 @@ class DashboardView(BCChrome):
                         form([
                           div({'class': 'form-group'}, [
                             label({'class':"col-form-label", 'for':"formGroupExampleInput"}, 'Title'),
-                            html_input({'type': "text", 'class':"form-control", 'id':"formGroupExampleInput", 'placeholder':"http://bc.com/o82Ssdms/"}),
+                            html_input({'type': "text", 'class':"form-control", 'id':"formGroupExampleInput", 'placeholder':self.get_share_url}),
                           ]),
                           div({'class': 'form-group'}, [
-                            label({'for':"exampleFormControlTextarea1"}, 'Share On:'),
-                            i({'class': 'fa fa-facebook', 'aria-hidden': 'true'}),
-                            i({'class': 'fa fa-twitter', 'aria-hidden': 'true'}),
-                            i({'class': 'fa fa-envelope-o', 'aria-hidden': 'true'}),
+                            p('Share On:'),
+                            iframe({'src':self.get_facebook_iframe_src,
+                                    'width':"59",
+                                    'height':"20",
+                                    'style':"border:none;overflow:hidden",
+                                    'scrolling':"no",
+                                    'frameborder':"0",
+                                    'allowTransparency':"true",
+                                    'allow':"encrypted-media"}),
                           ]),
                         ]),
                       ], None),
@@ -185,8 +205,9 @@ class DashboardView(BCChrome):
                         div({'class': 'form-group'}, [
                           label({'for': 'selectProjectType'}, 'Project Type'),
                           select({'class': 'form-control', 'id': 'selectProjectType'}, [
-                            option({'value': 0}, 'Python'),
+                            option({'value': 0}, 'Python'), #TODO: The values in these selects should somehow be made portable between the frond and back ends
                             option({'value': 1}, 'Webpage'),
+                            option({'value': 2}, 'Python with Storage (HistoryGraph)'),
                           ]),
                         ]),
                       ], self.createNew_ok),
@@ -194,7 +215,8 @@ class DashboardView(BCChrome):
 
     def projects_api_ajax_post_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
-            self.query_projects()
+            new_project = json.loads(str(xmlhttp.responseText))
+            js.globals.document.location = '/#!editor/' + new_project['id']
 
     def projects_api_ajax_put_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:

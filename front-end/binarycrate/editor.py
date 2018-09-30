@@ -20,13 +20,18 @@ from collections import defaultdict
 from cavorite.svg import svg
 import re
 import os
-from binarycrate.controls import StudentForm
+from binarycrate.controls import Form
 import inspect
 from binarycrate import historygraphfrontend
 import binarycrate
 from .urllib import urlencode
 import bs4
 from bs4 import BeautifulSoup
+from .uploadmodal import UploadModal
+from binarycrate.controls.bcform import get_form_item_property, FormItemPropType
+from types import ModuleType
+import sys
+
 
 HANDLE_NONE = 0
 HANDLE_TOPLEFT = 1
@@ -37,6 +42,10 @@ HANDLE_BOTTOMLEFT = 3
 python_module_dir = '/lib/pypyjs/lib_pypy/'
 
 project = {}
+
+original_modules = set()
+
+project_files = [] #All the project files we have written to the virtual file system
 
 example_html = """<!doctype html>
 <html>
@@ -106,6 +115,7 @@ class BCPFolder(li):
     def on_click(self, e):
         self.editor_view.folder_state[self.de['id']] = not self.editor_view.folder_state[self.de['id']]
         self.editor_view.selected_de = self.de
+        self.editor_view.selected_file_de = None
         self.editor_view.selected_item = ''
         self.editor_view.mount_redraw()
         self.editor_view.update_html_preview()
@@ -174,8 +184,8 @@ def drop_down_item(title, icon_class, click_handler):
 
         attribs['onclick'] = dummy_click_handler
     return a(attribs, [
-        i({'class': "fa fa-1x " + icon_class, 'aria-hidden': "true"}),
-        t(title),
+        i({'class': "fa fa-1x " + icon_class, 'aria-hidden':"true"}),
+        t(' ' + title),
     ])
 
 
@@ -266,6 +276,7 @@ class EditorView(BCChrome):
         for de in project['directory_entry']:
             if de['name'] != '':  # Don't try to save the root folder
                 de_copy = copy.copy(de)
+                #print('de_copy[form_items]=', de_copy['form_items'])
                 de_copy['form_items'] = json.dumps(de_copy['form_items'])
                 ajaxput('/api/projects/directoryentry/' + de['id'] + '/', de_copy, dummy_put_result_handler)
         for de_id in project['deleted_directory_entries']:
@@ -316,8 +327,10 @@ class EditorView(BCChrome):
                     # print('write_program_to_virtual_file_system de[content]', de['content'])
                     # print('write_program_to_virtual_file_system type(de[content])', type(de['content']))
                     with open(python_module_dir + extra_path + de['name'], "w+") as fl:
-                        fl.write(de['content'])
-                    # print('write_program_to_virtual_file_system 7')
+                         fl.write(de['content'].encode('utf-8'))
+                         global project_files
+                         project_files.append(python_module_dir + extra_path + de['name'])
+                    #print('write_program_to_virtual_file_system 7')
 
     def get_default_directory_entry(self):
         des = [de for de in project['directory_entry'] if de['is_default']]
@@ -327,21 +340,65 @@ class EditorView(BCChrome):
             return des[0]
 
     def get_default_module_form_classes(self):
-        # de = [de for de in project['directory_entry'] if de['is_default']][0]
+        def reload_recursively(mod):
+            if not isinstance(mod, ModuleType):
+                return
+            #print('found mod= ', mod)
+            #print('found dir(mod)= ', dir(mod))
+            for mod2 in dir(mod):
+                #print('mod2=', mod2)
+                if mod2 not in sys.builtin_module_names and \
+                   mod2 != '__builtin__'  and mod2 != '__builtins__':
+                    reload_recursively(getattr(mod, mod2))
+            #print('reloading mod= ', mod)
+            reload(mod)
+
+        #de = [de for de in project['directory_entry'] if de['is_default']][0]
         de = self.get_default_directory_entry()
         if de is None:
             return []
+        if project['type'] == 2:
+            documents_imported_module = __import__('documents') #TODO: Make it impossible to rename or delete the documents file from the root of the proejct
         imported_module = __import__(de['name'][:de['name'].find('.')])
-        # print('EditorView run_project dir(imported_module)=', dir(imported_module))
-        return [getattr(imported_module, name) for name in dir(imported_module) if
-                inspect.isclass(getattr(imported_module, name)) and issubclass(getattr(imported_module, name),
-                                                                               StudentForm)]
+        #print('EditorView run_project dir(imported_module)=', dir(imported_module))
+        classes = [getattr(imported_module, name) for name in dir(imported_module)
+                   if inspect.isclass(getattr(imported_module, name)) and
+                     issubclass(getattr(imported_module, name), Form) and
+                     getattr(imported_module, name) != Form]
+        assert len(classes) <= 1, "Only 1 Form class should exist in a module"
+        return classes
 
     def on_historygraph_download_complete(self):
         for form in self.form_stack:
             form.on_historygraph_download_complete()
         self.mount_redraw()
         Router.router.ResetHashChange()
+
+    def stop_project(self, e):
+        print('EditorView stop_project called')
+        self.program_is_running = False
+        for form in self.form_stack:
+            form.clear_all_active_timeouts()
+            form.clear_all_active_intervals()
+        self.form_stack = []
+        js.globals.document.print_to_secondary_output = False
+        self.cleanup_project()
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
+    def cleanup_project(self):
+        print('cleanup_project called')
+        global project_files
+        for f in project_files:
+            os.remove(f)
+        project_files = []
+
+        global original_modules
+        modules_to_remove = [module_name for module_name in sys.modules.keys() if module_name not in original_modules]
+        for module_name in modules_to_remove:
+            del sys.modules[module_name]
+        import gc
+        gc.collect()
 
     def run_project(self, e):
         print('EditorView run_project called')
@@ -350,31 +407,39 @@ class EditorView(BCChrome):
 
         # print('EditorView run_project 0.9')
         self.program_is_running = True
+        js.globals.document.print_to_secondary_output = True
         global project
         historygraphfrontend.initialise_document_collection(project['id'], self.on_historygraph_download_complete)
         # print('EditorView run_project 1')
         # historygraphfrontend.download_document_collection()
         self.write_program_to_virtual_file_system()
-        # print('EditorView run_project 2')
-        js.globals.document.print_to_secondary_output = True
-        # print('EditorView run_project 3')
+        #print('EditorView run_project 2')
+        #print('EditorView run_project 3')
         form_classes = self.get_default_module_form_classes()
         # print('EditorView run_project form_classes=', form_classes)
         if len(form_classes) > 0:
-            # print('EditorView run_project Found usable class name=' + form_classes[0].__name__)
-            self.form_stack.append(form_classes[0](self))
+            #print('EditorView run_project Found usable class name=' + form_classes[0].__name__)
+            self.form_stack.append(form_classes[0](editorview=self))
             self.mount_redraw()
             Router.router.ResetHashChange()
         else:
             # print('EditorView run_project Found  no usable class')
             js.globals.document.print_to_secondary_output = False
-        # aa.tr()
-        # print('EditorView run_project called 4')
+            self.program_is_running = False
+            self.cleanup_project()
+        #aa.tr()
+        #print('EditorView run_project called 4')
+
+    def get_sidebar_nav_items(self):
+        if self.program_is_running:
+            return []
+        else:
+            return super(EditorView, self).get_sidebar_nav_items()
 
     def set_current_file_as_default(self, e):
-        # print('set_current_file_as_default called')
-        # from binarycrate.controls import StudentForm
-        # print('set_current_file_as_default StudentForm=', StudentForm)
+        #print('set_current_file_as_default called')
+        #from binarycrate.controls import Form
+        #print('set_current_file_as_default Form=', Form)
         if self.selected_de:
             for de in project['directory_entry']:
                 de['is_default'] = False
@@ -383,10 +448,13 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
 
     def projects_api_ajax_result_handler(self, xmlhttp, response):
+        print('projects_api_ajax_result_handler called')
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             global project
             new_project = json.loads(str(xmlhttp.responseText))
-            if project != new_project:
+            if project  != new_project:
+                self.selected_de = None
+                self.selected_file_de = None
                 project = new_project
                 project['deleted_directory_entries'] = list()
                 for de in project['directory_entry']:
@@ -394,6 +462,10 @@ class EditorView(BCChrome):
                         de['form_items'] = []
                     else:
                         de['form_items'] = json.loads(de['form_items'])
+                        for fi in de['form_items']:
+                            # Some of the form controls in the demo content don't have visibility set
+                            if 'visible' not in fi:
+                                fi['visible'] = True
                 self.mount_redraw()
                 Router.router.ResetHashChange()
 
@@ -401,6 +473,8 @@ class EditorView(BCChrome):
         global project
         project = {}
         self.context_menu = None
+        self.selected_de = None
+        self.selected_file_de = None
         super(EditorView, self).mount(element)
 
     def get_project(self):
@@ -410,10 +484,21 @@ class EditorView(BCChrome):
         global project
         if len(project) == 0:
             # Only load the project if we don't alreayd have it
-            ajaxget('/api/projects/' + self.get_root().url_kwargs['project_id'] + '/',
-                    self.projects_api_ajax_result_handler)
+            def images_api_ajax_result_handler2(xmlhttp, response):
+                # Get the images first then the projects
+                #TODO: Do this all in one query. Otherwise it get brittle
+                print('images_api_ajax_result_handler2')
+                #self.images_api_ajax_result_handler(xmlhttp, response)
+                if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+                    self.images = json.loads(str(xmlhttp.responseText))
+                    #self.mount_redraw()
+                    #Router.router.ResetHashChange()
+                    ajaxget('/api/projects/' + self.get_root().url_kwargs['project_id'] + '/', self.projects_api_ajax_result_handler)
+
+            ajaxget('/api/projects/image-list/' + self.get_root().url_kwargs['project_id'] + '/', images_api_ajax_result_handler2)
 
     def was_mounted(self):
+        #print('was_mounted called')
         super(EditorView, self).was_mounted()
         self.timeout_val = timeouts.set_timeout(lambda: self.query_project(), 1)
 
@@ -533,6 +618,7 @@ class EditorView(BCChrome):
         return self.context_menu
 
     def xy_from_e(self, e):
+        #TODO: Shared code put in a library
         if e.pageX or e.pageY:
             posx = e.pageX
             posy = e.pageY
@@ -546,19 +632,19 @@ class EditorView(BCChrome):
     def contextmenu_preview(self, e):
         posx, posy = self.xy_from_e(e)
         self.context_menu = ContextMenu(posx, posy, (
-            ('New Button', self.new_button),
-            ('New Textbox', self.new_textbox),
-            ('New Image', self.new_image),
-            ('New Label', self.new_label),
-            ('New Frame', self.new_frame),
-            ('New Checkbox', self.new_checkbox),
-            ('New Listbox', self.new_listbox),
-            ('New Rectangle', self.new_rectangle),
-            ('New Circle', self.new_circle),
-            ('New Ellipse', self.new_ellipse),
-            ('New Line', self.new_line),
-            ('New Hexagon', self.new_hexagon),
-        ))
+                                        ('New Button', self.new_button),
+                                        ('New Textbox', self.new_textbox),
+                                        ('New Image', self.new_image),
+                                        ('New Label', self.new_label),
+                                        ('New Frame', self.new_frame),
+                                        ('New Checkbox', self.new_checkbox),
+                                        ('New Listbox', self.new_listbox),
+                                        ('New Rectangle', self.new_rectangle),
+                                        ('New Circle', self.new_circle),
+                                        ('New Ellipse', self.new_ellipse),
+                                        ('New Line', self.new_line),
+                                        ('New Hexagon', self.new_hexagon),
+                                        ))
         self.mount_redraw()
         Router.router.ResetHashChange()
         e.stopPropagation()
@@ -615,10 +701,20 @@ class EditorView(BCChrome):
         e.stopPropagation()
         e.preventDefault()
 
+    def images_api_ajax_result_handler(self, xmlhttp, response):
+        print('images_api_ajax_result_handle status=', xmlhttp.status)
+        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+            self.images = json.loads(str(xmlhttp.responseText))
+            self.mount_redraw()
+            Router.router.ResetHashChange()
+
     def display_property_change_modal(self, e, form_item, prop_name):
-        # print('display_property_change_modal called form_item[name]=', form_item['name'])
+        #print('display_property_change_modal called form_item[name]=', form_item['name'])
+        #print('display_property_change_modal prop_name=', prop_name)
+        #print('display_property_change_modal get_form_item_property(form_item[\'type\'])=', get_form_item_property(form_item['type']))
         self.current_prop_name = prop_name
         prop_type = get_form_item_property(form_item['type'])[prop_name]
+        #print('display_property_change_modal prop_type=', prop_type)
         self.context_menu = None
 
         def display_modal():
@@ -627,14 +723,32 @@ class EditorView(BCChrome):
                 jquery('#changePropertyBoolean').modal('show')
             elif prop_type == FormItemPropType.COLOR:
                 jquery('#changePropertyColor').modal('show')
+            elif prop_type == FormItemPropType.PRELOADED_IMAGE:
+                jquery('#changePropertyPreloadedImage').modal('show')
             else:
                 jquery('#changeProperty').modal('show')
 
         self.mount_redraw()
         Router.router.ResetHashChange()
-        # e.stopPropagation()
-        # e.preventDefault()
-        timeouts.set_timeout(display_modal, 1)
+        #e.stopPropagation()
+        #e.preventDefault()
+        print('display_property_change_modal prop_type=', prop_type)
+
+        def images_handler2(xmlhttp, response):
+            print('images halndler2')
+            #self.images_api_ajax_result_handler(xmlhttp, response)
+            if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+                self.images = json.loads(str(xmlhttp.responseText))
+                self.mount_redraw()
+                Router.router.ResetHashChange()
+                timeouts.set_timeout(display_modal, 1)
+
+        if prop_type == FormItemPropType.PRELOADED_IMAGE:
+            #ajaxget('/api/projects/image-list/' + project['id'] + '/', self.self.images_api_ajax_result_handler)
+            ajaxget('/api/projects/image-list/' + project['id'] + '/', images_handler2)
+        else:
+            timeouts.set_timeout(display_modal, 1)
+
 
     def contextmenu_control(self, form_item_id, e):
         posx, posy = self.xy_from_e(e)
@@ -680,23 +794,33 @@ class EditorView(BCChrome):
                 elif form_item['type'] == 'textbox':
                     control_class = html_input
                     attribs_extra = {'type': "text"}
-                    # control = html_input({'type': "text", 'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
+                    #control = html_input({'type': "text", 'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
                 elif form_item['type'] == 'image':
                     control_class = img
-                    attribs_extra = {}
+                    preloaded_image = form_item['preloaded_image']
+                    print('get_selected_de_form_controls preloaded_image=', preloaded_image)
+                    if preloaded_image == '':
+                        attribs_extra = {'src': form_item['src'], 'preloaded_image': '' }
+                    else:
+                        image = filter(lambda image: image['id'] == preloaded_image, self.images)[0]
+                        i = image['name'].rfind('.')
+                        extension = image['name'][i:]
+                        attribs_extra = {'src': '/images/images-{0}/{1}{2}'.format(project['id'],
+                                         image['id'], extension),
+                                         'preloaded_image': preloaded_image }
                 elif form_item['type'] == 'label':
                     control_class = p
-                    attribs_extra = {}
+                    attribs_extra = { }
                 elif form_item['type'] == 'frame':
                     control_class = div
-                    # attribs_extra = {'s': "text"}
+                    #attribs_extra = {'s': "text"}
                 elif form_item['type'] == 'checkbox':
                     control_class = html_input
                     attribs_extra = merge_dicts({'type': "checkbox", 'form_item': 'True'},
                                                 {'checked': 'checked'} if form_item['value'] else {})
                 elif form_item['type'] == 'select':
                     control_class = select
-                    attribs_extra = {}
+                    attribs_extra = { }
                 attribs.update(attribs_extra)
                 if control_class:
                     control = control_class(attribs, form_item.get('caption', ''))
@@ -705,60 +829,52 @@ class EditorView(BCChrome):
             for form_item in self.selected_de['form_items']:
                 if form_item['type'] == 'rect':
                     svg_list.append(svg('rect', {'x': form_item['x'],
-                                                 'y': form_item['y'],
-                                                 'width': form_item['width'],
-                                                 'height': form_item['height'],
-                                                 'fill': form_item['fill'],
-                                                 'stroke-width': form_item['stroke_width'],
-                                                 'stroke': form_item['stroke'],
-                                                 # 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e), 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
-                                                 'onmouseup': self.on_mouse_up,
-                                                 'onmousedown': lambda e, form_item_id=form_item[
-                                                     'id']: self.select_new_item(form_item_id, e),
-                                                 'oncontextmenu': lambda e, form_item_id=form_item[
-                                                     'id']: self.contextmenu_control(form_item_id, e)}))
+                                 'y':form_item['y'],
+                                 'width': form_item['width'],
+                                 'height': form_item['height'],
+                                 'fill': form_item['fill'],
+                                 'stroke-width':  form_item['stroke_width'],
+                                 'stroke': form_item['stroke'],
+                                 #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e), 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                                 'onmouseup': self.on_mouse_up,
+                                 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e),
+                                 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
                 if form_item['type'] == 'circle':
                     svg_list.append(svg('circle', {'cx': form_item['x'] + form_item['width'] / 2,
-                                                   'cy': form_item['y'] + form_item['height'] / 2,
-                                                   'r': form_item['width'] / 2,
-                                                   # 'height': form_item['height'],
-                                                   'fill': form_item['fill'],
-                                                   'stroke-width': form_item['stroke_width'],
-                                                   'stroke': form_item['stroke'],
-                                                   # 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
-                                                   'onmouseup': self.on_mouse_up,
-                                                   'onmousedown': lambda e, form_item_id=form_item[
-                                                       'id']: self.select_new_item(form_item_id, e),
-                                                   'oncontextmenu': lambda e, form_item_id=form_item[
-                                                       'id']: self.contextmenu_control(form_item_id, e)}))
+                                 'cy':form_item['y'] + form_item['height'] / 2,
+                                 'r': form_item['width'] / 2,
+                                 #'height': form_item['height'],
+                                 'fill': form_item['fill'],
+                                 'stroke-width':  form_item['stroke_width'],
+                                 'stroke': form_item['stroke'],
+                                 #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
+                                 'onmouseup': self.on_mouse_up,
+                                 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e),
+                                 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
                 if form_item['type'] == 'ellipse':
                     svg_list.append(svg('ellipse', {'cx': form_item['x'] + form_item['width'] / 2,
-                                                    'cy': form_item['y'] + form_item['height'] / 2,
-                                                    'rx': form_item['width'] / 2,
-                                                    'ry': form_item['height'] / 2,
-                                                    'fill': form_item['fill'],
-                                                    'stroke-width': form_item['stroke_width'],
-                                                    'stroke': form_item['stroke'],
-                                                    # 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
-                                                    'onmouseup': self.on_mouse_up,
-                                                    'onmousedown': lambda e, form_item_id=form_item[
-                                                        'id']: self.select_new_item(form_item_id, e),
-                                                    'oncontextmenu': lambda e, form_item_id=form_item[
-                                                        'id']: self.contextmenu_control(form_item_id, e)}))
+                                 'cy':form_item['y'] + form_item['height'] / 2,
+                                 'rx': form_item['width'] / 2,
+                                 'ry': form_item['height'] / 2,
+                                 'fill': form_item['fill'],
+                                 'stroke-width':  form_item['stroke_width'],
+                                 'stroke': form_item['stroke'],
+                                 #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
+                                 'onmouseup': self.on_mouse_up,
+                                 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e),
+                                 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
                 if form_item['type'] == 'line':
                     svg_list.append(svg('line', {'x1': form_item['x'],
-                                                 'y1': form_item['y'],
-                                                 'x2': form_item['x'] + form_item['width'],
-                                                 'y2': form_item['y'] + form_item['height'],
-                                                 'fill': form_item['fill'],
-                                                 'stroke-width': form_item['stroke_width'],
-                                                 'stroke': form_item['stroke'],
-                                                 # 'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
-                                                 'onmouseup': self.on_mouse_up,
-                                                 'onmousedown': lambda e, form_item_id=form_item[
-                                                     'id']: self.select_new_item(form_item_id, e),
-                                                 'oncontextmenu': lambda e, form_item_id=form_item[
-                                                     'id']: self.contextmenu_control(form_item_id, e)}))
+                                 'y1':form_item['y'],
+                                 'x2': form_item['x'] + form_item['width'],
+                                 'y2': form_item['y'] + form_item['height'],
+                                 'fill': form_item['fill'],
+                                 'stroke-width':  form_item['stroke_width'],
+                                 'stroke': form_item['stroke'],
+                                 #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
+                                 'onmouseup': self.on_mouse_up,
+                                 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e),
+                                 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
                 if form_item['type'] == 'hexagon':
                     # Draw a hexagon
                     x1 = form_item['x'] + form_item['width'] / 2
@@ -788,59 +904,54 @@ class EditorView(BCChrome):
                 selected_form_item = \
                 [form_item for form_item in self.selected_de['form_items'] if self.selected_item == form_item['id']][0]
                 svg_list.extend([
-                    svg('rect', {'x': selected_form_item['x'],
-                                 'y': selected_form_item['y'],
-                                 'width': selected_form_item['width'],
-                                 'height': selected_form_item['height'],
-                                 'style': "fill:None;stroke-width:5;stroke:rgb(255,0,0)",
-                                 'onmouseup': self.on_mouse_up,
-                                 'oncontextmenu': lambda e, form_item_id=selected_form_item[
-                                     'id']: self.contextmenu_control(form_item_id, e)}),
-                    svg('rect', {'id': 'handle-top-left', 'x': selected_form_item['x'] - 5,
-                                 'y': selected_form_item['y'] - 5,
-                                 'width': 10,
-                                 'height': 10,
-                                 'style': "fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
-                                 'onmousedown': lambda e: self.on_handle_mouse_down(e, HANDLE_TOPLEFT),
-                                 'onmouseup': self.on_mouse_up,
-                                 # 'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)
-                                 }),
-                    svg('rect',
-                        {'id': 'handle-top-right', 'x': selected_form_item['x'] + selected_form_item['width'] - 5,
-                         'y': selected_form_item['y'] - 5,
-                         'width': 10,
-                         'height': 10,
-                         'style': "fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
-                         'onmousedown': lambda e: self.on_handle_mouse_down(e, HANDLE_TOPRIGHT),
-                         'onmouseup': self.on_mouse_up,
-                         # 'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)
-                         }),
-                    svg('rect',
-                        {'id': 'handle-bottom-right', 'x': selected_form_item['x'] + selected_form_item['width'] - 5,
-                         'y': selected_form_item['y'] + selected_form_item['height'] - 5,
-                         'width': 10,
-                         'height': 10,
-                         'style': "fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
-                         'onmousedown': lambda e: self.on_handle_mouse_down(e, HANDLE_BOTTOMRIGHT),
-                         'onmouseup': self.on_mouse_up,
-                         # 'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)
-                         }),
-                    svg('rect', {'id': 'handle-bottom-left', 'x': selected_form_item['x'] - 5,
-                                 'y': selected_form_item['y'] + selected_form_item['height'] - 5,
-                                 'width': 10,
-                                 'height': 10,
-                                 'style': "fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
-                                 'onmousedown': lambda e: self.on_handle_mouse_down(e, HANDLE_BOTTOMLEFT),
-                                 'onmouseup': self.on_mouse_up,
-                                 # 'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)
-                                 }),
-                ])
-            ret.append(svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%',
-                                   'oncontextmenu': self.contextmenu_preview, 'z-index': -5,
-                                   'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up}, svg_list))
+                              svg('rect', {'x': selected_form_item['x'],
+                                           'y':selected_form_item['y'],
+                                           'width': selected_form_item['width'],
+                                           'height': selected_form_item['height'],
+                                           'style':"fill:None;stroke-width:5;stroke:rgb(255,0,0)",
+                                           'onmouseup': self.on_mouse_up,
+                                           'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)}),
+                              svg('rect', {'id': 'handle-top-left', 'x': selected_form_item['x'] - 5,
+                                           'y':selected_form_item['y'] - 5,
+                                           'width': 10,
+                                           'height': 10,
+                                           'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
+                                           'onmousedown': lambda e: self.on_handle_mouse_down(e, HANDLE_TOPLEFT),
+                                           'onmouseup': self.on_mouse_up,
+                                           #'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)
+                                           }),
+                              svg('rect', {'id': 'handle-top-right', 'x': selected_form_item['x'] + selected_form_item['width'] - 5,
+                                           'y':selected_form_item['y'] - 5,
+                                           'width': 10,
+                                           'height': 10,
+                                           'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
+                                           'onmousedown': lambda e: self.on_handle_mouse_down(e, HANDLE_TOPRIGHT),
+                                           'onmouseup': self.on_mouse_up,
+                                           #'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)
+                                           }),
+                              svg('rect', {'id': 'handle-bottom-right', 'x': selected_form_item['x'] + selected_form_item['width'] - 5,
+                                           'y':selected_form_item['y'] + selected_form_item['height'] - 5,
+                                           'width': 10,
+                                           'height': 10,
+                                           'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
+                                           'onmousedown': lambda e: self.on_handle_mouse_down(e, HANDLE_BOTTOMRIGHT),
+                                           'onmouseup': self.on_mouse_up,
+                                           #'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)
+                                           }),
+                              svg('rect', {'id': 'handle-bottom-left', 'x': selected_form_item['x'] - 5,
+                                           'y':selected_form_item['y'] + selected_form_item['height'] - 5,
+                                           'width': 10,
+                                           'height': 10,
+                                           'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
+                                           'onmousedown': lambda e: self.on_handle_mouse_down(e, HANDLE_BOTTOMLEFT),
+                                           'onmouseup': self.on_mouse_up,
+                                           #'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)
+                                           }),
+                            ])
+            ret.append(svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%', 'oncontextmenu': self.contextmenu_preview, 'z-index':-5, 'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up}, svg_list))
         if self.program_is_running and len(self.form_stack) > 0:
-            # print('get_selected_de_form_controls getting form controls from from_stack')
-            ret = self.form_stack[-1].get_form_controls()
+            #print('get_selected_de_form_controls getting form controls from from_stack')
+            ret = self.form_stack[-1].get_form_control_elements()
         return ret
 
     def clear_selected_item(self, e):
@@ -890,125 +1001,141 @@ class EditorView(BCChrome):
 
     def new_button(self, e):
         self.new_control(e,
-                         {'type': 'button',
-                          'width': 100,
-                          'height': 30,
-                          'caption': 'Button',
-                          'name': self.get_next_name('button'),
-                          })
+            {'type': 'button',
+             'width': 100,
+             'height': 30,
+             'caption': 'Button',
+             'visible': True,
+             'name': self.get_next_name('button'),
+            })
 
     def new_textbox(self, e):
-        self.new_control(e,
-                         {'type': 'textbox',
-                          'width': 150,
-                          'height': 30,
-                          'name': self.get_next_name('textbox'),
-                          })
+       self.new_control(e,
+            {'type': 'textbox',
+             'width': 150,
+             'height': 30,
+             'visible': True,
+             'name': self.get_next_name('textbox'),
+            })
 
     def new_image(self, e):
-        self.new_control(e,
-                         {'type': 'image',
-                          'width': 200,
-                          'height': 200,
-                          'name': self.get_next_name('image'),
-                          })
+       self.new_control(e,
+            {'type': 'image',
+             'width': 200,
+             'height': 200,
+             'name': self.get_next_name('image'),
+             'src': '',
+             'preloaded_image': '',
+             'visible': True,
+            })
 
     def new_label(self, e):
-        self.new_control(e,
-                         {'type': 'label',
-                          'width': 150,
-                          'height': 30,
-                          'caption': 'Label',
-                          'name': self.get_next_name('label'),
-                          })
+       self.new_control(e,
+            {'type': 'label',
+             'width': 150,
+             'height': 30,
+             'caption': 'Label',
+             'name': self.get_next_name('label'),
+             'visible': True,
+            })
 
     def new_frame(self, e):
-        self.new_control(e,
-                         {'type': 'frame',
-                          'width': 300,
-                          'height': 300,
-                          'caption': 'Frame',
-                          'name': self.get_next_name('frame'),
-                          })
+       self.new_control(e,
+            {'type': 'frame',
+             'width': 300,
+             'height': 300,
+             'caption': 'Frame',
+             'name': self.get_next_name('frame'),
+             'visible': True,
+            })
 
     def new_checkbox(self, e):
-        self.new_control(e,
-                         {'type': 'checkbox',
-                          'width': 150,
-                          'height': 30,
-                          'caption': 'Checkbox',
-                          'name': self.get_next_name('checkbox'),
-                          'value': False,
-                          })
+       self.new_control(e,
+            {'type': 'checkbox',
+             'width': 150,
+             'height': 30,
+             'caption': 'Checkbox',
+             'name': self.get_next_name('checkbox'),
+             'value': False,
+             'visible': True,
+            })
 
     def new_listbox(self, e):
-        self.new_control(e,
-                         {'type': 'listbox',
-                          'width': 150,
-                          'height': 150,
-                          'name': self.get_next_name('listbox'),
-                          })
+       self.new_control(e,
+            {'type': 'listbox',
+             'width': 150,
+             'height': 150,
+             'name': self.get_next_name('listbox'),
+             'visible': True,
+            })
 
     def new_rectangle(self, e):
-        self.new_control(e,
-                         {'type': 'rect',
-                          'width': 150,
-                          'height': 150,
-                          'name': self.get_next_name('rect'),
-                          'stroke_width': 5,
-                          'stroke': 'rgb(0,0,0)',
-                          'fill': 'none',
-                          })
+       self.new_control(e,
+            {'type': 'rect',
+             'width': 150,
+             'height': 150,
+             'name': self.get_next_name('rect'),
+             'stroke_width': 5,
+             'stroke': 'rgb(0,0,0)',
+             'fill': 'none',
+             'visible': True,
+            })
 
     def new_circle(self, e):
-        self.new_control(e,
-                         {'type': 'circle',
-                          'width': 150,
-                          'height': 150,
-                          'name': self.get_next_name('circle'),
-                          'stroke_width': 5,
-                          'stroke': 'rgb(0,0,0)',
-                          'fill': 'none',
-                          })
+       self.new_control(e,
+            {'type': 'circle',
+             'width': 150,
+             'height': 150,
+             'name': self.get_next_name('circle'),
+             'stroke_width': 5,
+             'stroke': 'rgb(0,0,0)',
+             'fill': 'none',
+             'visible': True,
+            })
 
     def new_ellipse(self, e):
-        self.new_control(e,
-                         {'type': 'ellipse',
-                          'width': 150,
-                          'height': 150,
-                          'name': 'ellipse1',
-                          'stroke_width': 5,
-                          'stroke': 'rgb(0,0,0)',
-                          'fill': 'none',
-                          })
+       self.new_control(e,
+            {'type': 'ellipse',
+             'width': 150,
+             'height': 150,
+             'name': self.get_next_name('ellipse'),
+             'stroke_width': 5,
+             'stroke': 'rgb(0,0,0)',
+             'fill': 'none',
+             'visible': True,
+            })
 
     def new_line(self, e):
-        self.new_control(e,
-                         {'type': 'line',
-                          'width': 150,
-                          'height': 150,
-                          'name': 'line1',
-                          'stroke_width': 5,
-                          'stroke': 'rgb(0,0,0)',
-                          'fill': 'none',
-                          })
+       self.new_control(e,
+            {'type': 'line',
+             'width': 150,
+             'height': 150,
+             'name': self.get_next_name('line'),
+             'stroke_width': 5,
+             'stroke': 'rgb(0,0,0)',
+             'fill': 'none',
+             'visible': True,
+            })
 
     def new_hexagon(self, e):
-        self.new_control(e,
-                         {'type': 'hexagon',
-                          'width': 150,
-                          'height': 150,
-                          'name': 'listbox1',
-                          'stroke_width': 5,
-                          'stroke': 'rgb(0,0,0)',
-                          'fill': 'none',
-                          })
+       self.new_control(e,
+            {'type': 'hexagon',
+             'width': 150,
+             'height': 150,
+             'name': self.get_next_name('hexagon'),
+             'stroke_width': 5,
+             'stroke': 'rgb(0,0,0)',
+             'fill': 'none',
+             'visible': True,
+            })
 
     def get_selected_de_content(self):
         if self.selected_file_de is None:
-            return ''
+            ret = ''
         else:
-            return self.selected_file_de['content']
+            ret = self.selected_file_de['content']
+        #print('get_selected_de_content ret=', ret)
+        return ret
 
     def get_file_name_content(self, file_name):
         global project
@@ -1067,15 +1194,28 @@ class EditorView(BCChrome):
     def newFile_ok(self, e, form_values):
         root_folder = [de for de in project['directory_entry'] if de['parent_id'] is None][0]
         parent_de = root_folder if self.selected_de is None else self.selected_de
+        file_name = str(form_values['txtFileName'])
+        class_name = file_name[:file_name.find('.')]
+        class_name = class_name[0].upper() + class_name[1:]
+        content = 'from __future__ import unicode_literals, absolute_import, print_function\n'
+        print("""str(form_values['selFileType'])=""", str(form_values['selFileType']))
+        if str(form_values['selFileType']) == 'graphical-py-file':
+            content += """from binarycrate.controls import Form
+""" + ('from binarycrate.historygraphfrontend.documentcollection import dc\n' if project['type'] == 2 else '' ) + """
+class """ + class_name + """(Form):
+    file_location = __file__
+"""
         new_de = {'id': str(uuid.uuid4()),
-                  'name': str(form_values['txtFileName']),
-                  'content': '',
-                  'is_file': True,
-                  'form_items': [],
-                  'parent_id': parent_de['id'],
-                  'is_default': False,
+                   'name': file_name,
+                   'content': content,
+                   'is_file': True,
+                   'form_items': [],
+                   'parent_id': parent_de['id'],
+                   'is_default': False,
                   }
         project['directory_entry'].append(new_de)
+        self.selected_de = new_de
+        self.selected_file_de = new_de
         self.mount_redraw()
         Router.router.ResetHashChange()
 
@@ -1083,12 +1223,12 @@ class EditorView(BCChrome):
         root_folder = [de for de in project['directory_entry'] if de['parent_id'] is None][0]
         parent_de = root_folder if self.selected_de is None else self.selected_de
         new_de = {'id': str(uuid.uuid4()),
-                  'name': str(form_values['txtFolderName']),
-                  'content': '',
-                  'is_file': False,
-                  'form_items': [],
-                  'parent_id': parent_de['id'],
-                  'is_default': False,
+                   'name': str(form_values['txtFolderName']),
+                   'content': '',
+                   'is_file': False,
+                   'form_items': [],
+                   'parent_id': parent_de['id'],
+                   'is_default': False,
                   }
         project['directory_entry'].append(new_de)
         self.mount_redraw()
@@ -1097,9 +1237,10 @@ class EditorView(BCChrome):
     def changeProperty_ok(self, e, form_values):
         # print('changeProperty_ok called')
         fi = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item][0]
-        # print('changeProperty_ok called fi[type]=', fi['type'], ', self.current_prop_name=', self.current_prop_name)
-        # print('changeProperty_ok form_values=', form_values)
-        # print('changeProperty_ok called FormItemPropType=', get_form_item_property(fi['type'])[self.current_prop_name])
+        #print('changeProperty_ok called fi[type]=', fi['type'], ', self.current_prop_name=', self.current_prop_name)
+        #print('changeProperty_ok form_values=', form_values)
+        #print('changeProperty_ok called self.current_prop_name=', self.current_prop_name)
+        #print('changeProperty_ok called FormItemPropType=', get_form_item_property(fi['type'])[self.current_prop_name])
         if self.current_prop_name == 'name':
             matches = [fi for fi in self.selected_de['form_items'] if
                        fi['id'] != self.selected_item and fi['name'] == str(form_values['txtValue'])]
@@ -1115,62 +1256,101 @@ class EditorView(BCChrome):
         elif get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.BOOLEAN:
             value = form_values['chkValue']
         elif get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.COLOR:
-            # print('changeProperty_ok form_values=', form_values)
-            # print('changeProperty_ok form_values[chkEmpty]=', form_values['chkEmpty'])
-            value = 'none' if form_values['chkEmpty'] else 'rgb({},{},{})'.format(form_values['txtRed'],
-                                                                                  form_values['txtGreen'],
-                                                                                  form_values['txtBlue'])
+            #print('changeProperty_ok form_values=', form_values)
+            #print('changeProperty_ok form_values[chkEmpty]=', form_values['chkEmpty'])
+            value = 'none' if form_values['chkEmpty'] else 'rgb({},{},{})'.format(form_values['txtRed'], form_values['txtGreen'], form_values['txtBlue'])
+        elif get_form_item_property(fi['type'])[self.current_prop_name] == FormItemPropType.PRELOADED_IMAGE:
+            print('changeProperty_ok type is FormItemPropType.PRELOADED_IMAGE')
+            value = str(form_values['selChosenImage'])
+        else:
+            assert False # Unknown property type
         fi[self.current_prop_name] = value
-        # print('changeProperty_ok self.current_prop_name=', self.current_prop_name, ', form_values[chkValue]', form_values.get('chkValue', None))
+        print('changeProperty_ok self.current_prop_name=', self.current_prop_name, ', form_values[selChosenImage]', form_values.get('selChosenImage', None))
+        print('changeProperty_ok fi[self.current_prop_name]', fi[self.current_prop_name])
         self.current_prop_name = None
         self.mount_redraw()
         Router.router.ResetHashChange()
 
+    def upload_images(self, e):
+        #print('upload images called')
+        self.upload_modal = UploadModal(self)
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
+    def close_upload_modal(self, e):
+        self.upload_modal = False
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
     def get_top_navbar_items(self):
-        global project
-        # There is no Delete File/Folder button for html projects
-        return [
-            drop_down_menu('File', [
-                drop_down_item('Run', 'fa-caret-right', self.run_project),
-                drop_down_item('Save Project', '', self.save_project),
-            ] + ([drop_down_item('Delete File/Folder', '', self.delete_selected_de),
-                 ] if (project.get('type', None) == 0) else []) + [
-                   drop_down_item('Set Default', '', self.set_current_file_as_default),
-                   drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
-                   drop_down_item('Square', 'fa-square', None),
-                   drop_down_item('Something else here', 'fa-btc', None),
-                   drop_down_submenu('Recent documents', 'fa-caret-right', [
-                       drop_down_item('Hello.py', '', None),
-                       drop_down_item('World.py', '', None),
-                   ])
-               ]),
-            drop_down_menu('Edit', [
-                drop_down_item('Triangle', 'fa-caret-up', None),
-                drop_down_item('Square', 'fa-square', None),
-                drop_down_item('Something else here', 'fa-btc', None),
-            ]),
-            drop_down_menu('Debug', [
-                drop_down_item('Run', 'fa-caret-right', self.run_project),
-                drop_down_item('Square', 'fa-square', None),
-                drop_down_item('Something else here', 'fa-btc', None),
-            ]),
-            li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
-                form({'action': '#'}, [
-                    ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
-                ]),
-            ]),
-        ]
+        if self.program_is_running:
+            return [
+                     #drop_down_item('Stop', 'fa-square', self.stop_project),
+                      li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
+                        form({'action': '#'}, [
+                          a({'class': "btn btn-default navbar-btn crt-btn",
+                             'href': get_current_hash(), 'onclick': self.stop_project}, [
+                            i({'class': "fa fa-1x fa-square'", 'aria-hidden':"true"}),
+                            t('Stop'),
+                          ]),
+                        ]),
+                      ]),
+
+                   ]
+        else:
+            return [
+                      drop_down_menu('File', [
+                        #drop_down_item('Run', 'fa-caret-right', self.run_project),
+                        drop_down_item('Save Project', '', self.save_project),
+                        drop_down_item('Delete File/Folder', '', self.delete_selected_de),
+                        drop_down_item('Set Default', '', self.set_current_file_as_default),
+                        drop_down_item('Upload images...', '', self.upload_images),
+                        #drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
+                        #drop_down_item('Square', 'fa-square', None),
+                        #drop_down_item('Something else here', 'fa-btc', None),
+                        #drop_down_submenu('Recent documents', 'fa-caret-right', [
+                        #  drop_down_item('Hello.py', '', None),
+                        #  drop_down_item('World.py', '', None),
+                        #])
+                      ]),
+                      #drop_down_menu('Edit', [
+                      #  drop_down_item('Triangle', 'fa-caret-up', None),
+                      #  drop_down_item('Square', 'fa-square', None),
+                      #  drop_down_item('Something else here', 'fa-btc', None),
+                      #]),
+                      drop_down_menu('Debug', [
+                        drop_down_item('Run', 'fa-caret-right', self.run_project),
+                        #drop_down_item('Square', 'fa-square', None),
+                        #drop_down_item('Something else here', 'fa-btc', None),
+                      ]),
+                      li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
+                        form({'action': '#'}, [
+                          ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
+                        ]),
+                      ]),
+                      span({'style':{'color': 'white', # TODO: This is a really hacky way to display this. Add better styling
+                                     'padding-top': '7px',
+                                     'margin-left': '5px'}}, [
+                        t(lambda: self.get_project().get('name', ''))
+                      ])
+                    ]
 
     def get_modals(self):
         # print('EditorView get_modals called')
         def get_current_form_item_prop_val():
+            #print('EditorView get_current_form_item_prop_vals called')
             if self.selected_de is None:
                 return ''
+            #print('1 EditorView get_current_form_item_prop_vals')
             fis = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item]
+            #print('2 EditorView get_current_form_item_prop_vals')
             if len(fis) == 0 or self.current_prop_name == '' or self.current_prop_name is None:
                 return ''
-            return str(fis[0][self.current_prop_name])
-
+            #print('EditorView self.current_prop_name=', self.current_prop_name)
+            #print('EditorView fis[0]=', fis[0])
+            ret = str(fis[0][self.current_prop_name])
+            #print('EditorView get_current_form_item_prop_vals exited ret=', ret)
+            return ret
         def get_current_form_item_checked():
             # print ('get_current_form_item_checked 1')
             if self.selected_de is None:
@@ -1221,69 +1401,69 @@ class EditorView(BCChrome):
         share_url = str(js.globals.window.location.origin) + "/share/" + project.get('id', '') + "/"
         facebook_iframe_src = 'https://www.facebook.com/plugins/share_button.php?' + \
                               urlencode({'href': share_url,
-                                         'layout': 'button',
-                                         'size': 'small',
-                                         'mobile_iframe': 'true',
-                                         'width': '59',
-                                         'height': '20'})
+                                         'layout':'button',
+                                         'size':'small',
+                                         'mobile_iframe':'true',
+                                         'width':'59',
+                                         'height':'20'})
 
-        return [
-            Modal("shareProj", "Share Project", [
-                form([
-                    div({'class': 'form-group'}, [
-                        label({'class': "col-form-label", 'for': "formGroupExampleInput"}, 'Web Link'),
-                        html_input({'type': "text", 'class': "form-control", 'id': "formGroupExampleInput",
-                                    'value': share_url,
-                                    'readonly': 'readonly'}),
-                    ]),
-                    div({'class': 'form-group'}, [
-                        # label({'for':"exampleFormControlTextarea1"}, 'Share On:'),
-                        p('Share On:'),
-                        # i({'class': 'fa fa-facebook', 'aria-hidden': 'true'}),
-                        # i({'class': 'fa fa-twitter', 'aria-hidden': 'true'}),
-                        # i({'class': 'fa fa-envelope-o', 'aria-hidden': 'true'}),
-                        iframe({'src': facebook_iframe_src + "&appId",
-                                'width': "59",
-                                'height': "20",
-                                'style': "border:none;overflow:hidden",
-                                'scrolling': "no",
-                                'frameborder': "0",
-                                'allowTransparency': "true",
-                                'allow': "encrypted-media"}),
-                    ]),
-                ]),
-            ], None),
-            Modal("newFile", "New File", [
-                form([
-                    div({'class': 'form-group'}, [
-                        label({'class': "col-form-label", 'for': "txtFileName"}, 'File name'),
-                        html_input(
-                            {'type': "text", 'class': "form-control", 'id': "txtFileName", 'placeholder': "New File"}),
-                    ]),
-                ]),
-            ], self.newFile_ok),
-            Modal("newFolder", "New Folder", [
-                form([
-                    div({'class': 'form-group'}, [
-                        label({'class': "col-form-label", 'for': "txtFolderName"}, 'Folder name'),
-                        html_input({'type': "text", 'class': "form-control", 'id': "txtFolderName",
-                                    'placeholder': "New Folder"}),
-                    ]),
-                ]),
-            ], self.newFolder_ok),
-            Modal("changeProperty", "Change Property " + self.current_prop_name if self.current_prop_name else '', [
-                form([
-                    div({'class': 'form-group'}, [
-                        label({'class': "col-form-label", 'for': "txtValue"}, 'Value'),
-                        html_input(
-                            {'type': "text", 'class': "form-control", 'id': "txtValue", 'placeholder': "New Value",
-                             'value': get_current_form_item_prop_val()}),
-                    ]),
-                ]),
-            ], self.changeProperty_ok),
-            Modal("changePropertyBoolean",
-                  "Change Boolean Property " + self.current_prop_name if self.current_prop_name else '', [
-                      form([
+        return      [
+                      Modal("shareProj", "Share Project", [
+                        form([
+                          div({'class': 'form-group'}, [
+                            label({'class':"col-form-label", 'for':"formGroupExampleInput"}, 'Web Link'),
+                            html_input({'type': "text", 'class':"form-control", 'id':"formGroupExampleInput",
+                                         'value':share_url,
+                                         'readonly':'readonly'}),
+                          ]),
+                          div({'class': 'form-group'}, [
+                            #label({'for':"exampleFormControlTextarea1"}, 'Share On:'),
+                            p('Share On:'),
+                            #i({'class': 'fa fa-facebook', 'aria-hidden': 'true'}),
+                            #i({'class': 'fa fa-twitter', 'aria-hidden': 'true'}),
+                            #i({'class': 'fa fa-envelope-o', 'aria-hidden': 'true'}),
+                            iframe({'src':facebook_iframe_src + "&appId",
+                                    'width':"59",
+                                    'height':"20",
+                                    'style':"border:none;overflow:hidden",
+                                    'scrolling':"no",
+                                    'frameborder':"0",
+                                    'allowTransparency':"true",
+                                    'allow':"encrypted-media"}),
+                          ]),
+                        ]),
+                      ], None),
+                      Modal("newFile", "New File", [
+                        form([
+                          div({'class': 'form-group'}, [
+                            label({'class':"col-form-label", 'for':"txtFileName"}, 'File name'),
+                            html_input({'type': "text", 'class':"form-control", 'id':"txtFileName", 'placeholder':"New File"}),
+                            label({'class':"col-form-label", 'for':"selFileType"}, 'File type'),
+                            select({'id': 'selFileType', 'class':"form-control"}, [
+                              option({'value': 'plain-py-file', 'class':"form-control"}, 'Plain old Python file'),
+                              option({'value': 'graphical-py-file', 'class':"form-control"}, 'Graphical Binary Crate Python file'),
+                            ]),
+                          ]),
+                        ]),
+                      ], self.newFile_ok),
+                      Modal("newFolder", "New Folder", [
+                        form([
+                          div({'class': 'form-group'}, [
+                            label({'class':"col-form-label", 'for':"txtFolderName"}, 'Folder name'),
+                            html_input({'type': "text", 'class':"form-control", 'id':"txtFolderName", 'placeholder':"New Folder"}),
+                          ]),
+                        ]),
+                      ], self.newFolder_ok),
+                      Modal("changeProperty", "Change Property " + self.current_prop_name if self.current_prop_name else '', [
+                        form([
+                          div({'class': 'form-group'}, [
+                            label({'class':"col-form-label", 'for':"txtValue"}, 'Value'),
+                            html_input({'type': "text", 'class':"form-control", 'id':"txtValue", 'placeholder':"New Value", 'value': get_current_form_item_prop_val()}),
+                          ]),
+                        ]),
+                      ], self.changeProperty_ok),
+                      Modal("changePropertyBoolean", "Change Boolean Property " + self.current_prop_name if self.current_prop_name else '', [
+                        form([
                           div({'class': 'form-group'}, [
                               label({'class': "col-form-label", 'for': "chkValue"}, 'Value'),
                               html_input(merge_dicts({'type': "checkbox", 'class': "form-control", 'id': "chkValue"},
@@ -1308,12 +1488,29 @@ class EditorView(BCChrome):
                               html_input(merge_dicts({'type': "text", 'class': "form-control", 'id': "txtBlue"},
                                                      get_current_form_item_color_blue())),
                           ]),
-                      ]),
-                  ], self.changeProperty_ok),
-        ]
+                        ]),
+                      ], self.changeProperty_ok),
+                      Modal("changePropertyPreloadedImage", "Change Preloaded Image " + self.current_prop_name if self.current_prop_name else '', [
+                        form([
+                          div({'class': 'form-group'}, [
+                            label({'class':"col-form-label", 'for':"selChosenImage"}, 'Preloaded Image'),
+                            select({'class':"form-control", 'id':"selChosenImage", 'value': get_current_form_item_prop_val()},
+                              [option({'value': image['id']}, image['name']) for image in self.images]
+                              ),
+                          ]),
+                        ]),
+                      ], self.changeProperty_ok),
+                    ] + \
+                    (self.upload_modal.get_modal_vnodes() if self.upload_modal else [])
 
     def get_code_mirror_read_only(self):
         return False
+
+    def images_api_ajax_result_handler(self, xmlhttp, response):
+        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+            self.images = json.loads(str(xmlhttp.responseText))
+            self.mount_redraw()
+            Router.router.ResetHashChange()
 
     def __init__(self, *args, **kwargs):
         # print('EditorView __init__')
@@ -1332,7 +1529,13 @@ class EditorView(BCChrome):
                                                   [t(self.get_selected_de_content)],
                                                   change_handler=self.code_mirror_change,
                                                   read_only=self.get_code_mirror_read_only())
-        # TODO: Option arguments should be kwargs
+        self.upload_modal = None
+        self.images = []
+        global original_modules
+        if len(original_modules) == 0:
+            original_modules = set(sys.modules.keys())
+            #print('original_modules=', original_modules)
+        #TODO: Option arguments should be kwargs
         super(EditorView, self).__init__(
             None,
             None,
@@ -1341,7 +1544,3 @@ class EditorView(BCChrome):
 
 def editor_view():
     return EditorView()
-
-
-
-

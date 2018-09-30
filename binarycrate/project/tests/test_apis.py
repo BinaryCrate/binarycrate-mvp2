@@ -3,12 +3,14 @@ from __future__ import absolute_import, unicode_literals, print_function
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from project.models import Project, DirectoryEntry
+from project.models import Project, DirectoryEntry, Image
 import uuid
 from accounts.factories import UserFactory
 from rest_framework.test import APIClient
 import pytest
 
+import os
+from django.conf import settings
 
 
 # TODO: This (DirectoryEntryDict) appears to be balloonian code - it should be deleted
@@ -61,11 +63,13 @@ class ProjectListTestCase(APITestCase):
     def test_project_post_creates_python_project(self):
         self.assertEqual(Project.objects.count(), 1)
         url = reverse('api:project-list')
-        project_id = str(uuid.uuid4())
+        project_id = str(Project.objects.first().id)
         data = {'name':'Test 2', 'type':0, 'public':False }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Project.objects.count(), 2)
+        self.assertNotEqual(response.data['id'], project_id)
+        self.assertIn(response.data['id'], set([str(p.id) for p in Project.objects.all()]))
 
     def test_put_python_project_detail(self):
         """
@@ -558,6 +562,107 @@ class PublicAccessNotLoggedInUserTestCase(APITestCase):
                          }),
                          })
 
+class ProjectImageTestCase(APITestCase):
+    def setUp(self):
+        self.project_id = uuid.uuid4()
+        u = UserFactory()
+        de = DirectoryEntry.objects.create(name='', is_file=False)
+        self.project = Project.objects.create(id=self.project_id, name='Test 1', type=0, public=False,
+                               root_folder=de, owner=u)
+        self.client.force_authenticate(user=u)
+
+    def test_upload_image(self):
+        # Upload the file and test we don't get an error
+        assert Image.objects.all().count() == 0
+        with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
+            response = self.client.post(reverse('api:image-upload'), {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
+                                          'file_data': f}, format='multipart')
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            assert Image.objects.all().count() == 1
+
+        url = reverse('api:image-list', kwargs={'project':str(self.project_id)})
+        data = { }
+        response = self.client.get(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = response.data
+        assert len(results) == 1
+        result = results[0]
+        assert result['name'] == 'Natural-red-apple.jpg'
+        assert result['image_url'] == '/images/images-{0}/{1}.jpg'.format(self.project.id, result['id'])
+
+        with open(settings.PROJECT_FILES_ROOT + '/images-{0}/{1}'.format(self.project.id, result['id']), 'rb') as saved_file:
+            with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as original_file:
+                saved_content = saved_file.read()
+                original_content = original_file.read()
+
+                assert saved_content == original_content
+
+                response = self.client.get(result['image_url'], follow=True)
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+                assert saved_content == response.content
+
+    def test_delete_uploaded_image(self):
+        # Upload the file and test we don't get an error
+        assert Image.objects.all().count() == 0
+        with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
+            response = self.client.post(reverse('api:image-upload'), {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
+                                          'file_data': f}, format='multipart')
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            assert Image.objects.all().count() == 1
+
+        response = self.client.delete(reverse('api:image-edit', kwargs={'pk': str(Image.objects.first().pk)}), {}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        assert Image.objects.all().count() == 0
+
+    def test_rename_uploaded_image(self):
+        # Upload the file and test we don't get an error
+        assert Image.objects.all().count() == 0
+        with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
+            response = self.client.post(reverse('api:image-upload'), {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
+                                          'file_data': f}, format='multipart')
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            assert Image.objects.all().count() == 1
+
+        response = self.client.put(reverse('api:image-edit', kwargs={'pk': str(Image.objects.first().pk)}), {'name': 'Natural-red-pear.jpg'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        assert Image.objects.all().count() == 1
+        assert {i.name for i in Image.objects.all()} == {'Natural-red-pear.jpg'}
+
+
+class ProjectImageNotLoggedInTestCase(APITestCase):
+    def setUp(self):
+        self.project_id = uuid.uuid4()
+        u = UserFactory()
+        de = DirectoryEntry.objects.create(name='', is_file=False)
+        self.project = Project.objects.create(id=self.project_id, name='Test 1', type=0, public=False,
+                               root_folder=de, owner=u)
+
+    def test_upload_image(self):
+        # Test we get an error if not logged in and the uplaod fails
+        assert Image.objects.all().count() == 0
+        with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
+            response = self.client.post('/api/projects/image/', {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
+                                          'file_data': f}, format='multipart')
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+            assert Image.objects.all().count() == 0
+
+    def test_delete_image(self):
+        Image.objects.create(project=self.project, name='hello.jpg')
+
+        assert Image.objects.all().count() == 1
+        response = self.client.delete(reverse('api:image-edit', kwargs={'pk': str(Image.objects.first().pk)}), {}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        assert Image.objects.all().count() == 1
+
+    def test_rename_image(self):
+        Image.objects.create(project=self.project, name='hello.jpg')
+
+        assert Image.objects.all().count() == 1
+        response = self.client.put(reverse('api:image-edit', kwargs={'pk': str(Image.objects.first().pk)}), {'name': 'Natural-red-pear.jpg'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        assert Image.objects.all().count() == 1
+        assert {i.name for i in Image.objects.all()} == {'hello.jpg'}
 
 class ProjectFilesTestCase(APITestCase):
     def setUp(self):
@@ -663,3 +768,39 @@ class ProjectFilesTestCase(APITestCase):
         self.assertEqual(DirectoryEntry.objects.get(id=html.id).content, '')
         self.assertEqual(DirectoryEntry.objects.get(id=html.id).form_items,
                          str(html.form_items))
+
+class ProjectImageOtherUserTestCase(APITestCase):
+    def setUp(self):
+        self.project_id = uuid.uuid4()
+        u = UserFactory(username='user1@binarycrate.com',email='user1@binarycrate.com')
+        u2 = UserFactory(username='user2@binarycrate.com',email='user2@binarycrate.com')
+        de = DirectoryEntry.objects.create(name='', is_file=False)
+        self.project = Project.objects.create(id=self.project_id, name='Test 1', type=0, public=False,
+                               root_folder=de, owner=u)
+        self.client.force_authenticate(user=u2)
+
+    def test_upload_image(self):
+        # Test we get an error if logged in as a different user
+        assert Image.objects.all().count() == 0
+        with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
+            response = self.client.post('/api/projects/image/', {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
+                                          'file_data': f}, format='multipart')
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+            assert Image.objects.all().count() == 0
+
+    def test_delete_image(self):
+        Image.objects.create(project=self.project, name='hello.jpg')
+
+        assert Image.objects.all().count() == 1
+        response = self.client.delete(reverse('api:image-edit', kwargs={'pk': str(Image.objects.first().pk)}), {}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        assert Image.objects.all().count() == 1
+
+    def test_rename_image(self):
+        Image.objects.create(project=self.project, name='hello.jpg')
+
+        assert Image.objects.all().count() == 1
+        response = self.client.put(reverse('api:image-edit', kwargs={'pk': str(Image.objects.first().pk)}), {'name': 'Natural-red-pear.jpg'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        assert Image.objects.all().count() == 1
+        assert {i.name for i in Image.objects.all()} == {'hello.jpg'}
