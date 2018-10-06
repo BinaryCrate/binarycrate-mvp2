@@ -124,6 +124,34 @@ $(function () {
     });
 });
 
+function isChrome() {
+  //From https://stackoverflow.com/a/13348618
+  var isChromium = window.chrome;
+  var winNav = window.navigator;
+  var vendorName = winNav.vendor;
+  var isOpera = typeof window.opr !== "undefined";
+  var isIEedge = winNav.userAgent.indexOf("Edge") > -1;
+  var isIOSChrome = winNav.userAgent.match("CriOS");
+
+  if (isIOSChrome) {
+   return false;
+  } else if(
+    isChromium !== null &&
+    typeof isChromium !== "undefined" &&
+    vendorName === "Google Inc." &&
+    isOpera === false &&
+    isIEedge === false
+  ) {
+     return true;
+  } else {
+    return false;
+  }
+}
+
+if (isChrome() == false) {
+  alert('Binary Crate is only compatible with Google Chrome Browser some functions might not work');
+}
+
 </script>
 </body>
 </html>

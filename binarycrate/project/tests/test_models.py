@@ -92,18 +92,42 @@ class TestWebpageProject(APITestCase):
             self.assertEqual(Project.objects.count(), 1)
             self.assertEqual(Project.objects.all().first().type, 1)
 
+class TestWebpageFiles(APITestCase):
+    def test_webpage_files_created_in_root(self):
+            self.project_id = uuid.uuid4()
+            u = UserFactory()
+            de = DirectoryEntry.objects.create(name='', is_file=False)
+            p = Project.objects.create(id=self.project_id, name='Test Webpage', type=ProjectTypes.webpage.value, public=False,
+                                   root_folder=de, owner=u)
+
+            self.assertEqual(Project.objects.count(), 1)
+            self.assertEqual(Project.objects.all().first().type, 1)
+
+            #Checks that new files are not re-created upon saving project
+            p.save()
+            p.save()
+
+            print(p.get_directory_entries().values_list('name', flat=True))
+            p.save()
+            self.assertEqual(p.get_directory_entries().count(), 4)
+            self.assertEqual(set(p.get_directory_entries().values_list('name', flat=True)),
+            {u'', u'scripts.js', u'index.html', u'styles.css'})
+
+
 class TestPythonWithStorageProject(APITestCase):
         def test_python_project_correct_type(self):
             self.project_id = uuid.uuid4()
             u = UserFactory()
             de = DirectoryEntry.objects.create(name='', is_file=False)
-            Project.objects.create(id=self.project_id, name='Test Python', type=ProjectTypes.python_with_storage.value, public=False,
+            Project.objects.create(id=self.project_id, name='Test Python',
+                                type=ProjectTypes.python_with_storage.value, public=False,
                                    root_folder=de, owner=u)
 
             self.assertEqual(Project.objects.count(), 1)
             p = Project.objects.all().first()
             self.assertEqual(p.type, 2)
 
+            print('Dir entries=', p.get_directory_entries().values_list('name', flat=True))
             self.assertEqual(set(p.get_directory_entries().values_list('name', flat=True)),
                 {'', 'documents.py'})
 

@@ -11,11 +11,12 @@ import uuid
 from cavorite.bootstrap.modals import ModalTrigger, Modal
 
 
-def navitem(title, icon_class, href):
-    return li({'class':"nav-item", 'data-toggle':"tooltip", 'data-placement':"right", 'title':title}, [
-             a({'class':"nav-link", 'href': href, 'style': {'min-height': '56px'}}, children=[
-               i(cssClass=["fa", "fa-fw"] + [icon_class]),
-               span({'class':"nav-link-text"}, title),
+def navitem(title, icon_class, href, onclick=None):
+    return li({'class':"nav-item", 'data-toggle':"tooltip", 'data-placement':"right", 'title':title, 'onclick': onclick}, [
+             a({'class':"nav-link", 'href': href, 'style': {'min-height': '56px'}, 'onclick': onclick}, children=[
+             #a({'class':"nav-link", 'style': {'min-height': '56px'}, 'onclick': onclick}, children=[
+               i({'class': ["fa", "fa-fw"] + [icon_class], 'onclick': onclick}),
+               span({'class':"nav-link-text", 'onclick': onclick}, title),
              ]),
            ])
 

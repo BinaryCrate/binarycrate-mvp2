@@ -334,3 +334,11 @@ class Form(object):
     def clear_interval(self, val):
         self._active_intervals.remove(val)
         timeouts.clear_interval(val)
+
+    def get_preloaded_images(self):
+        return self.editorview.images
+
+    def get_preloaded_image_id(self, image_name):
+        images = [image for image in self.get_preloaded_images() if image['name'] == image_name]
+        assert len(images) == 1, 'No image matches that name'
+        return images[0]['id']

@@ -7,7 +7,7 @@ from collections import defaultdict
 import uuid
 from mock import Mock
 import json
-from binarycrate.editor import BCProjectTree, BCPFolder, BCPFile, ContextMenu
+from binarycrate.editor import BCProjectTree, BCPFolder, BCPFile, ContextMenuFormItems
 from binarycrate.controls import codemirror, Form
 from utils import IterateVirtualDOM, AnyVirtualDOM, get_matching_vnode, style_to_dict, get_vnode_by_id, get_vnode_by_css_class, get_matching_vnodes
 import cavorite.bootstrap.modals
@@ -20,6 +20,7 @@ import os
 from cavorite.HTML import *
 from binarycrate import historygraphfrontend
 import sys
+import pytest
 
 
 class TestEditor(object):
@@ -411,7 +412,7 @@ class TestEditor(object):
         #add_folder_link.get_attribs()['onclick'](Mock())
         node.display_new_file_modal(Mock())
 
-        editor.js.globals.window.alert.assert_called_with('Error: You must select a folder to insert this file in')
+        editor.js.globals.window.alert.assert_not_called()
 
         editor.js.globals.window.alert = Mock()
         root_folder.on_click(Mock())
@@ -443,9 +444,16 @@ class TestEditor(object):
             if isinstance(node, js.MockElement) and node.getAttribute('id') == 'txtFileName':
                 node.value = file_name
 
+        js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, 'hello_file.py2'))
+
+        editor.js.globals.window.alert = Mock()
+
+        result['newFile_OK_handler'](Mock())
+
+        editor.js.globals.window.alert.assert_called_with('Error: python files must end with .py')
+
         js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, 'hello_file.py'))
 
-        #print('test_editor result[newFile_OK_handler]=', result['newFile_OK_handler'])
         result['newFile_OK_handler'](Mock())
 
         rendered = node._render(None)
@@ -923,7 +931,7 @@ class TestEditor(object):
         assert root_folder.folder_children[0].de['name'] == 'hello_world.py'
 
 
-class TestContextMenu(object):
+class TestContextMenuFormItems(object):
     def test_context_menu_appears(self, monkeypatch):
         monkeypatch.setattr(Router, 'ResetHashChange', Mock())
         monkeypatch.setattr(editor.cavorite, 'js', js)
@@ -1007,7 +1015,7 @@ class TestContextMenu(object):
         assert view.context_menu is None
         Router.router.ResetHashChange.reset_mock()
         view.contextmenu_preview(Mock(pageX=10, pageY=10))
-        assert type(view.context_menu) == ContextMenu
+        assert type(view.context_menu) == ContextMenuFormItems
         assert len(view.context_menu.menu_items) >= 1
         assert view.context_menu.menu_items[0][0] == 'New Button'
         assert callable(view.context_menu.menu_items[0][1])
@@ -1069,6 +1077,18 @@ class TestContextMenu(object):
 
         # Lift the mouse button up and check we are still selected
         preview_node.get_attribs()['onmouseup'](Mock())
+        assert view.selected_item == button['id']
+        assert view.mouse_is_down == False
+
+        # Test clicking with the right mouse button selects an item but doesnt allow us to drag it
+        # First deselect it
+        preview_node = get_matching_vnode(view, find_preview)
+        assert preview_node is not None
+        preview_node.get_attribs()['onmousedown'](Mock(button=0))
+        assert view.selected_item == ''
+
+        # Then click with the right hand mouse button
+        vnode_button.get_attribs()['onmousedown'](Mock(button=1))
         assert view.selected_item == button['id']
         assert view.mouse_is_down == False
 
@@ -1191,7 +1211,7 @@ class TestContextMenu(object):
         assert view.context_menu is None
         Router.router.ResetHashChange.reset_mock()
         vnode_button.get_attribs()['oncontextmenu'](Mock())
-        assert type(view.context_menu) == ContextMenu
+        assert type(view.context_menu) == ContextMenuFormItems
         assert len(view.context_menu.menu_items) >= 1
 
         assert 'Change caption' ==  view.context_menu.menu_items[0][0]
@@ -2244,7 +2264,11 @@ print('Hello folder i={}'.format(i))
                      ]
                     }
 
+        view.images = [{'id': '4a88ff77-5969-40b8-a1da-8fefc5477f44', 'name': 'space-rocket.jpg'},
+                         {'id': '4ee4576a-c5f8-450b-bf8f-3a77f87632f3', 'name': 'my-image.jpg'}]
+
         assert len(view.form_stack) == 0
+        js.return_get_element_by_id = {'secondary-output': Mock()}
 
         class TestForm2(Form):
             file_location = '/lib/pypyjs/lib_pypy/folder/hello_folder.py'
@@ -2285,7 +2309,11 @@ print('Hello folder i={}'.format(i))
         assert len(view.get_selected_de_form_controls()) == 1
 
         view.cleanup_project = Mock()
+        view.save_project = Mock()
         view.run_project(Mock())
+
+        # Assert we save the project when run is called
+        view.save_project.assert_called_once()
 
         # Test that while the program is running we cannot see the Dashboard Link
         assert view.program_is_running == True
@@ -2354,6 +2382,14 @@ print('Hello folder i={}'.format(i))
         view.form_stack[-1].close()
         assert len(view.form_stack) == 1
         view.form_stack[0].on_child_form_closed.assert_called()
+
+        # Assert we can access the list of preloaded images
+        form = view.form_stack[0]
+        assert form.get_preloaded_images() == view.images
+        assert form.get_preloaded_image_id('space-rocket.jpg') == \
+            '4a88ff77-5969-40b8-a1da-8fefc5477f44'
+        with pytest.raises(AssertionError):
+            form.get_preloaded_image_id('invalid.jpg')
 
         result = defaultdict(bool)
         view.stop_project(Mock())
@@ -2452,6 +2488,7 @@ print('Hello folder i={}'.format(i))
                     }
 
         assert len(view.form_stack) == 0
+        js.return_get_element_by_id = {'secondary-output': Mock()}
 
         counter = dict()
         counter['count'] = 0
@@ -2469,6 +2506,7 @@ print('Hello folder i={}'.format(i))
         view.get_default_module_form_classes = Mock(return_value=form_classes)
         view.write_program_to_virtual_file_system = Mock()
         view.cleanup_project = Mock()
+        view.save_project = Mock()
         view.run_project(Mock())
         assert view.program_is_running == True
 
@@ -2578,6 +2616,7 @@ print('Hello folder i={}'.format(i))
                     }
 
         assert len(view.form_stack) == 0
+        js.return_get_element_by_id = {'secondary-output': Mock()}
 
         counter = dict()
         counter['count'] = 0
@@ -2595,6 +2634,7 @@ print('Hello folder i={}'.format(i))
         view.get_default_module_form_classes = Mock(return_value=form_classes)
         view.write_program_to_virtual_file_system = Mock()
         view.cleanup_project = Mock()
+        view.save_project = Mock()
         view.run_project(Mock())
         assert view.program_is_running == True
 
@@ -2692,6 +2732,7 @@ print('Hello folder i={}'.format(i))
                     }
 
         assert len(view.form_stack) == 0
+        js.return_get_element_by_id = {'secondary-output': Mock()}
 
         counter = dict()
         counter['count'] = 0
@@ -2709,6 +2750,7 @@ print('Hello folder i={}'.format(i))
         view.get_default_module_form_classes = Mock(return_value=form_classes)
         view.write_program_to_virtual_file_system = Mock()
         view.cleanup_project = Mock()
+        view.save_project = Mock()
         view.run_project(Mock())
         assert view.program_is_running == True
 
@@ -2815,6 +2857,7 @@ print('Hello folder i={}'.format(i))
                     }
 
         assert len(view.form_stack) == 0
+        js.return_get_element_by_id = {'secondary-output': Mock()}
 
         counter = dict()
         counter['count'] = 0
@@ -2832,6 +2875,7 @@ print('Hello folder i={}'.format(i))
         view.get_default_module_form_classes = Mock(return_value=form_classes)
         view.write_program_to_virtual_file_system = Mock()
         view.cleanup_project = Mock()
+        view.save_project = Mock()
         view.run_project(Mock())
         assert view.program_is_running == True
 
@@ -2949,6 +2993,7 @@ print('Hello folder i={}'.format(i))
                     }
 
         assert len(view.form_stack) == 0
+        js.return_get_element_by_id = {'secondary-output': Mock()}
 
         counter = dict()
         counter['count'] = 0
@@ -2966,6 +3011,7 @@ print('Hello folder i={}'.format(i))
         view.get_default_module_form_classes = Mock(return_value=form_classes)
         view.write_program_to_virtual_file_system = Mock()
         view.cleanup_project = Mock()
+        view.save_project = Mock()
         view.run_project(Mock())
         assert view.program_is_running == True
 
@@ -3115,6 +3161,8 @@ historygraphfrontend.download_document_collection()
         #view.get_default_module_form_classes = Mock(return_value=form_classes)
         #view.write_program_to_virtual_file_system = Mock()
 
+        js.return_get_element_by_id = {'secondary-output': Mock()}
+
         old_python_module_dir = editor.python_module_dir
         with TemporaryDirectory() as temp_dir:
             assert os.path.isdir(temp_dir)
@@ -3123,6 +3171,7 @@ historygraphfrontend.download_document_collection()
             mock_download_document_collection.assert_not_called()
             view.write_program_to_virtual_file_system()
             view.cleanup_project = Mock()
+            view.save_project = Mock()
             view.run_project(Mock())
             assert view.program_is_running == False
 
@@ -3210,6 +3259,8 @@ print('Hello folder i={}'.format(i))
 
         assert len(view.form_stack) == 0
 
+        js.return_get_element_by_id = {'secondary-output': Mock()}
+
         old_python_module_dir = editor.python_module_dir
         with TemporaryDirectory() as temp_dir:
             assert os.path.isdir(temp_dir)
@@ -3218,6 +3269,7 @@ print('Hello folder i={}'.format(i))
             mock_download_document_collection.assert_not_called()
             view.write_program_to_virtual_file_system()
             view.cleanup_project = Mock()
+            view.save_project = Mock()
             view.run_project(Mock())
             assert view.program_is_running == False
 
@@ -3310,7 +3362,10 @@ print('Hello folder i={}'.format(i))
         view.get_default_module_form_classes = Mock(return_value=form_classes)
         view.write_program_to_virtual_file_system = Mock()
         editor.js.globals.window.alert = Mock()
+        js.return_get_element_by_id = {'secondary-output': Mock()}
+
         view.cleanup_project = Mock()
+        view.save_project = Mock()
         view.run_project(Mock())
         assert view.program_is_running == True
 
@@ -3445,6 +3500,7 @@ print('Hello folder i={}'.format(i))
         view.context_menu.menu_items[fill_index][1](Mock())
 
         result = dict()
+        result['available_images'] = []
 
         def mock_element_iterator_callback(vnode):
             #if hasattr(vnode, 'get_attribs'):
@@ -3460,6 +3516,8 @@ print('Hello folder i={}'.format(i))
                             result['changePropertyPreloadedImage_OK_handler'] = vnode.get_attribs()['onclick']
                         if vnode.get_tag_name() == 'select' and vnode.get_attribs().get('id') == "selChosenImage":
                             result['chosen_image'] = vnode.get_attribs().get('value', '')
+                        if vnode.get_tag_name() == 'option':
+                            result['available_images'] += [ vnode.get_children()[0].text ]
                 IterateVirtualDOM(vnode, mock_element_iterator_callback2)
 
         view.mount_redraw = Mock()
@@ -3468,6 +3526,7 @@ print('Hello folder i={}'.format(i))
         IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
 
         assert result['chosen_image'] == ''
+        assert result['available_images'] == ['(none)', 'space-rocket.jpg', 'my-image.jpg']
 
         # Call the modal handler
         rendered_modal = view._render(None)
@@ -3477,11 +3536,13 @@ print('Hello folder i={}'.format(i))
             if isinstance(node, js.MockElement) and node.getAttribute('id') == 'selChosenImage':
                 #print('setup_mock_modal_callback setting selChosenImage=', choice)
                 # Verify that the select element contains options from the server
-                assert node.options.length == 2
-                assert node.options.item(0).getAttribute('value') == '4a88ff77-5969-40b8-a1da-8fefc5477f44'
-                assert node.options.item(0).children.item(0)._text == 'space-rocket.jpg'
-                assert node.options.item(1).getAttribute('value') == '4ee4576a-c5f8-450b-bf8f-3a77f87632f3'
-                assert node.options.item(1).children.item(0)._text == 'my-image.jpg'
+                assert node.options.length == 3
+                assert node.options.item(0).getAttribute('value') == ''
+                assert node.options.item(0).children.item(0)._text == '(none)'
+                assert node.options.item(1).getAttribute('value') == '4a88ff77-5969-40b8-a1da-8fefc5477f44'
+                assert node.options.item(1).children.item(0)._text == 'space-rocket.jpg'
+                assert node.options.item(2).getAttribute('value') == '4ee4576a-c5f8-450b-bf8f-3a77f87632f3'
+                assert node.options.item(2).children.item(0)._text == 'my-image.jpg'
                 node.value = choice
 
         js.IterateElements(rendered_modal, lambda node: setup_mock_modal_callback(node, '4ee4576a-c5f8-450b-bf8f-3a77f87632f3'))
