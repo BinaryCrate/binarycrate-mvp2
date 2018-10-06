@@ -119,6 +119,7 @@ We need to go into the pypyjs directory and undo any updates caused by previous 
 ```
 cd pypyjs-release/pypyjs-release/
 sudo git checkout -- .
+sudo git clean -f -d
 cd /srv/binarycrate-mvp2
 ```
 
@@ -148,26 +149,31 @@ sudo ./binarycrate/bin/fab development.create_version_file
 We now load the new frontend code into the pypysjs-release area.
 
 ```
+cd /srv/binarycrate-mvp2
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ cavorite/cavorite/
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ front-end/binarycrate/
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ historygraph/historygraph/
-sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ munch/munch/
-sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ six/six.py
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ pypyjs_modules/munch/munch/
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ pypyjs_modules/six/six.py
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ pypyjs_modules/beautifulsoup4-4.6.0/bs4/
 ```
 
 Next we tell pypyjs to preload all of our modules - this greatly improves the load time
 
 ```
+cd /srv/binarycrate-mvp2
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ cavorite
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ binarycrate
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ historygraph
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ munch
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ six
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ bs4
 ```
 
 We now update the django static. Note this is different to the above step in that we put all pypyjs files including standard modules and the pypyjs interpreter
 in the correct Django static area.
 ```
+cd /srv/binarycrate-mvp2
 sudo ./binarycrate/bin/python binarycrate/manage.py collectstatic --noinput
 ```
 
