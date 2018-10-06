@@ -2,7 +2,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 from binarycrate.storage import project_media_storage
 from cStringIO import StringIO
-
+from .models import Project, ProjectTypes
 
 def save_de_content(sender, instance, created, raw, **kwargs):
     #print ('save_de_content called instance._content=',instance._content)
@@ -24,6 +24,9 @@ def load_de_content(sender, instance, **kwargs):
 
 
 def save_project(sender, instance, created, raw, **kwargs):
+    if created is True:
+        if instance.type == 1:
+            instance.create_files()
     from .models import DirectoryEntry, ProjectTypes
     if raw is False and created is True and instance.type == ProjectTypes.python_with_storage.value:
         DirectoryEntry.objects.create(name='documents.py', is_file=True,
