@@ -263,19 +263,10 @@ def test_click_handler(e):
     e.stopPropagation()
     e.preventDefault()
 
-<<<<<<< HEAD
 class ContextMenuFormItems(nav):
     def __init__(self, posx, posy, menu_items, *args, **kwargs):
         self.menu_items = menu_items
         super(ContextMenuFormItems, self).__init__({'class': "context-menu", 'style': 'left: {}px; top:{}px'.format(posx, posy)}, *args, **kwargs)
-=======
-
-class ContextMenu(nav):
-    def __init__(self, posx, posy, menu_items, *args, **kwargs):
-        self.menu_items = menu_items
-        super(ContextMenu, self).__init__({'class': "context-menu", 'style': 'left: {}px; top:{}px'.format(posx, posy)},
-                                          *args, **kwargs)
->>>>>>> serena/htmleditor
 
     def get_children(self):
         menu_items = [
@@ -444,7 +435,6 @@ class EditorView(BCChrome):
         if self.get_default_directory_entry() is None:
             js.globals.window.alert('Error: You must select one of the files as the default to run')
 
-<<<<<<< HEAD
         self.save_project(e)
         # Clear the program output area
         js.globals.document.getElementById('secondary-output').innerHTML = ''
@@ -482,32 +472,6 @@ class EditorView(BCChrome):
             # Cleanup in the timeout because we need to be running when the exception is handled to print the output
             timeouts.set_timeout(finish_running, 1)
             raise
-=======
-        # print('EditorView run_project 0.9')
-        self.program_is_running = True
-        js.globals.document.print_to_secondary_output = True
-        global project
-        historygraphfrontend.initialise_document_collection(project['id'], self.on_historygraph_download_complete)
-        # print('EditorView run_project 1')
-        # historygraphfrontend.download_document_collection()
-        self.write_program_to_virtual_file_system()
-        #print('EditorView run_project 2')
-        #print('EditorView run_project 3')
-        form_classes = self.get_default_module_form_classes()
-        # print('EditorView run_project form_classes=', form_classes)
-        if len(form_classes) > 0:
-            #print('EditorView run_project Found usable class name=' + form_classes[0].__name__)
-            self.form_stack.append(form_classes[0](editorview=self))
-            self.mount_redraw()
-            Router.router.ResetHashChange()
-        else:
-            # print('EditorView run_project Found  no usable class')
-            js.globals.document.print_to_secondary_output = False
-            self.program_is_running = False
-            self.cleanup_project()
-        #aa.tr()
-        #print('EditorView run_project called 4')
->>>>>>> serena/htmleditor
 
     def get_sidebar_nav_items(self):
         def dashboad_click_handler(e):
@@ -622,7 +586,7 @@ class EditorView(BCChrome):
             ]
 
     def get_central_content(self):
-<<<<<<< HEAD
+        """
         return    c("div", {'class': "container-fluid code-area", 'style': 'padding-left: 1px; padding-top:1px height:100%;'}, [
                     div({'class': 'row row-wrapper'}, [
                       div({'class': "project-fnf col-ms-2"}, [
@@ -647,7 +611,7 @@ class EditorView(BCChrome):
                     ]),
                   ] +
                   ([style('.CodeMirror { background-color: darkgrey;}')] if self.get_code_mirror_read_only() else []))
-=======
+"""
         global project
         return c("div",
                  {'class': "container-fluid code-area", 'style': 'padding-left: 1px; padding-top:1px height:100%;'}, [
@@ -686,7 +650,6 @@ class EditorView(BCChrome):
                          ]),
                      ]),
                  ])
->>>>>>> serena/htmleditor
 
     def on_body_click(self, e):
         if self.context_menu is not None:
@@ -771,11 +734,8 @@ class EditorView(BCChrome):
         if e.button == 0:
             self.mouse_is_down = True
             self.selected_handler = HANDLE_NONE
-<<<<<<< HEAD
-=======
             # print('select_new_item mouse is down')
             self.selected_item = form_item_id
->>>>>>> serena/htmleditor
             self.mount_redraw()
             Router.router.ResetHashChange()
             e.stopPropagation()
@@ -892,15 +852,9 @@ class EditorView(BCChrome):
                                                                                                         prop_name)) for
                                      prop_name in get_form_item_property(form_item['type'])],
                                     key=itemgetter(0)))
-<<<<<<< HEAD
         self.context_menu = ContextMenuFormItems(posx, posy, change_items + (
                                         ('Delete', lambda e: self.delete_selected_form_item(form_item_id, e)),
                                         ))
-=======
-        self.context_menu = ContextMenu(posx, posy, change_items + (
-            ('Delete', lambda e: self.delete_selected_form_item(form_item_id, e)),
-        ))
->>>>>>> serena/htmleditor
         self.mount_redraw()
         Router.router.ResetHashChange()
         e.stopPropagation()
