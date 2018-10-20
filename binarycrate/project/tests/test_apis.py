@@ -7,6 +7,8 @@ from project.models import Project, DirectoryEntry, Image
 import uuid
 from accounts.factories import UserFactory
 from rest_framework.test import APIClient
+import pytest
+
 import os
 from django.conf import settings
 
@@ -58,16 +60,18 @@ class ProjectListTestCase(APITestCase):
         self.assertEqual(response.data['type'], 0)
         self.assertEqual(response.data['public'], False)
 
-    def test_project_post_creates_project(self):
+    def test_project_post_creates_python_project(self):
         self.assertEqual(Project.objects.count(), 1)
         url = reverse('api:project-list')
-        project_id = str(uuid.uuid4())
+        project_id = str(Project.objects.first().id)
         data = {'name':'Test 2', 'type':0, 'public':False }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Project.objects.count(), 2)
+        self.assertNotEqual(response.data['id'], project_id)
+        self.assertIn(response.data['id'], set([str(p.id) for p in Project.objects.all()]))
 
-    def test_put_project_detail(self):
+    def test_put_python_project_detail(self):
         """
         Ensure we can view individual projects
         """
@@ -80,7 +84,7 @@ class ProjectListTestCase(APITestCase):
         self.assertEqual(Project.objects.count(), 1)
         self.assertEqual(Project.objects.first().name, 'Test 1a')
 
-    def test_delete_project_detail(self):
+    def test_delete_python_project_detail(self):
         """
         Ensure we can delete individual projects
         """
@@ -90,7 +94,6 @@ class ProjectListTestCase(APITestCase):
         response = self.client.delete(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Project.objects.count(), 0)
-
 
 
 class ProjectMustLogin(APITestCase):
@@ -570,7 +573,7 @@ class ProjectImageTestCase(APITestCase):
 
     def test_upload_image(self):
         # Upload the file and test we don't get an error
-        assert Image.objects.all().count() == 0        
+        assert Image.objects.all().count() == 0
         with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
             response = self.client.post(reverse('api:image-upload'), {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
                                           'file_data': f}, format='multipart')
@@ -601,7 +604,7 @@ class ProjectImageTestCase(APITestCase):
 
     def test_delete_uploaded_image(self):
         # Upload the file and test we don't get an error
-        assert Image.objects.all().count() == 0        
+        assert Image.objects.all().count() == 0
         with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
             response = self.client.post(reverse('api:image-upload'), {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
                                           'file_data': f}, format='multipart')
@@ -614,7 +617,7 @@ class ProjectImageTestCase(APITestCase):
 
     def test_rename_uploaded_image(self):
         # Upload the file and test we don't get an error
-        assert Image.objects.all().count() == 0        
+        assert Image.objects.all().count() == 0
         with open(os.path.join(settings.BASE_DIR, 'project', 'tests', 'assets', 'Natural-red-apple.jpg'), 'rb') as f:
             response = self.client.post(reverse('api:image-upload'), {'name': 'Natural-red-apple.jpg', 'project': str(self.project.id),
                                           'file_data': f}, format='multipart')
@@ -661,6 +664,111 @@ class ProjectImageNotLoggedInTestCase(APITestCase):
         assert Image.objects.all().count() == 1
         assert {i.name for i in Image.objects.all()} == {'hello.jpg'}
 
+class ProjectFilesTestCase(APITestCase):
+    def setUp(self):
+        self.project_id1 = uuid.uuid4()
+        self.project_id2 = uuid.uuid4()
+        self.user1 = UserFactory(username='user1@binarycrate.com', email='user1@binarycrate.com')
+
+        self.de1 = DirectoryEntry.objects.create(name='', is_file=False)
+        Project.objects.create(id=self.project_id1, name='Python Test', type=0, public=True,
+                               root_folder=self.de1, owner=self.user1)
+        self.pyfile = DirectoryEntry.objects.create(parent=self.de1, name='pyfile.py',
+                                                    is_file=True)
+        self.pyfile.is_default = True
+        self.pyfile.save()
+
+        self.de2 = DirectoryEntry.objects.create(name='', is_file=False)
+        Project.objects.create(id=self.project_id2, name='HTML Test', type=1, public=True,
+                               root_folder=self.de2, owner=self.user1)
+        #Note: 3 files are automatically spawned upon creation of Webpage project
+
+        self.client.force_authenticate(user=self.user1)
+
+    # Users are allowed to delete python projects
+    def test_delete_python_files(self):
+        """
+        Ensure Python projects can be deleted
+        """
+        self.assertEqual(DirectoryEntry.objects.filter(name='pyfile.py').count(), 1)
+        url = reverse('api:directoryentry-detail', kwargs={'pk': str(self.pyfile.id)})
+        data = {}
+        response = self.client.delete(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(DirectoryEntry.objects.filter(name='pyfile.py').count(), 0)
+
+    # User gets 405 error when attempting to delete html project files
+    def test_delete_html_files(self):
+        """
+        Ensure HTML project files cannot be deleted, error 405 'method not allowed' returned
+        """
+        self.assertEqual(DirectoryEntry.objects.filter(name='index.html').count(), 1)
+        html = DirectoryEntry.objects.get(name='index.html')
+        url = reverse('api:directoryentry-detail', kwargs={'pk':str(html.id)})
+        data = {}
+        response = self.client.delete(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(DirectoryEntry.objects.filter(name='index.html').count(), 1)
+
+    # User gets 405 error when attempting to create html project file
+    def test_create_html_files(self):
+        """Ensure HTML project files cannot be created, error 405 returned"""
+        data = {'id': str(uuid.uuid4()),
+                'name': 'file.html',
+                'is_file': True,
+                'content': "print('Hello world4')",
+                'parent_id': str(self.de2.id),
+                'form_items': "[{'id': '197239de-0b08-49ca-8419-33907d8be3c0'}]",
+                'is_default': True,
+                }
+        url = reverse('api:directoryentry-detail', kwargs={'pk': data['id']})
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(DirectoryEntry.objects.filter(name='file.html').count(), 0)
+
+    #Users can update content and form_items of html project files
+    def test_update_html_files(self):
+        """Ensure put can update fields except name of HTML project files"""
+        html = DirectoryEntry.objects.get(name='index.html') #This file is created automatically
+        url = reverse('api:directoryentry-detail', kwargs={'pk': str(html.id)})
+        data = {'id': str(html.id),
+                'name': "index.html",
+                'is_file': html.is_file,
+                'content': "print('Hello world123')",
+                'parent_id': str(self.de2.id),
+                'form_items': "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]",
+                'is_default': html.is_default,
+                }
+        response = self.client.put(url, data, format='json')
+        # print('response.content=', response.content)
+        print(html.name)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(DirectoryEntry.objects.filter(name='index.html').count(), 1)
+        self.assertEqual(DirectoryEntry.objects.get(id=html.id).content, "print('Hello world123')")
+        self.assertEqual(DirectoryEntry.objects.get(id=html.id).form_items,
+                         "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]")
+
+    def test_rename_html_file(self):
+        "Return error 405 when attempting to rename HTML project files"
+        html = DirectoryEntry.objects.get(name='index.html') #This file is created automatically
+        url = reverse('api:directoryentry-detail', kwargs={'pk': str(html.id)})
+        data = {'id': str(html.id),
+                'name': "newname.html",
+                'is_file': html.is_file,
+                'content': "print('Hello world2')",
+                'parent_id': str(self.de2.id),
+                'form_items': "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]",
+                'is_default': True,
+                }
+        response = self.client.put(url, data, format='json')
+        # print('response.content=', response.content)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(DirectoryEntry.objects.filter(name='newname.html').count(), 0)
+        self.assertEqual(DirectoryEntry.objects.filter(name='index.html').count(), 1)
+        self.assertEqual(DirectoryEntry.objects.get(id=html.id).content, '')
+        self.assertEqual(DirectoryEntry.objects.get(id=html.id).form_items,
+                         str(html.form_items))
+
 class ProjectImageOtherUserTestCase(APITestCase):
     def setUp(self):
         self.project_id = uuid.uuid4()
@@ -696,4 +804,3 @@ class ProjectImageOtherUserTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         assert Image.objects.all().count() == 1
         assert {i.name for i in Image.objects.all()} == {'hello.jpg'}
-

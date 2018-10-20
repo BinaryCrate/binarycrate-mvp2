@@ -11,11 +11,12 @@ import uuid
 from cavorite.bootstrap.modals import ModalTrigger, Modal
 
 
-def navitem(title, icon_class, href):
-    return li({'class':"nav-item", 'data-toggle':"tooltip", 'data-placement':"right", 'title':title}, [
-             a({'class':"nav-link", 'href': href, 'style': {'min-height': '56px'}}, children=[
-               i(cssClass=["fa", "fa-fw"] + [icon_class]),
-               span({'class':"nav-link-text"}, title),
+def navitem(title, icon_class, href, onclick=None):
+    return li({'class':"nav-item", 'data-toggle':"tooltip", 'data-placement':"right", 'title':title, 'onclick': onclick}, [
+             a({'class':"nav-link", 'href': href, 'style': {'min-height': '56px'}, 'onclick': onclick}, children=[
+             #a({'class':"nav-link", 'style': {'min-height': '56px'}, 'onclick': onclick}, children=[
+               i({'class': ["fa", "fa-fw"] + [icon_class], 'onclick': onclick}),
+               span({'class':"nav-link-text", 'onclick': onclick}, title),
              ]),
            ])
 
@@ -45,7 +46,7 @@ class BCChrome(div):
         jquery = js.globals['$']
         jquery(".navbar-sidenav .nav-link-collapse").addClass("collapsed");
         jquery(".navbar-sidenav .sidenav-second-level, .navbar-sidenav .sidenav-third-level").removeClass("show");
-        e.preventDefault()    
+        e.preventDefault()
         return False
 
     def __init__(self, top_navbar_items, central_content, modals):
@@ -78,18 +79,18 @@ class BCChrome(div):
     def get_sidebar_nav_items(self):
         return [
                  navitem('Dashboard', 'fa-dashboard', '#!'),
-                 navitem('Editor', 'fa-code', '#!editor'),
-                 navitem('Classroom', 'fa-laptop', '#!classroom'),
-                 navsubmenu('Settings', 'exampleAccordion', 'collapseComponents', [
-                   navsubmenuitem('Navbar', '#!navbar'),
-                   navsubmenuitem('Cards', '#!cards'),
-                 ])
+                 #navitem('Editor', 'fa-code', '#!editor'),
+                 #navitem('Classroom', 'fa-laptop', '#!classroom'),
+                 #navsubmenu('Settings', 'exampleAccordion', 'collapseComponents', [
+                 #  navsubmenuitem('Navbar', '#!navbar'),
+                 #  navsubmenuitem('Cards', '#!cards'),
+                 #])
                ]
 
     def get_logout_link(self):
         #TODO: It makes no logical sense for this function to be seperate from get_sidebar_nav_items
         # Find a way to roll them together
-        return [           
+        return [
                  ul({'class': 'navbar-nav ml-auto'}, [
                    li({'class': 'nav-item'}, [
                      ModalTrigger({'class':"nav-link"}, [
@@ -104,7 +105,7 @@ class BCChrome(div):
         js.globals.window.location.href = '/accounts/logout'
 
     def get_children(self):
-        return [ 
+        return [
                 nav({'class': "navbar navbar-expand-lg navbar-dark bg-dark fixed-top", 'id': 'mainNav'}, [
                   a({'class': "nav-link", 'id':"sidenavToggler", 'style':"padding: 0px 10px 0px 0px; color:white;"}, [
                     i({'class': "fa fa-fw fa-bars", "onclick": self.collapse_menu})
@@ -133,4 +134,3 @@ class BCChrome(div):
                   div("Select \"Logout\" below if you are ready to end your current session."),
                 ], self.logout_clicked),
               ] + self.get_modals() + self.get_context_menu_list()
-

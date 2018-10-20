@@ -1,5 +1,5 @@
 from __future__ import absolute_import, print_function
-from cavorite import c, t, Router, callbacks, timeouts
+from cavorite import c, t, Router, callbacks, timeouts, lazy_eval
 from cavorite.HTML import *
 try:
     import js
@@ -54,13 +54,14 @@ class CodeMirrorHandlerVNode(textarea):
         should_init = js.globals.document.getElementsByClassName('CodeMirror').length < 2
         if should_init:
             textarea = js.globals.document.getElementById("code")
+            read_only = lazy_eval(self.read_only)
             self.editor = js.globals.CodeMirror.fromTextArea(textarea, {
                 'lineNumbers': True,
                 #'mode': 'text/html',
                 'mode': 'python',
                 'indentUnit': 4,
                 'viewportMargin': js.globals.Infinity,
-                'readOnly': self.read_only,
+                'readOnly': read_only,
               })
             self.editor.addKeyMap({'Tab': global_on_tab,})
 
@@ -84,21 +85,18 @@ class CodeMirrorHandlerVNode(textarea):
             #'mode': 'python',
             'viewportMargin': js.globals.Infinity,
           })
-
         @js.Function
         def change_callback_handler(a, b):
             print('change_callback_handler called')
             callbacks.global_callbacks['onchange'][str(textarea.getAttribute('_cavorite_id'))](self.editor)
-
         self.editor.on('change', change_callback_handler2)
-
         self.onchange_codemirror(None)
     """
 
     def onchange_codemirror(self, e):
         #print ('onchange_codemirror self.change_handler=', self.change_handler)
         #previewFrame = js.globals.document.getElementById('preview');
-        #preview =  previewFrame.contentDocument or  previewFrame.contentWindow.document;
+        #preview =  previewFrame.contentDocument or  previewFrame.contentWindow.document; #don't need preview if python
         #preview.open();
         content = self.editor.getValue()
         #preview.write(content);
@@ -108,6 +106,3 @@ class CodeMirrorHandlerVNode(textarea):
             self.change_handler(content)
         #e.stopPropagation()
         #e.preventDefault()
-
-
-

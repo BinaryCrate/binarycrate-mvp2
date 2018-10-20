@@ -1,8 +1,84 @@
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 from cavorite.HTML import *
 from cavorite.svg import svg
 import copy
-from cavorite import Router
+from cavorite import Router, timeouts
+from binarycrate.bcmunch import BCMunch
+import uuid
+
+
+class FormItemPropType(object):
+    INT = 0
+    STRING = 1
+    BOOLEAN = 2
+    COLOR = 3
+    PRELOADED_IMAGE = 4
+
+def get_form_item_property(form_item_type):
+    if form_item_type == 'line':
+        return  {'x1': FormItemPropType.INT,
+                 'y1': FormItemPropType.INT,
+                 'x2': FormItemPropType.INT,
+                 'y2': FormItemPropType.INT,
+                 'name': FormItemPropType.STRING,
+                 'stroke_width': FormItemPropType.INT,
+                 'stroke': FormItemPropType.COLOR,
+                 'visible': FormItemPropType.BOOLEAN}
+    props = {'x': FormItemPropType.INT,
+             'y': FormItemPropType.INT,
+             'width': FormItemPropType.INT,
+             'height': FormItemPropType.INT,
+             'name': FormItemPropType.STRING,
+             'visible': FormItemPropType.BOOLEAN}
+    if form_item_type == 'button' or form_item_type == 'label' \
+       or form_item_type == 'frame' or form_item_type == 'checkbox':
+        props.update({'caption': FormItemPropType.STRING})
+    if form_item_type == 'textbox':
+        props.update({'text': FormItemPropType.STRING})
+    if form_item_type == 'image':
+        props.update({'src': FormItemPropType.STRING, 'preloaded_image': FormItemPropType.PRELOADED_IMAGE})
+    if form_item_type == 'checkbox':
+        props.update({'value': FormItemPropType.BOOLEAN})
+    if form_item_type in {'rect', 'circle', 'ellipse', 'hexagon'}:
+        props.update({'stroke_width': FormItemPropType.INT,
+                      'stroke': FormItemPropType.COLOR,
+                      'fill': FormItemPropType.COLOR,
+                     })
+    return props
+
+def get_form_item_optional_members(form_item_type):
+    #print('get_form_item_optional_members form_item_type=',form_item_type)
+    #assert False
+    #Optional members can only every be created dynamically
+    if form_item_type == 'button':
+        return ['onclick']
+    return []
+
+control_types = ['line', 'button', 'label', 'frame','checkbox',
+                 'textbox', 'image', 'checkbox', 'rect',
+                 'circle', 'ellipse', 'hexagon',
+                ]
+
+# Dynamically create classes from https://stackoverflow.com/a/15247892
+def ClassFactory(class_name, control_type, BaseClass):
+    def __init__(self, *args, **kwargs):
+        BaseClass.__init__(self, *args, **kwargs)
+        self.type = control_type
+        if 'id' not in self:
+            self.id = str(uuid.uuid4())
+    newclass = type(str(class_name), (BaseClass,),{"__init__": __init__,
+        "_members": get_form_item_property(control_type).keys(),
+        "_optional_members": get_form_item_optional_members(control_type)})
+    return newclass
+
+control_types2 = dict()
+
+# Dynamically insert variables into the global namespace
+for control_type in control_types:
+    class_name = control_type[0].upper() + control_type[1:]
+    cls = ClassFactory(class_name, control_type, BCMunch)
+    globals()[class_name] = cls
+    control_types2[control_type] = cls
 
 
 class Form(object):
@@ -32,29 +108,44 @@ class Form(object):
     def get_file_location(self):
         # Returns the file local relative to the module directory
         from binarycrate.editor import python_module_dir
-        print('python_module_dir=', python_module_dir)
-        print('self.file_location=', self.file_location)
+        #print('python_module_dir=', python_module_dir)
+        #print('self.file_location=', self.file_location)
         assert self.file_location.startswith(python_module_dir)
         return self.file_location[len(python_module_dir):]
 
 
     def initialise_form_controls(self):
-        self.form_controls = copy.deepcopy(self.get_form_items())
-        for control in self.form_controls:
+        self._static_form_controls = [control_types2[fi['type']](fi) for fi in
+                              self.get_form_items()]
+        self._dynamic_form_controls = []
+        for control in self._static_form_controls:
             setattr(self, control['name'], control)
 
+    def get_form_controls(self):
+        return self._static_form_controls + self._dynamic_form_controls
+
+    def add_control(self, control):
+        self._dynamic_form_controls.append(control)
+
+    def remove_dynamic_controls(self):
+        self._dynamic_form_controls = []
+
     def handle_onclick(self, e, form_item_name):
-        #print('handle_onclick form_item_name=', form_item_name)
+        print('handle_onclick form_item_name=', form_item_name)
         if hasattr(self, form_item_name + '_onclick'):
             #print('handle_onclick calling custom handler')
             getattr(self, form_item_name + '_onclick')(e)
         self.editorview.mount_redraw()
         Router.router.ResetHashChange()
 
-    def get_form_controls(self):
+    def get_form_control_elements(self):
         ret = list()
         html_controls = dict()
-        for form_item in self.form_controls:
+        control = None
+        for form_item in self.get_form_controls():
+            if form_item['visible'] == False:
+                # Don't write invisible items out the DOM
+                continue
             #print('initialise_form_controls form_item=', form_item)
             #TODO: Copied code from editor.py should be refactored
             style = ''.join(('position: absolute; ',
@@ -72,7 +163,11 @@ class Form(object):
             control_class = None
             if form_item['type'] == 'button':
                 control_class = html_button
-                attribs_extra = { 'onclick': lambda e, form_item_name=form_item['name']: self.handle_onclick(e, form_item_name) }
+                if form_item in self._static_form_controls:
+                    # Static control fire handle_onclick to route then dynamic ones may have their own handler attached
+                    attribs_extra = { 'onclick': lambda e, form_item_name=form_item['name']: self.handle_onclick(e, form_item_name) }
+                else:
+                    attribs_extra = { 'onclick': form_item.get('onclick', lambda e: None) }
                 #control = html_button({'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
             elif form_item['type'] == 'textbox':
                 control_class = html_input
@@ -108,7 +203,7 @@ class Form(object):
                 html_controls[form_item['name']] = control
                 ret.append(control)
         svg_list = list()
-        for form_item in self.form_controls:
+        for form_item in self._static_form_controls:
             if form_item['type'] == 'rect':
                 control = svg('rect', {'x': form_item['x'],
                              'y':form_item['y'],
@@ -175,22 +270,22 @@ class Form(object):
         ret.append(svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%'}, svg_list))
         return ret
 
-    def __init__(self, *args, **kwargs):
-        assert 'editorview' in kwargs or 'parent' in kwargs, 'A form must set either a parent or the editorview'
+    def __init__(self, parent=None, *args, **kwargs):
+        assert bool('editorview' in kwargs) != bool(parent is not None), 'A form must set either a parent or the editorview'
         self.editorview = kwargs.pop('editorview', None)
-        self.parent = None
-        if self.editorview is None:
-            self.parent = kwargs.pop('parent')
+        self.parent = parent
+        if parent is not None:
+            self.parent = parent
             self.editorview = self.parent.editorview
+            self.editorview.form_stack.append(self)
         self.images = self.editorview.images
+        self._active_timeouts = set()
+        self._active_intervals = set()
         super(Form, self).__init__(*args, **kwargs)
         self.initialise_form_controls()
 
     def on_historygraph_download_complete(self):
         pass
-
-    def display_form(self, new_form):
-        self.editorview.form_stack.append(new_form)
 
     def on_child_form_closed(self):
         pass
@@ -199,3 +294,51 @@ class Form(object):
         self.editorview.form_stack = self.editorview.form_stack[:-1]
         if self.parent is not None:
             self.parent.on_child_form_closed()
+
+    def set_timeout(self, func, delay):
+        # We need a list here because we need a variable the we can amend and
+        # access from inside the inner function.
+        value_wrapper = list()
+        def wrapper():
+            func()
+            self._active_timeouts.remove(value_wrapper[0])
+            self.editorview.mount_redraw()
+            Router.router.ResetHashChange()
+        value_wrapper.append(timeouts.set_timeout(wrapper, delay))
+        self._active_timeouts.add(value_wrapper[0])
+        return value_wrapper[0]
+
+    def clear_all_active_timeouts(self):
+        timeouts = copy.copy(self._active_timeouts)
+        for val in timeouts:
+            self.clear_timeout(val)
+
+    def clear_timeout(self, val):
+        self._active_timeouts.remove(val)
+        timeouts.clear_timeout(val)
+
+    def set_interval(self, func, delay):
+        def wrapper():
+            func()
+            self.editorview.mount_redraw()
+            Router.router.ResetHashChange()
+        val = timeouts.set_interval(wrapper, delay)
+        self._active_intervals.add(val)
+        return val
+
+    def clear_all_active_intervals(self):
+        intervals = copy.copy(self._active_intervals)
+        for val in intervals:
+            self.clear_interval(val)
+
+    def clear_interval(self, val):
+        self._active_intervals.remove(val)
+        timeouts.clear_interval(val)
+
+    def get_preloaded_images(self):
+        return self.editorview.images
+
+    def get_preloaded_image_id(self, image_name):
+        images = [image for image in self.get_preloaded_images() if image['name'] == image_name]
+        assert len(images) == 1, 'No image matches that name'
+        return images[0]['id']
