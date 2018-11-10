@@ -2,7 +2,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 from binarycrate.bcmunch import BCMunch
 import pytest
-from binarycrate.controls.bcform import Button
+from binarycrate.controls.bcform import Button, Line
 
 
 class TestBCMunch(object):
@@ -58,3 +58,12 @@ class TestBCFormItemMunches(object):
             m = Button({'x': 1, 'y': 2, 'width': 100, 'height': 20,
                         'name': 'button1', 'caption': 'Hello', 'visible': True,
                         'foo2': 'bar2'})
+
+    def test_lines(self):
+        b = Line({'x1': 1, 'y1': 1, 'x2': 10, 'y2':10,
+                  'name': 'line1', 'stroke_width':1, 'stroke': 'solid',
+                  'visible': True})
+        assert b.x2 == 10
+        assert b['x2'] == 10
+        assert b['type'] == 'line'
+        assert 'id' in b

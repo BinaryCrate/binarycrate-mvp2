@@ -298,6 +298,262 @@ class TestEditor(object):
         assert was_found2
 
 
+    def test_editor_new_line(self, monkeypatch):
+        def dummy_uuid():
+            return uuid.UUID('d7114859-3a2f-4701-967a-fb66fd60b963')
+        def dummy_uuid_editor():
+            return uuid.UUID('236a5a73-0ffd-4329-95c0-9deaa95830f4')
+        project_id = 'e1e37287-9127-46cb-bddb-4a1a825a5d8e'
+
+        monkeypatch.setattr(editor.cavorite, 'js', js)
+        monkeypatch.setattr(editor, 'js', js)
+        monkeypatch.setattr(editor.modals, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(ajaxget, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(Router, 'router', Mock())
+        monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(editor, 'get_uuid', dummy_uuid_editor)
+
+        callbacks.initialise_global_callbacks()
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        js.globals.cavorite_ajaxGet = Mock()
+
+        result = defaultdict(int)
+
+        editor.project.clear()
+
+        node = editor.editor_view()
+        node.url_kwargs = { 'project_id': project_id }
+        # SImulate the first screen draw before there is anything loaded
+
+        tree = node.get_project_tree()
+
+        assert type(tree) == BCProjectTree
+        root_folder = tree.get_children()
+        print('root_folde=',root_folder)
+        assert len(root_folder) == 0
+
+        # Simulate the query which is sent after the screen is drawn
+        node.query_project()
+
+        js.globals.cavorite_ajaxGet.assert_called_with('/api/projects/image-list/' + project_id + '/', str(dummy_uuid()))
+
+
+        monkeypatch.setattr(node, 'mount_redraw', Mock())
+
+        hello_world_content = "print('Hello world')"
+        hello_folder_content = \
+"""for i in range(3):
+    print('Hello folder i={}'.format(i))
+"""
+
+        response = {'id': '4b352f3a-752f-4769-8537-880be4e99ce0',
+                    'name': 'Mark\'s Project',
+                    'type': 0,
+                    'public': True,
+                    'directory_entry':
+                     [
+                       # Root directory
+                       {'id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'name': '',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': '', # Test when we get a completely empty result may be necessary for some transitional things
+                        'parent_id': None,
+                        'is_default': False,
+                       },
+                       # A file in the root directory
+                       {'id': 'ae935c72-cf56-48ed-ab35-575cb9a983ea',
+                        'name': 'hello_world.py',
+                        'is_file': True,
+                        'content': hello_world_content,
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A folder in the root directory
+                       {'id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'name': 'folder',
+                        'is_file': False,
+                        'content': '',
+                        'form_items': '[]',
+                        'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
+                        'is_default': False,
+                       },
+                       # A file in the 'folder' folder
+                       {'id': '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a',
+                        'name': 'hello_folder.py',
+                        'is_file': True,
+                        'content': hello_folder_content,
+                        'form_items': '[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]',
+                        'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
+                        'is_default': True,
+                       },
+                     ]
+                    }
+        node.projects_api_ajax_result_handler(Mock(status=200, responseText=json.dumps(response)),
+                                              response)
+
+        # Test that the text in form_items is translated in Python dicts
+        for de in editor.project['directory_entry']:
+            if de['id'] != '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a':
+                assert de['form_items'] == []
+            else:
+                assert de['form_items'] == [{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30, "visible": True}]
+
+        tree = node.get_project_tree()
+
+        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+
+        assert type(tree) == BCProjectTree
+        #root_folder = tree.get_children()[0]
+        assert type(root_folder) == BCPFolder
+        assert root_folder.get_is_checked()
+        assert len(root_folder.folder_children) == 2
+        assert type(root_folder.folder_children[0]) == BCPFolder
+        assert root_folder.folder_children[0].de['name'] == 'folder'
+        #hello_world = root_folder.folder_children[1]
+        assert type(hello_world) == BCPFile
+        assert self.get_BCPFile_title(hello_world) == 'hello_world.py'
+        #folder = root_folder.folder_children[0]
+        #hello_folder = folder.folder_children[0]
+        assert type(hello_folder) == BCPFile
+        assert self.get_BCPFile_title(hello_folder) == '* hello_folder.py'
+
+        assert root_folder.get_display_title() == '/'
+        assert folder.get_display_title() == 'folder'
+
+        # Test no content set
+        assert len(node.code_mirror.get_children()) == 1
+        assert type(node.code_mirror.get_children()[0]) == t
+        assert node.code_mirror.get_children()[0].text() == ''
+
+        node.code_mirror.editor = Mock(setValue=Mock())
+        hello_world.on_click(None)
+        #node.code_mirror.editor.setValue.assert_called_with(hello_world_content)
+
+        # Test content set from clicked file
+        assert len(node.code_mirror.get_children()) == 1
+        assert type(node.code_mirror.get_children()[0]) == t
+        assert node.code_mirror.get_children()[0].text() == hello_world_content
+
+        # Click folder should blank the text
+        node.code_mirror.editor = Mock(setValue=Mock())
+        folder.on_click(None)
+        assert node.code_mirror.editor.setValue.call_count == 0
+        assert len(node.code_mirror.get_children()) == 1
+        assert type(node.code_mirror.get_children()[0]) == t
+        assert node.code_mirror.get_children()[0].text() == ''
+        folder.on_click(None)
+
+        node.code_mirror.editor = Mock(setValue=Mock())
+        hello_folder.on_click(None)
+        #node.code_mirror.editor.setValue.assert_called_with(hello_folder_content)
+
+        assert len(node.code_mirror.get_children()) == 1
+        assert type(node.code_mirror.get_children()[0]) == t
+        assert node.code_mirror.get_children()[0].text() == hello_folder_content
+
+        hello_world.on_click(None)
+        # Click on hello_world and check that the UI updates correctly
+        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        assert node.selected_de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'
+        assert node.selected_file_de == node.selected_de
+        assert 'file-active' in hello_world.get_attribs().get('class', '')
+        a_hello_world = hello_world.get_children()[0]
+        assert a_hello_world.get_tag_name() == 'a'
+        assert 'file-active' in a_hello_world.get_attribs().get('class', '')
+        label_folder = folder.get_children()[0]
+        assert label_folder.get_tag_name() == 'label'
+        assert 'file-active' not in label_folder.get_attribs().get('class', '')
+        checkbox_folder = folder.get_children()[1]
+        assert checkbox_folder.get_tag_name() == 'input'
+        assert 'checked' not in checkbox_folder.get_attribs()
+
+        folder.on_click(None)
+        # Click on folder and check that the UI updates correctly
+        tree = node.get_project_tree()
+        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        assert node.selected_de['id'] == 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
+        assert node.selected_file_de == None
+        assert 'file-active' not in hello_world.get_attribs().get('class', '')
+        a_hello_world = hello_world.get_children()[0]
+        assert a_hello_world.get_tag_name() == 'a'
+        assert 'file-active' not in a_hello_world.get_attribs().get('class', '')
+        label_folder = folder.get_children()[0]
+        assert label_folder.get_tag_name() == 'label'
+        assert 'file-active' in label_folder.get_attribs().get('class', '')
+        checkbox_folder = folder.get_children()[1]
+        assert checkbox_folder.get_tag_name() == 'input'
+        assert 'checked' in checkbox_folder.get_attribs()
+
+        hello_world.on_click(None)
+        # Click on hello_world and check that the UI updates correctly That is the selected changes but not the fact that folder is checked (ie folded out)
+        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        assert node.selected_de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'
+        assert 'file-active' in hello_world.get_attribs().get('class', '')
+        a_hello_world = hello_world.get_children()[0]
+        assert a_hello_world.get_tag_name() == 'a'
+        assert 'file-active' in a_hello_world.get_attribs().get('class', '')
+        label_folder = folder.get_children()[0]
+        assert label_folder.get_tag_name() == 'label'
+        assert 'file-active' not in label_folder.get_attribs().get('class', '')
+        checkbox_folder = folder.get_children()[1]
+        assert checkbox_folder.get_tag_name() == 'input'
+        assert 'checked' in checkbox_folder.get_attribs()
+
+        js.return_get_element_by_id = {'preview': Mock(getBoundingClientRect=Mock(return_value=Mock(left=0, top=0)))}
+
+        hello_world2_content = "print('Hello world2')"
+        mock_code_mirrow_get_value = Mock(side_effect=lambda: hello_world2_content)
+        node.code_mirror.editor = Mock(getValue=mock_code_mirrow_get_value)
+
+        #editor.code_mirror_changed = Mock()
+
+        node.code_mirror.onchange_codemirror(None)
+        #editor.code_mirror_changed.assert_called_with(hello_world2_content)
+        assert node.selected_file_de['content'] == hello_world2_content
+
+        # Test we send the correct thing when we change the default file
+        #editor.selected_de = [de for de in editor.project['directory_entry'] if de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'][0]
+        node.set_current_file_as_default(Mock())
+
+        # Test we send the correct stuff when we add a new button
+        node.new_line(Mock(clientX=100, clientY=100))
+
+        js.globals.cavorite_ajaxPut.reset_mock()
+
+        node.save_project(None)
+        calls = [(a[0][0], a[0][2]) for a in js.globals.cavorite_ajaxPut.call_args_list]
+
+        assert len(calls) == len(editor.project['directory_entry']) - 1 # We don't send the root folder
+        was_found = False
+        was_found2 = False
+        for url, data in calls:
+            if url == '/api/projects/directoryentry/ae935c72-cf56-48ed-ab35-575cb9a983ea/':
+                assert len(data) == 7
+                assert data['id'] == node.selected_de['id']
+                assert data['name'] == node.selected_de['name']
+                assert data['is_file'] == node.selected_de['is_file']
+                assert data['content'] == hello_world2_content
+                assert data['parent_id'] == node.selected_de['parent_id']
+                assert data['is_default'] == True
+                assert json.loads(data['form_items']) == json.loads('[{"x2": 150, "name": "line1", "y1": 100, "x1": 100, "type": "line", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "y2": 150, "visible": true, "stroke": "rgb(0,0,0)", "stroke_width": 5}]')
+                was_found = True
+            if url == '/api/projects/directoryentry/6a05e63e-6db4-4898-a3eb-2aad50dd5f9a/':
+                assert len(data) == 7
+                assert data['name'] == 'hello_folder.py'
+                assert data['is_default'] == False
+                was_found2 = True
+
+        assert was_found
+        assert was_found2
+
+
     def test_editor_can_add_new_files(self, monkeypatch):
         def dummy_uuid():
             return uuid.UUID('d7114859-3a2f-4701-967a-fb66fd60b963')

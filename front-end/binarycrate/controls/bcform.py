@@ -115,6 +115,9 @@ class Form(object):
 
 
     def initialise_form_controls(self):
+        #print("initialise_form_controls fis=", [fi for fi in
+        #                      self.get_form_items()])
+        #self._static_form_controls = []
         self._static_form_controls = [control_types2[fi['type']](fi) for fi in
                               self.get_form_items()]
         self._dynamic_form_controls = []
