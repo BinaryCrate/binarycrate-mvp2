@@ -904,8 +904,8 @@ class EditorView(BCChrome):
                                      'z-index: 1; ',
                                      'left: {};'.format(form_item['x1']),
                                      'top: {};'.format(form_item['y1']),
-                                     'width: {};'.format(form_item['x2'] - form_item['x1']),
-                                     'height: {};'.format(form_item['y2'] - form_item['y1'])
+                                     'width: {};'.format(abs(form_item['x2'] - form_item['x1'])),
+                                     'height: {};'.format(abs(form_item['y2'] - form_item['y1']))
                                      ))
                 else:
                     style = ''.join(('position: absolute; ',
@@ -1043,8 +1043,8 @@ class EditorView(BCChrome):
                 if selected_form_item['type'] == 'line':
                     selected_form_item_x = selected_form_item['x1']
                     selected_form_item_y = selected_form_item['y1']
-                    selected_form_item_width = selected_form_item['x2'] - selected_form_item['x1']
-                    selected_form_item_height = selected_form_item['y2'] - selected_form_item['y1']
+                    selected_form_item_width = abs(selected_form_item['x2'] - selected_form_item['x1'])
+                    selected_form_item_height = abs(selected_form_item['y2'] - selected_form_item['y1'])
                 else:
                     selected_form_item_x = selected_form_item['x']
                     selected_form_item_y = selected_form_item['y']
