@@ -354,3 +354,9 @@ class Form(object):
         images = [image for image in self.get_preloaded_images() if image['name'] == image_name]
         assert len(images) == 1, 'No image matches that name'
         return images[0]['id']
+
+    def on_body_click(self):
+        pass
+
+    def on_body_mousemove(self, x, y):
+        pass

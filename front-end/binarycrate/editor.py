@@ -652,6 +652,9 @@ class EditorView(BCChrome):
                  ])
 
     def on_body_click(self, e):
+        if self.program_is_running:
+            #print('on_body_click called self.program_is_running')
+            self.form_stack[-1].on_body_click()
         if self.context_menu is not None:
             self.context_menu = None
             self.mount_redraw()
@@ -660,6 +663,17 @@ class EditorView(BCChrome):
     def on_body_mousemove(self, e, change_x, change_y):
         change_x = int(change_x)
         change_y = int(change_y)
+        if self.program_is_running:
+            #print('on_body_mousemove self.program_is_running')
+            posx = e.clientX
+            posy = e.clientY
+            rect = js.globals.document.getElementById('preview').getBoundingClientRect()
+            if posx >= rect.left and posy >= rect.top and posx <= rect.right and posy <= rect.bottom:
+                posx = posx - rect.left
+                posy = posy - rect.top
+                self.form_stack[-1].on_body_mousemove(int(posx), int(posy))
+                self.mount_redraw()
+                Router.router.ResetHashChange()
         if self.mouse_is_down and self.selected_item != '':
             fi = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item][0]
             if fi['type'] == 'line':

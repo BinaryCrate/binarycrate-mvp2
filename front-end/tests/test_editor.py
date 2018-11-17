@@ -5,7 +5,7 @@ import cavorite_tests.fakejs as js
 from cavorite import callbacks, ajaxget, timeouts, Router, t, c
 from collections import defaultdict
 import uuid
-from mock import Mock
+from mock import Mock, MagicMock
 import json
 from binarycrate.editor import BCProjectTree, BCPFolder, BCPFile, ContextMenuFormItems
 from binarycrate.controls import codemirror, Form
@@ -2646,6 +2646,23 @@ print('Hello folder i={}'.format(i))
             '4a88ff77-5969-40b8-a1da-8fefc5477f44'
         with pytest.raises(AssertionError):
             form.get_preloaded_image_id('invalid.jpg')
+
+        # Assert mouse moves are received by the form
+        preview = Mock()
+        preview.getBoundingClientRect = Mock(return_value=MagicMock(left=2, top=10))
+        js.return_get_element_by_id = {'preview': preview}
+        form = view.form_stack[0]
+        form.on_body_mousemove = Mock()
+        e = Mock()
+        e.configure_mock(clientX=100, clientY=100)
+        view.on_body_mousemove(e, 10, 10)
+        form.on_body_mousemove.assert_called_with(98, 90)
+
+        # Assert mouse clicks on no specific control are received by the form
+        form = view.form_stack[0]
+        form.on_body_click = Mock()
+        view.on_body_click(Mock())
+        form.on_body_click.assert_called_with()
 
         result = defaultdict(bool)
         view.stop_project(Mock())
