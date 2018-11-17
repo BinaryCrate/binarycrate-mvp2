@@ -134,7 +134,7 @@ class Form(object):
         self._dynamic_form_controls = []
 
     def handle_onclick(self, e, form_item_name):
-        print('handle_onclick form_item_name=', form_item_name)
+        #print('handle_onclick form_item_name=', form_item_name)
         if hasattr(self, form_item_name + '_onclick'):
             #print('handle_onclick calling custom handler')
             getattr(self, form_item_name + '_onclick')(e)
