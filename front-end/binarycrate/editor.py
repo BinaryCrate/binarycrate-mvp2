@@ -662,29 +662,48 @@ class EditorView(BCChrome):
         change_y = int(change_y)
         if self.mouse_is_down and self.selected_item != '':
             fi = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item][0]
-            if self.selected_handler == HANDLE_NONE:
-                fi['x'] += change_x
-                fi['y'] += change_y
-            elif self.selected_handler == HANDLE_TOPLEFT:
-                fi['x'] += change_x
-                fi['y'] += change_y
-                fi['width'] -= change_x
-                fi['height'] -= change_y
-            elif self.selected_handler == HANDLE_TOPRIGHT:
-                # fi['x'] += change_x
-                fi['y'] += change_y
-                fi['width'] += change_x
-                fi['height'] -= change_y
-            elif self.selected_handler == HANDLE_BOTTOMRIGHT:
-                # fi['x'] += change_x
-                # fi['y'] += change_y
-                fi['width'] += change_x
-                fi['height'] += change_y
-            elif self.selected_handler == HANDLE_BOTTOMLEFT:
-                fi['x'] += change_x
-                # fi['y'] += change_y
-                fi['width'] -= change_x
-                fi['height'] += change_y
+            if fi['type'] == 'line':
+                if self.selected_handler == HANDLE_NONE:
+                    fi['x1'] += change_x
+                    fi['y1'] += change_y
+                    fi['x2'] += change_x
+                    fi['y2'] += change_y
+                elif self.selected_handler == HANDLE_TOPLEFT:
+                    fi['x1'] += change_x
+                    fi['y1'] += change_y
+                elif self.selected_handler == HANDLE_TOPRIGHT:
+                    fi['x2'] += change_x
+                    fi['y1'] += change_y
+                elif self.selected_handler == HANDLE_BOTTOMRIGHT:
+                    fi['x2'] += change_x
+                    fi['y2'] += change_y
+                elif self.selected_handler == HANDLE_BOTTOMLEFT:
+                    fi['x1'] += change_x
+                    fi['y2'] += change_y
+            else:
+                if self.selected_handler == HANDLE_NONE:
+                    fi['x'] += change_x
+                    fi['y'] += change_y
+                elif self.selected_handler == HANDLE_TOPLEFT:
+                    fi['x'] += change_x
+                    fi['y'] += change_y
+                    fi['width'] -= change_x
+                    fi['height'] -= change_y
+                elif self.selected_handler == HANDLE_TOPRIGHT:
+                    # fi['x'] += change_x
+                    fi['y'] += change_y
+                    fi['width'] += change_x
+                    fi['height'] -= change_y
+                elif self.selected_handler == HANDLE_BOTTOMRIGHT:
+                    # fi['x'] += change_x
+                    # fi['y'] += change_y
+                    fi['width'] += change_x
+                    fi['height'] += change_y
+                elif self.selected_handler == HANDLE_BOTTOMLEFT:
+                    fi['x'] += change_x
+                    # fi['y'] += change_y
+                    fi['width'] -= change_x
+                    fi['height'] += change_y
             self.mount_redraw()
             Router.router.ResetHashChange()
             e.stopPropagation()
@@ -1004,7 +1023,7 @@ class EditorView(BCChrome):
                                                     'oncontextmenu': lambda e, form_item_id=form_item[
                                                         'id']: self.contextmenu_control(form_item_id, e)}))
             if self.selected_item != '':
-                print('self.selected_item=', self.selected_item)
+                #print('self.selected_item=', self.selected_item)
                 selected_form_item = \
                 [form_item for form_item in self.selected_de['form_items'] if self.selected_item == form_item['id']][0]
                 if selected_form_item['type'] == 'line':

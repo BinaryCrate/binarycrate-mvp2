@@ -151,13 +151,22 @@ class Form(object):
                 continue
             #print('initialise_form_controls form_item=', form_item)
             #TODO: Copied code from editor.py should be refactored
-            style = ''.join(('position: absolute; ',
-                            'z-index: 1; ',
-                            'left: {};'.format(form_item['x']),
-                            'top: {};'.format(form_item['y']),
-                            'width: {};'.format(form_item['width']),
-                            'height: {};'.format(form_item['height'])
-                            ))
+            if form_item['type'] == 'line':
+                style = ''.join(('position: absolute; ',
+                                'z-index: 1; ',
+                                'left: {};'.format(form_item['x1']),
+                                'top: {};'.format(form_item['y1']),
+                                'width: {};'.format(form_item['x2'] - form_item['x1']),
+                                'height: {};'.format(form_item['x2'] - form_item['x1'])
+                                ))
+            else:
+                style = ''.join(('position: absolute; ',
+                                'z-index: 1; ',
+                                'left: {};'.format(form_item['x']),
+                                'top: {};'.format(form_item['y']),
+                                'width: {};'.format(form_item['width']),
+                                'height: {};'.format(form_item['height'])
+                                ))
             #print('get_selected_de_form_controls form_item[id]=',form_item['id'])
             form_item_id = form_item['id']
             attribs = {'style': style
@@ -238,11 +247,11 @@ class Form(object):
                              #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
                              })
             if form_item['type'] == 'line':
-                control = svg('line', {'x1': form_item['x'],
-                             'y1':form_item['y'],
-                             'x2': form_item['x'] + form_item['width'],
-                             'y2': form_item['y'] + form_item['height'],
-                             'fill': form_item['fill'],
+                control = svg('line', {'x1': form_item['x1'],
+                             'y1':form_item['y1'],
+                             'x2': form_item['x2'],
+                             'y2': form_item['y2'],
+                             #'fill': form_item['fill'],
                              'stroke-width':  form_item['stroke_width'],
                              'stroke': form_item['stroke'],
                              #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
