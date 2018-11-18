@@ -11,11 +11,9 @@ class LandingPageView(LoginRequiredMixin, TemplateView):
     template_name = "landingpage.html"
 
     def get_context_data(self, **kwargs):
-        #TODO: This task is included for example purposes for how to write them these debug tasks should be removed once real tasks are created
+        #TODO: This task is included for example purposes for how to write them these debug tasks should be removed once real tasks are created. Note this line causes the unit tests to fail
         debug_task.delay("Hello task")
         context = super(LandingPageView, self).get_context_data(**kwargs)
         context['build_number'] = settings.BUILD_NUMBER
         context['boot_file'] = 'bootbc.py'
         return context
-
-

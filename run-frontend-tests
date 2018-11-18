@@ -1,4 +1,5 @@
 #! /bin/bash
+pip uninstall pytest-django --yes
 cd /opt
 cp /opt/project/front-end/tests tests -r
 cd tests
@@ -9,4 +10,3 @@ mkdir cavorite_tests
 cp /opt/project/cavorite/tests/__init__.py cavorite_tests/
 cp /opt/project/cavorite/tests/fakejs.py cavorite_tests/
 pytest $*
-
