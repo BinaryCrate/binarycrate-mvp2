@@ -139,6 +139,7 @@ class BCPFolder(li):
         e.preventDefault()
 
     def close_context_menu(self, e):
+        print("close_context_menu called")
         self.editor_view.context_menu = None
         self.editor_view.mount_redraw()
         Router.router.ResetHashChange()
@@ -652,6 +653,7 @@ class EditorView(BCChrome):
                  ])
 
     def on_body_click(self, e):
+        #print("on_body_click called self.context_menu=", self.context_menu)
         if self.program_is_running:
             #print('on_body_click called self.program_is_running')
             self.form_stack[-1].on_body_click()

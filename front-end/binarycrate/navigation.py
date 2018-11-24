@@ -72,9 +72,11 @@ class BCChrome(div):
     def get_context_menu_list(self):
         context_menu = self.get_context_menu()
         if context_menu is None:
-            return []
+            ret = []
         else:
-            return [context_menu]
+            ret = [context_menu]
+        #print('get_context_menu_list ret=', ret)
+        return ret
 
     def get_sidebar_nav_items(self):
         return [
