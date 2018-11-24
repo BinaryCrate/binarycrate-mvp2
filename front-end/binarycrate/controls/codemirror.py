@@ -49,9 +49,31 @@ class CodeMirrorHandlerVNode(textarea):
         super(CodeMirrorHandlerVNode, self).__init__(attribs, children, **kwargs)
 
     def was_mounted(self):
+        #print("CodeMirrorHandlerVNode was_mounted called")
         super(CodeMirrorHandlerVNode, self).was_mounted()
         should_init = True
-        should_init = js.globals.document.getElementsByClassName('CodeMirror').length < 2
+        #should_init = js.globals.document.getElementsByClassName('CodeMirror').length < 2
+        code_mirrors = js.globals.document.getElementsByClassName('CodeMirror');
+        #print('CodeMirror was_mounted self.editor=', self.editor)
+        #if self.editor is not None:
+        #    self.editor.parentNode.removeChild(self.editor);
+        js.globals.code_mirrors = code_mirrors
+
+        #print('was_mounted code_mirrors=', code_mirrors)
+        to_delete = []
+        for i in range(code_mirrors.length):
+            #print('code_mirrors[i].tagName=', code_mirrors[i].tagName)
+            if str(code_mirrors[i].tagName) == "DIV":
+                to_delete.append(code_mirrors[i])
+
+        #while code_mirrors.length > 1:
+        #    code_mirrors.item(1).parentNode.removeChild(code_mirrors.item(1));
+        for div in to_delete:
+            div.parentNode.removeChild(div);
+
+
+
+        #print("CodeMirrorHandlerVNode should_init=", should_init)
         if should_init:
             textarea = js.globals.document.getElementById("code")
             read_only = lazy_eval(self.read_only)
