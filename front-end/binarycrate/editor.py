@@ -751,7 +751,7 @@ class EditorView(BCChrome):
                                         ('New Label', self.new_label),
                                         ('New Frame', self.new_frame),
                                         ('New Checkbox', self.new_checkbox),
-                                        ('New Listbox', self.new_listbox),
+                                        #('New Listbox', self.new_listbox),
                                         ('New Rectangle', self.new_rectangle),
                                         ('New Circle', self.new_circle),
                                         ('New Ellipse', self.new_ellipse),

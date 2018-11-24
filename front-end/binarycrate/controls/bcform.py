@@ -118,8 +118,10 @@ class Form(object):
         #print("initialise_form_controls fis=", [fi for fi in
         #                      self.get_form_items()])
         #self._static_form_controls = []
+        #print('initialise_form_controls self.get_form_items()=', self.get_form_items())
+        #print('initialise_form_controls control_types2=', control_types2)
         self._static_form_controls = [control_types2[fi['type']](fi) for fi in
-                              self.get_form_items()]
+                              self.get_form_items() if fi['type'] in control_types2]
         self._dynamic_form_controls = []
         for control in self._static_form_controls:
             setattr(self, control['name'], control)
