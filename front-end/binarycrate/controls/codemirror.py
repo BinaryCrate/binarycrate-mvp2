@@ -53,7 +53,7 @@ class CodeMirrorHandlerVNode(textarea):
         super(CodeMirrorHandlerVNode, self).was_mounted()
         should_init = True
         #should_init = js.globals.document.getElementsByClassName('CodeMirror').length < 2
-        code_mirrors = js.globals.document.getElementsByClassName('CodeMirror');
+        code_mirrors = js.globals.document.getElementsByClassName('CodeMirror')
         #print('CodeMirror was_mounted self.editor=', self.editor)
         #if self.editor is not None:
         #    self.editor.parentNode.removeChild(self.editor);

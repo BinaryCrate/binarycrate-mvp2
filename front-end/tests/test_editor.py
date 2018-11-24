@@ -1201,6 +1201,10 @@ class TestContextMenuFormItems(object):
         timeouts.initialise_timeout_callbacks()
         monkeypatch.setattr(codemirror, 'js', js)
 
+        js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
+        js.return_get_element_by_id = {'code': Mock()}
+        codemirror.global_change_callback_handler = Mock()
+
         body = js.globals.document.body
         error_404_page = c("div", [c("p", "No match 404 error"),
                                    c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
@@ -1503,6 +1507,10 @@ class TestContextMenuFormItems(object):
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
 
+        js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
+        js.return_get_element_by_id = {'code': Mock()}
+        codemirror.global_change_callback_handler = Mock()
+
         body = js.globals.document.body
         error_404_page = c("div", [c("p", "No match 404 error"),
                                    c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
@@ -1665,6 +1673,10 @@ class TestContextMenuFormItems(object):
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
 
+        js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
+        js.return_get_element_by_id = {'code': Mock()}
+        codemirror.global_change_callback_handler = Mock()
+
         body = js.globals.document.body
         error_404_page = c("div", [c("p", "No match 404 error"),
                                    c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
@@ -1821,6 +1833,10 @@ class TestContextMenuFormItems(object):
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+
+        js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
+        js.return_get_element_by_id = {'code': Mock()}
+        codemirror.global_change_callback_handler = Mock()
 
         body = js.globals.document.body
         error_404_page = c("div", [c("p", "No match 404 error"),
@@ -2009,6 +2025,10 @@ class TestContextMenuFormItems(object):
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+
+        js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
+        js.return_get_element_by_id = {'code': Mock()}
+        codemirror.global_change_callback_handler = Mock()
 
         body = js.globals.document.body
         error_404_page = c("div", [c("p", "No match 404 error"),
@@ -2275,6 +2295,10 @@ class TestRunningAProgram(object):
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
 
+        js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
+        js.return_get_element_by_id = {'code': Mock()}
+        codemirror.global_change_callback_handler = Mock()
+
         old_python_module_dir = editor.python_module_dir
         with TemporaryDirectory() as temp_dir:
             assert os.path.isdir(temp_dir)
@@ -2366,6 +2390,10 @@ class TestRunningAProgram(object):
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+
+        js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
+        js.return_get_element_by_id = {'code': Mock()}
+        codemirror.global_change_callback_handler = Mock()
 
         body = js.globals.document.body
         error_404_page = c("div", [c("p", "No match 404 error"),
@@ -2460,6 +2488,10 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+
+        js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
+        js.return_get_element_by_id = {'code': Mock()}
+        codemirror.global_change_callback_handler = Mock()
 
         body = js.globals.document.body
         error_404_page = c("div", [c("p", "No match 404 error"),
@@ -2701,6 +2733,10 @@ print('Hello folder i={}'.format(i))
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
 
+        js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
+        js.return_get_element_by_id = {'code': Mock()}
+        codemirror.global_change_callback_handler = Mock()
+
         body = js.globals.document.body
         error_404_page = c("div", [c("p", "No match 404 error"),
                                    c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
@@ -2829,6 +2865,10 @@ print('Hello folder i={}'.format(i))
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
 
+        js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
+        js.return_get_element_by_id = {'code': Mock()}
+        codemirror.global_change_callback_handler = Mock()
+
         body = js.globals.document.body
         error_404_page = c("div", [c("p", "No match 404 error"),
                                    c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
@@ -2944,6 +2984,10 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+
+        js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
+        js.return_get_element_by_id = {'code': Mock()}
+        codemirror.global_change_callback_handler = Mock()
 
         body = js.globals.document.body
         error_404_page = c("div", [c("p", "No match 404 error"),
@@ -3069,6 +3113,10 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+
+        js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
+        js.return_get_element_by_id = {'code': Mock()}
+        codemirror.global_change_callback_handler = Mock()
 
         body = js.globals.document.body
         error_404_page = c("div", [c("p", "No match 404 error"),
@@ -3206,6 +3254,10 @@ print('Hello folder i={}'.format(i))
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
 
+        js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
+        js.return_get_element_by_id = {'code': Mock()}
+        codemirror.global_change_callback_handler = Mock()
+
         body = js.globals.document.body
         error_404_page = c("div", [c("p", "No match 404 error"),
                                    c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
@@ -3335,6 +3387,10 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+
+        js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
+        js.return_get_element_by_id = {'code': Mock()}
+        codemirror.global_change_callback_handler = Mock()
 
         body = js.globals.document.body
         error_404_page = c("div", [c("p", "No match 404 error"),
@@ -3471,6 +3527,10 @@ historygraphfrontend.download_document_collection()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
 
+        js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
+        js.return_get_element_by_id = {'code': Mock()}
+        codemirror.global_change_callback_handler = Mock()
+
         body = js.globals.document.body
         error_404_page = c("div", [c("p", "No match 404 error"),
                                    c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
@@ -3567,6 +3627,10 @@ print('Hello folder i={}'.format(i))
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
 
+        js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
+        js.return_get_element_by_id = {'code': Mock()}
+        codemirror.global_change_callback_handler = Mock()
+
         body = js.globals.document.body
         error_404_page = c("div", [c("p", "No match 404 error"),
                                    c("p", [c("a", {"href": "/#!"}, "Back to main page")])])
@@ -3658,11 +3722,16 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        #monkeypatch.setattr(binarycrate.controls.codemirror, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+
+        js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
+        js.return_get_element_by_id = {'code': Mock()}
+        codemirror.global_change_callback_handler = Mock()
 
         body = js.globals.document.body
         error_404_page = c("div", [c("p", "No match 404 error"),
