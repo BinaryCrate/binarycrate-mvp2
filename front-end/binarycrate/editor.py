@@ -673,9 +673,9 @@ class EditorView(BCChrome):
             if posx >= rect.left and posy >= rect.top and posx <= rect.right and posy <= rect.bottom:
                 posx = posx - rect.left
                 posy = posy - rect.top
-                self.form_stack[-1].on_body_mousemove(int(posx), int(posy))
-                self.mount_redraw()
-                Router.router.ResetHashChange()
+                if self.form_stack[-1].on_body_mousemove(int(posx), int(posy)):
+                    self.mount_redraw()
+                    Router.router.ResetHashChange()
         if self.mouse_is_down and self.selected_item != '':
             fi = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item][0]
             if fi['type'] == 'line':
