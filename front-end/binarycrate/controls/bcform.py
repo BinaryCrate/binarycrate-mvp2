@@ -127,13 +127,18 @@ class Form(object):
             setattr(self, control['name'], control)
 
     def get_form_controls(self):
+        #print('get_form_controls self._dynamic_form_controls=', self._dynamic_form_controls)
         return self._static_form_controls + self._dynamic_form_controls
 
     def add_control(self, control):
+        #print('add_control control=', control)
         self._dynamic_form_controls.append(control)
 
     def remove_dynamic_controls(self):
         self._dynamic_form_controls = []
+
+    def remove_dynamic_control(self, control):
+        self._dynamic_form_controls.remove(control)
 
     def handle_onclick(self, e, form_item_name):
         #print('handle_onclick form_item_name=', form_item_name)
@@ -217,7 +222,7 @@ class Form(object):
                 html_controls[form_item['name']] = control
                 ret.append(control)
         svg_list = list()
-        for form_item in self._static_form_controls:
+        for form_item in self.get_form_controls():
             if form_item['type'] == 'rect':
                 control = svg('rect', {'x': form_item['x'],
                              'y':form_item['y'],

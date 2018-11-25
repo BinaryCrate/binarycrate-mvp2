@@ -656,7 +656,9 @@ class EditorView(BCChrome):
         #print("on_body_click called self.context_menu=", self.context_menu)
         if self.program_is_running:
             #print('on_body_click called self.program_is_running')
-            self.form_stack[-1].on_body_click()
+            if self.form_stack[-1].on_body_click():
+                self.mount_redraw()
+                Router.router.ResetHashChange()
         if self.context_menu is not None:
             self.context_menu = None
             self.mount_redraw()
@@ -1101,6 +1103,7 @@ class EditorView(BCChrome):
         if self.program_is_running and len(self.form_stack) > 0:
             #print('get_selected_de_form_controls getting form controls from from_stack')
             ret = self.form_stack[-1].get_form_control_elements()
+            #print('get_selected_de_form_controls ret=', ret)
         return ret
 
     def clear_selected_item(self, e):
@@ -1532,7 +1535,7 @@ class """ + class_name + """(Form):
             #print('EditorView self.current_prop_name=', self.current_prop_name)
             #print('EditorView fis[0]=', fis[0])
             ret = str(fis[0][self.current_prop_name])
-            print('EditorView get_current_form_item_prop_vals exited ret=', ret)
+            #print('EditorView get_current_form_item_prop_vals exited ret=', ret)
             return ret
         def get_current_form_item_checked():
             # print ('get_current_form_item_checked 1')
