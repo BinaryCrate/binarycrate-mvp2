@@ -115,23 +115,33 @@ class Form(object):
 
 
     def initialise_form_controls(self):
+        #print("initialise_form_controls fis=", [fi for fi in
+        #                      self.get_form_items()])
+        #self._static_form_controls = []
+        #print('initialise_form_controls self.get_form_items()=', self.get_form_items())
+        #print('initialise_form_controls control_types2=', control_types2)
         self._static_form_controls = [control_types2[fi['type']](fi) for fi in
-                              self.get_form_items()]
+                              self.get_form_items() if fi['type'] in control_types2]
         self._dynamic_form_controls = []
         for control in self._static_form_controls:
             setattr(self, control['name'], control)
 
     def get_form_controls(self):
+        #print('get_form_controls self._dynamic_form_controls=', self._dynamic_form_controls)
         return self._static_form_controls + self._dynamic_form_controls
 
     def add_control(self, control):
+        #print('add_control control=', control)
         self._dynamic_form_controls.append(control)
 
     def remove_dynamic_controls(self):
         self._dynamic_form_controls = []
 
+    def remove_dynamic_control(self, control):
+        self._dynamic_form_controls.remove(control)
+
     def handle_onclick(self, e, form_item_name):
-        print('handle_onclick form_item_name=', form_item_name)
+        #print('handle_onclick form_item_name=', form_item_name)
         if hasattr(self, form_item_name + '_onclick'):
             #print('handle_onclick calling custom handler')
             getattr(self, form_item_name + '_onclick')(e)
@@ -148,13 +158,22 @@ class Form(object):
                 continue
             #print('initialise_form_controls form_item=', form_item)
             #TODO: Copied code from editor.py should be refactored
-            style = ''.join(('position: absolute; ',
-                            'z-index: 1; ',
-                            'left: {};'.format(form_item['x']),
-                            'top: {};'.format(form_item['y']),
-                            'width: {};'.format(form_item['width']),
-                            'height: {};'.format(form_item['height'])
-                            ))
+            if form_item['type'] == 'line':
+                style = ''.join(('position: absolute; ',
+                                'z-index: 1; ',
+                                'left: {};'.format(form_item['x1']),
+                                'top: {};'.format(form_item['y1']),
+                                'width: {};'.format(form_item['x2'] - form_item['x1']),
+                                'height: {};'.format(form_item['x2'] - form_item['x1'])
+                                ))
+            else:
+                style = ''.join(('position: absolute; ',
+                                'z-index: 1; ',
+                                'left: {};'.format(form_item['x']),
+                                'top: {};'.format(form_item['y']),
+                                'width: {};'.format(form_item['width']),
+                                'height: {};'.format(form_item['height'])
+                                ))
             #print('get_selected_de_form_controls form_item[id]=',form_item['id'])
             form_item_id = form_item['id']
             attribs = {'style': style
@@ -203,7 +222,7 @@ class Form(object):
                 html_controls[form_item['name']] = control
                 ret.append(control)
         svg_list = list()
-        for form_item in self._static_form_controls:
+        for form_item in self.get_form_controls():
             if form_item['type'] == 'rect':
                 control = svg('rect', {'x': form_item['x'],
                              'y':form_item['y'],
@@ -235,11 +254,11 @@ class Form(object):
                              #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
                              })
             if form_item['type'] == 'line':
-                control = svg('line', {'x1': form_item['x'],
-                             'y1':form_item['y'],
-                             'x2': form_item['x'] + form_item['width'],
-                             'y2': form_item['y'] + form_item['height'],
-                             'fill': form_item['fill'],
+                control = svg('line', {'x1': form_item['x1'],
+                             'y1':form_item['y1'],
+                             'x2': form_item['x2'],
+                             'y2': form_item['y2'],
+                             #'fill': form_item['fill'],
                              'stroke-width':  form_item['stroke_width'],
                              'stroke': form_item['stroke'],
                              #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
@@ -342,3 +361,9 @@ class Form(object):
         images = [image for image in self.get_preloaded_images() if image['name'] == image_name]
         assert len(images) == 1, 'No image matches that name'
         return images[0]['id']
+
+    def on_body_click(self):
+        pass
+
+    def on_body_mousemove(self, x, y):
+        pass

@@ -139,6 +139,7 @@ class BCPFolder(li):
         e.preventDefault()
 
     def close_context_menu(self, e):
+        print("close_context_menu called")
         self.editor_view.context_menu = None
         self.editor_view.mount_redraw()
         Router.router.ResetHashChange()
@@ -652,6 +653,12 @@ class EditorView(BCChrome):
                  ])
 
     def on_body_click(self, e):
+        #print("on_body_click called self.context_menu=", self.context_menu)
+        if self.program_is_running:
+            #print('on_body_click called self.program_is_running')
+            if self.form_stack[-1].on_body_click():
+                self.mount_redraw()
+                Router.router.ResetHashChange()
         if self.context_menu is not None:
             self.context_menu = None
             self.mount_redraw()
@@ -660,31 +667,61 @@ class EditorView(BCChrome):
     def on_body_mousemove(self, e, change_x, change_y):
         change_x = int(change_x)
         change_y = int(change_y)
+        if self.program_is_running:
+            #print('on_body_mousemove self.program_is_running')
+            posx = e.clientX
+            posy = e.clientY
+            rect = js.globals.document.getElementById('preview').getBoundingClientRect()
+            if posx >= rect.left and posy >= rect.top and posx <= rect.right and posy <= rect.bottom:
+                posx = posx - rect.left
+                posy = posy - rect.top
+                if self.form_stack[-1].on_body_mousemove(int(posx), int(posy)):
+                    self.mount_redraw()
+                    Router.router.ResetHashChange()
         if self.mouse_is_down and self.selected_item != '':
             fi = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item][0]
-            if self.selected_handler == HANDLE_NONE:
-                fi['x'] += change_x
-                fi['y'] += change_y
-            elif self.selected_handler == HANDLE_TOPLEFT:
-                fi['x'] += change_x
-                fi['y'] += change_y
-                fi['width'] -= change_x
-                fi['height'] -= change_y
-            elif self.selected_handler == HANDLE_TOPRIGHT:
-                # fi['x'] += change_x
-                fi['y'] += change_y
-                fi['width'] += change_x
-                fi['height'] -= change_y
-            elif self.selected_handler == HANDLE_BOTTOMRIGHT:
-                # fi['x'] += change_x
-                # fi['y'] += change_y
-                fi['width'] += change_x
-                fi['height'] += change_y
-            elif self.selected_handler == HANDLE_BOTTOMLEFT:
-                fi['x'] += change_x
-                # fi['y'] += change_y
-                fi['width'] -= change_x
-                fi['height'] += change_y
+            if fi['type'] == 'line':
+                if self.selected_handler == HANDLE_NONE:
+                    fi['x1'] += change_x
+                    fi['y1'] += change_y
+                    fi['x2'] += change_x
+                    fi['y2'] += change_y
+                elif self.selected_handler == HANDLE_TOPLEFT:
+                    fi['x1'] += change_x
+                    fi['y1'] += change_y
+                elif self.selected_handler == HANDLE_TOPRIGHT:
+                    fi['x2'] += change_x
+                    fi['y1'] += change_y
+                elif self.selected_handler == HANDLE_BOTTOMRIGHT:
+                    fi['x2'] += change_x
+                    fi['y2'] += change_y
+                elif self.selected_handler == HANDLE_BOTTOMLEFT:
+                    fi['x1'] += change_x
+                    fi['y2'] += change_y
+            else:
+                if self.selected_handler == HANDLE_NONE:
+                    fi['x'] += change_x
+                    fi['y'] += change_y
+                elif self.selected_handler == HANDLE_TOPLEFT:
+                    fi['x'] += change_x
+                    fi['y'] += change_y
+                    fi['width'] -= change_x
+                    fi['height'] -= change_y
+                elif self.selected_handler == HANDLE_TOPRIGHT:
+                    # fi['x'] += change_x
+                    fi['y'] += change_y
+                    fi['width'] += change_x
+                    fi['height'] -= change_y
+                elif self.selected_handler == HANDLE_BOTTOMRIGHT:
+                    # fi['x'] += change_x
+                    # fi['y'] += change_y
+                    fi['width'] += change_x
+                    fi['height'] += change_y
+                elif self.selected_handler == HANDLE_BOTTOMLEFT:
+                    fi['x'] += change_x
+                    # fi['y'] += change_y
+                    fi['width'] -= change_x
+                    fi['height'] += change_y
             self.mount_redraw()
             Router.router.ResetHashChange()
             e.stopPropagation()
@@ -716,7 +753,7 @@ class EditorView(BCChrome):
                                         ('New Label', self.new_label),
                                         ('New Frame', self.new_frame),
                                         ('New Checkbox', self.new_checkbox),
-                                        ('New Listbox', self.new_listbox),
+                                        #('New Listbox', self.new_listbox),
                                         ('New Rectangle', self.new_rectangle),
                                         ('New Circle', self.new_circle),
                                         ('New Ellipse', self.new_ellipse),
@@ -866,13 +903,22 @@ class EditorView(BCChrome):
             for form_item in self.selected_de['form_items']:
                 # TODO: Copied code to studentform.py should be refactored
 
-                style = ''.join(('position: absolute; ',
-                                 'z-index: 1; ',
-                                 'left: {};'.format(form_item['x']),
-                                 'top: {};'.format(form_item['y']),
-                                 'width: {};'.format(form_item['width']),
-                                 'height: {};'.format(form_item['height'])
-                                 ))
+                if form_item['type'] == 'line':
+                    style = ''.join(('position: absolute; ',
+                                     'z-index: 1; ',
+                                     'left: {};'.format(form_item['x1']),
+                                     'top: {};'.format(form_item['y1']),
+                                     'width: {};'.format(abs(form_item['x2'] - form_item['x1'])),
+                                     'height: {};'.format(abs(form_item['y2'] - form_item['y1']))
+                                     ))
+                else:
+                    style = ''.join(('position: absolute; ',
+                                     'z-index: 1; ',
+                                     'left: {};'.format(form_item['x']),
+                                     'top: {};'.format(form_item['y']),
+                                     'width: {};'.format(form_item['width']),
+                                     'height: {};'.format(form_item['height'])
+                                     ))
                 # print('get_selected_de_form_controls form_item[id]=',form_item['id'])
                 form_item_id = form_item['id']
                 attribs = {'style': style, 'onmouseup': self.on_mouse_up,
@@ -958,11 +1004,11 @@ class EditorView(BCChrome):
                                  'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e),
                                  'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
                 if form_item['type'] == 'line':
-                    svg_list.append(svg('line', {'x1': form_item['x'],
-                                 'y1':form_item['y'],
-                                 'x2': form_item['x'] + form_item['width'],
-                                 'y2': form_item['y'] + form_item['height'],
-                                 'fill': form_item['fill'],
+                    svg_list.append(svg('line', {'x1': form_item['x1'],
+                                 'y1':form_item['y1'],
+                                 'x2': form_item['x2'],
+                                 'y2': form_item['y2'],
+                                 #'fill': form_item['fill'],
                                  'stroke-width':  form_item['stroke_width'],
                                  'stroke': form_item['stroke'],
                                  #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
@@ -995,18 +1041,29 @@ class EditorView(BCChrome):
                                                     'oncontextmenu': lambda e, form_item_id=form_item[
                                                         'id']: self.contextmenu_control(form_item_id, e)}))
             if self.selected_item != '':
+                #print('self.selected_item=', self.selected_item)
                 selected_form_item = \
                 [form_item for form_item in self.selected_de['form_items'] if self.selected_item == form_item['id']][0]
+                if selected_form_item['type'] == 'line':
+                    selected_form_item_x = selected_form_item['x1']
+                    selected_form_item_y = selected_form_item['y1']
+                    selected_form_item_width = abs(selected_form_item['x2'] - selected_form_item['x1'])
+                    selected_form_item_height = abs(selected_form_item['y2'] - selected_form_item['y1'])
+                else:
+                    selected_form_item_x = selected_form_item['x']
+                    selected_form_item_y = selected_form_item['y']
+                    selected_form_item_width = selected_form_item['width']
+                    selected_form_item_height = selected_form_item['height']
                 svg_list.extend([
-                              svg('rect', {'x': selected_form_item['x'],
-                                           'y':selected_form_item['y'],
-                                           'width': selected_form_item['width'],
-                                           'height': selected_form_item['height'],
+                              svg('rect', {'x': selected_form_item_x,
+                                           'y':selected_form_item_y,
+                                           'width': selected_form_item_width,
+                                           'height': selected_form_item_height,
                                            'style':"fill:None;stroke-width:5;stroke:rgb(255,0,0)",
                                            'onmouseup': self.on_mouse_up,
                                            'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)}),
-                              svg('rect', {'id': 'handle-top-left', 'x': selected_form_item['x'] - 5,
-                                           'y':selected_form_item['y'] - 5,
+                              svg('rect', {'id': 'handle-top-left', 'x': selected_form_item_x - 5,
+                                           'y':selected_form_item_y - 5,
                                            'width': 10,
                                            'height': 10,
                                            'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
@@ -1014,8 +1071,8 @@ class EditorView(BCChrome):
                                            'onmouseup': self.on_mouse_up,
                                            #'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)
                                            }),
-                              svg('rect', {'id': 'handle-top-right', 'x': selected_form_item['x'] + selected_form_item['width'] - 5,
-                                           'y':selected_form_item['y'] - 5,
+                              svg('rect', {'id': 'handle-top-right', 'x': selected_form_item_x + selected_form_item_width - 5,
+                                           'y':selected_form_item_y - 5,
                                            'width': 10,
                                            'height': 10,
                                            'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
@@ -1023,8 +1080,8 @@ class EditorView(BCChrome):
                                            'onmouseup': self.on_mouse_up,
                                            #'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)
                                            }),
-                              svg('rect', {'id': 'handle-bottom-right', 'x': selected_form_item['x'] + selected_form_item['width'] - 5,
-                                           'y':selected_form_item['y'] + selected_form_item['height'] - 5,
+                              svg('rect', {'id': 'handle-bottom-right', 'x': selected_form_item_x + selected_form_item_width - 5,
+                                           'y':selected_form_item_y + selected_form_item_height - 5,
                                            'width': 10,
                                            'height': 10,
                                            'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
@@ -1032,8 +1089,8 @@ class EditorView(BCChrome):
                                            'onmouseup': self.on_mouse_up,
                                            #'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)
                                            }),
-                              svg('rect', {'id': 'handle-bottom-left', 'x': selected_form_item['x'] - 5,
-                                           'y':selected_form_item['y'] + selected_form_item['height'] - 5,
+                              svg('rect', {'id': 'handle-bottom-left', 'x': selected_form_item_x - 5,
+                                           'y':selected_form_item_y + selected_form_item_height - 5,
                                            'width': 10,
                                            'height': 10,
                                            'style':"fill:rgb(255,0,0);stroke-width:5;stroke:rgb(255,0,0)",
@@ -1046,6 +1103,7 @@ class EditorView(BCChrome):
         if self.program_is_running and len(self.form_stack) > 0:
             #print('get_selected_de_form_controls getting form controls from from_stack')
             ret = self.form_stack[-1].get_form_control_elements()
+            #print('get_selected_de_form_controls ret=', ret)
         return ret
 
     def clear_selected_item(self, e):
@@ -1071,10 +1129,11 @@ class EditorView(BCChrome):
         new_id = str(get_uuid())
 
         control_dict = copy.copy(control_dict)
-        control_dict.update({'id': new_id,
-                             'x': int(posx),
-                             'y': int(posy),
-                             })
+        if control_dict['type'] != 'line':
+            control_dict.update({'id': new_id,
+                                 'x': int(posx),
+                                 'y': int(posy),
+                                 })
         self.selected_de['form_items'].append(control_dict)
         self.selected_item = new_id
 
@@ -1200,16 +1259,34 @@ class EditorView(BCChrome):
             })
 
     def new_line(self, e):
-       self.new_control(e,
-            {'type': 'line',
-             'width': 150,
-             'height': 150,
-             'name': self.get_next_name('line'),
-             'stroke_width': 5,
-             'stroke': 'rgb(0,0,0)',
-             'fill': 'none',
-             'visible': True,
-            })
+        if not self.selected_de:
+            return
+        posx = e.clientX
+        posy = e.clientY
+        rect = js.globals.document.getElementById('preview').getBoundingClientRect()
+        posx = posx - rect.left
+        posy = posy - rect.top
+        new_id = str(get_uuid())
+
+        control_dict = {'type': 'line',
+         'id': new_id,
+         'x1': int(posx),
+         'y1': int(posy),
+         'x2': int(posx) + 50,
+         'y2': int(posy) + 50,
+         'name': self.get_next_name('line'),
+         'stroke_width': 5,
+         'stroke': 'rgb(0,0,0)',
+         'visible': True,
+        }
+        self.selected_de['form_items'].append(control_dict)
+        self.selected_item = new_id
+
+        self.context_menu = None
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+        e.stopPropagation()
+        e.preventDefault()
 
     def new_hexagon(self, e):
        self.new_control(e,
@@ -1458,7 +1535,7 @@ class """ + class_name + """(Form):
             #print('EditorView self.current_prop_name=', self.current_prop_name)
             #print('EditorView fis[0]=', fis[0])
             ret = str(fis[0][self.current_prop_name])
-            print('EditorView get_current_form_item_prop_vals exited ret=', ret)
+            #print('EditorView get_current_form_item_prop_vals exited ret=', ret)
             return ret
         def get_current_form_item_checked():
             # print ('get_current_form_item_checked 1')
