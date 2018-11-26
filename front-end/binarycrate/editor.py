@@ -1308,6 +1308,12 @@ class EditorView(BCChrome):
         #print('get_selected_de_content ret=', ret)
         return ret
 
+    def get_selected_file_de(self):
+        if self.selected_file_de is None:
+            return ''
+        else:
+            return self.selected_file_de['id']
+
     def get_file_name_content(self, file_name):
         global project
         content = [de['content'] for de in project['directory_entry'] if de['name'] == file_name]
@@ -1724,7 +1730,8 @@ class """ + class_name + """(Form):
                                                    'class': 'col-md-5 CodeMirror'},
                                                   [t(self.get_selected_de_content)],
                                                   change_handler=self.code_mirror_change,
-                                                  read_only=self.get_code_mirror_read_only)
+                                                  read_only=self.get_code_mirror_read_only,
+                                                  current_selection_fn=self.get_selected_file_de)
         self.upload_modal = None
         self.images = []
         global original_modules
