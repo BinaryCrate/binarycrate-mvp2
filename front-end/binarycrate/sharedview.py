@@ -55,7 +55,8 @@ class SharedView(EditorView):
     def get_code_mirror_read_only(self):
         return True
 
-
+    def save_project(self, e):
+        pass
 
 def shared_view():
     return SharedView()
