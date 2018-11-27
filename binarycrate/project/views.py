@@ -1,5 +1,21 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals, print_function
+# BinaryCrate -  BinaryCrate an in browser python IDE. Design to make learning coding easy.
+# Copyright (C) 2018 BinaryCrate Pty Ltd
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from __future__ import absolute_import, print_function, unicode_literals
 
 from django.core.files import File
 import mimetypes
@@ -21,8 +37,7 @@ def download_image(request, project, image_id):
         raise Http404
     wrapper = project_media_storage.open(img.get_file_name(), 'rb')
     content_type = mimetypes.guess_type(img.name)[0]  # Use mimetypes to get file type
-    response     = HttpResponse(wrapper,content_type=content_type)  
+    response     = HttpResponse(wrapper,content_type=content_type)
     response['Content-Length']      = wrapper.size
     response['Content-Disposition'] = "attachment; filename=%s" %  img.name
     return response
-

@@ -1,4 +1,20 @@
 # -*- coding: utf-8 -*-
+# BinaryCrate -  BinaryCrate an in browser python IDE. Design to make learning coding easy.
+# Copyright (C) 2018 BinaryCrate Pty Ltd
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from __future__ import absolute_import, unicode_literals, print_function
 from rest_framework import mixins
 from rest_framework import generics
@@ -41,7 +57,7 @@ class HistoryGraphView(APIView):
                 str(edge.startnode1id),
                 str(edge.startnode2id),
                 str(edge.propertyownerid),
-                str(edge.propertyname), 
+                str(edge.propertyname),
                 str(edge.propertyvalue),
                 str(edge.propertytype),
                 str(edge.nonce)) for edge in edges]
@@ -63,7 +79,7 @@ class HistoryGraphView(APIView):
                 'propertyownerid': t[6],
                 'propertyname': t[7],
                 'propertyvalue': t[8],
-                'propertytype': t[9], 
+                'propertytype': t[9],
                 'nonce': t[10], 'documentcollectionid': documentcollectionid} for t in historyedges if HistoryEdge.objects.by_endnodeid(t[3]).count() == 0]
         #print('HistoryGraphView post received historyedges2=', historyedges2)
         serializer = HistoryGraphSerializer(data=historyedges2, many=True)
@@ -71,4 +87,3 @@ class HistoryGraphView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
