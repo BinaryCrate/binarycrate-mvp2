@@ -228,7 +228,7 @@ class DashboardView(BCChrome):
                           ]),
                         ]),
                       ], self.createNew_ok),
-                    ]
+                    ] + (self.licence_modal.get_modal_vnodes() if self.licence_modal else [])
 
     def projects_api_ajax_post_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:

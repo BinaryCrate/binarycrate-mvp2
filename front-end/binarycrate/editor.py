@@ -1720,7 +1720,7 @@ class """ + class_name + """(Form):
                         ]),
                       ], self.renameFile_ok),
                     ] + \
-                    (self.upload_modal.get_modal_vnodes() if self.upload_modal else [])
+                    (self.upload_modal.get_modal_vnodes() if self.upload_modal else [])  + (self.licence_modal.get_modal_vnodes() if self.licence_modal else [])
 
     def get_code_mirror_read_only(self):
         return self.selected_file_de is None

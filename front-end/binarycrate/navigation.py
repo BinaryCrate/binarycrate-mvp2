@@ -26,6 +26,7 @@ import copy
 from .controls import CodeMirrorHandlerVNode
 import uuid
 from cavorite.bootstrap.modals import ModalTrigger, Modal
+from .licencemodal import LicenceModal
 
 
 def navitem(title, icon_class, href, onclick=None):
@@ -72,6 +73,7 @@ class BCChrome(div):
         self.central_content = central_content
         self.modals = modals
         self.context_menu = None
+        self.licence_modal = None
         super(BCChrome, self).__init__()
 
     def get_top_navbar_items(self):
@@ -81,7 +83,7 @@ class BCChrome(div):
         return self.central_content
 
     def get_modals(self):
-        return self.modals
+        return self.modals + (self.licence_modal.get_modal_vnodes() if self.licence_modal else [])
 
     def get_context_menu(self):
         return None
@@ -123,6 +125,18 @@ class BCChrome(div):
     def logout_clicked(self, e, form_values):
         js.globals.window.location.href = '/accounts/logout'
 
+    def on_click_licence(self, e):
+        #print('on_click_licence called')
+        self.licence_modal = LicenceModal(self)
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
+    def close_licence_modal(self, e):
+        self.licence_modal = False
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
+
     def get_children(self):
         return [
                 nav({'class': "navbar navbar-expand-lg navbar-dark bg-dark fixed-top", 'id': 'mainNav'}, [
@@ -145,7 +159,10 @@ class BCChrome(div):
                 footer({'class': "sticky-footer"}, [
                   div({'class':"container"}, [
                     div({'class':"text-center"}, [
-                      small("Copyright (C) Binary Crate 2018"),
+                      small("Copyright (C) Binary Crate 2018 "),
+                      small([
+                        a({"href": "#", "onclick": self.on_click_licence}, "Licence")
+                      ])
                     ]),
                   ]),
                 ]),
