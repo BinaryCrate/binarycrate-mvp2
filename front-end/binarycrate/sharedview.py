@@ -67,7 +67,8 @@ class SharedView(EditorView):
             self.update_html_preview()
         #Run program for python projects
         elif project.get('type', None) == 0:
-            self.run_project(None)
+            if not self.program_is_running:
+                self.run_project(None)
 
     def get_code_mirror_read_only(self):
         return True
