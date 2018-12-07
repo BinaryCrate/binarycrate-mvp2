@@ -467,9 +467,9 @@ class EditorView(BCChrome):
             #print('EditorView run_project 2')
             #print('EditorView run_project 3')
             form_classes = self.get_default_module_form_classes()
-            #print('EditorView run_project form_classes=', form_classes)
+            print('EditorView run_project form_classes=', form_classes)
             if len(form_classes) > 0:
-                #print('EditorView run_project Found usable class name=' + form_classes[0].__name__)
+                print('EditorView run_project Found usable class name=' + form_classes[0].__name__)
                 self.form_stack.append(form_classes[0](editorview=self))
                 self.mount_redraw()
                 Router.router.ResetHashChange()
