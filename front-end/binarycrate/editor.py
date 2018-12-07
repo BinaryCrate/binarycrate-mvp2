@@ -434,6 +434,7 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
 
     def cleanup_project(self):
+        cavorite.force_redraw_all = True
         print('cleanup_project called')
         global project_files
         for f in project_files:
@@ -473,6 +474,7 @@ class EditorView(BCChrome):
                 self.form_stack.append(form_classes[0](editorview=self))
                 self.mount_redraw()
                 Router.router.ResetHashChange()
+                cavorite.force_redraw_all = False
             else:
                 #print('EditorView run_project Found  no usable class')
                 js.globals.document.print_to_secondary_output = False
@@ -1743,6 +1745,7 @@ class """ + class_name + """(Form):
         self.selected_handler = HANDLE_NONE
         self.program_is_running = False
         self.form_stack = list()
+        cavorite.force_redraw_all = True
         self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code',
                                                    'class': 'col-md-5 CodeMirror'},
                                                   [t(self.get_selected_de_content)],
