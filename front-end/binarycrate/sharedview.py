@@ -43,7 +43,7 @@ class SharedView(EditorView):
         if len(project) == 0:
             body = js.globals.document.body
             project_id = str(body.getAttribute('data-project-id'))
-            # Only load the project if we don't alreayd have it
+            # Only load the project if we don't already have it
             def images_api_ajax_result_handler2(xmlhttp, response):
                 # Get the images first then the projects
                 #TODO: Do this all in one query. Otherwise it get brittle

@@ -22,6 +22,10 @@ import copy
 from cavorite import Router, timeouts
 from binarycrate.bcmunch import BCMunch
 import uuid
+try:
+    import js
+except ImportError:
+    js = None
 
 
 class FormItemPropType(object):
@@ -89,6 +93,10 @@ def ClassFactory(class_name, control_type, BaseClass):
     return newclass
 
 control_types2 = dict()
+
+class bc_form_html_input(html_input):
+    def get_value(self):
+        return str(js.globals.document.getElementById(self.bc_form_item_name).value)
 
 # Dynamically insert variables into the global namespace
 for control_type in control_types:
@@ -206,8 +214,9 @@ class Form(object):
                     attribs_extra = { 'onclick': form_item.get('onclick', lambda e: None) }
                 #control = html_button({'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
             elif form_item['type'] == 'textbox':
-                control_class = html_input
-                attribs_extra = {'type': "text"}
+                control_class = bc_form_html_input
+                form_item['get_value'] = lambda a=form_item['name'] : str(js.globals.document.getElementById('bc_form_' + a).value)
+                attribs_extra = {'type': "text", 'id': 'bc_form_{}'.format(form_item['name'])}
                 #control = html_input({'type': "text", 'style': style, 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e)}, form_item['caption'])
             elif form_item['type'] == 'image':
                 control_class = img
@@ -236,6 +245,7 @@ class Form(object):
             attribs.update(attribs_extra)
             if  control_class:
                 control = control_class(attribs, form_item.get('caption', ''))
+                control.bc_form_item_name = form_item['name']
                 html_controls[form_item['name']] = control
                 ret.append(control)
         svg_list = list()
