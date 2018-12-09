@@ -26,7 +26,8 @@ class HistoryGraphSerializer(serializers.ModelSerializer):
         model = HistoryEdge
         fields = ('documentcollectionid', 'documentid', 'documentclassname',
                   'classname', 'endnodeid', 'startnode1id', 'startnode2id',
-                  'propertyownerid', 'propertyname', 'propertyvalue', 'propertytype', 'nonce')
+                  'propertyownerid', 'propertyname', 'propertyvalue',
+                  'propertytype', 'nonce', 'transaction_id')
         extra_kwargs = {'startnode2id': {'required': True}}
 
     def create(self, validated_data):
