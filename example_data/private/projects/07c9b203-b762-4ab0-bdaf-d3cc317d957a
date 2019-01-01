@@ -88,18 +88,27 @@ class Main(Form):
         self.mouse_y = y
         
     def UpdateSelectedSquare(self):
-        self.lblSelection.caption = "Selection:" + str(self.selected_square)
+        self.lblSelection.caption = "Selection: " + str(self.selected_square)
         
     def on_body_click(self):
-        self.selected_square = None
-        if self.mouse_x is not None and self.mouse_y is not None \
-         and self.mouse_x < 8 * SQUARE_WIDTH and self.mouse_y < 8 * SQUARE_WIDTH:
-            # Translate the mouse position into the board co-ordinate system    
-            selected_square = (self.mouse_x / SQUARE_WIDTH, self.mouse_y / SQUARE_WIDTH)
-            piece = self.board.GetPieceAt(selected_square[0], selected_square[1])
-            if piece is not None and piece.pieceside == self.board.GetTurnColour():
-                # If the piece is one of ours we can select it
-                self.selected_square = selected_square
+        if self.selected_square is None:
+            if self.mouse_x is not None and self.mouse_y is not None \
+             and self.mouse_x < 8 * SQUARE_WIDTH and self.mouse_y < 8 * SQUARE_WIDTH:
+                # Translate the mouse position into the board co-ordinate system    
+                selected_square = (self.mouse_x / SQUARE_WIDTH, self.mouse_y / SQUARE_WIDTH)
+                piece = self.board.GetPieceAt(selected_square[0], selected_square[1])
+                if piece is not None and piece.pieceside == self.board.GetTurnColour():
+                    # If the piece is one of ours we can select it
+                    self.selected_square = selected_square
+        else:
+            # We have already selected a piece so we deselect it by clicking it
+            # Clickinf else where does nothing
+            if self.mouse_x is not None and self.mouse_y is not None \
+             and self.mouse_x < 8 * SQUARE_WIDTH and self.mouse_y < 8 * SQUARE_WIDTH:
+                # Translate the mouse position into the board co-ordinate system    
+                selected_square = (self.mouse_x / SQUARE_WIDTH, self.mouse_y / SQUARE_WIDTH)
+                if self.selected_square == selected_square:
+                    self.selected_square = None
         self.UpdateSelectedSquare()
         return True
             
