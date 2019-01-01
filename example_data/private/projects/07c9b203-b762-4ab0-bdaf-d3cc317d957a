@@ -1,0 +1,81 @@
+from __future__ import unicode_literals, absolute_import, print_function
+from binarycrate.controls import Form
+from binarycrate.historygraphfrontend import documentcollection as dc
+from binarycrate.historygraphfrontend import post_document_collection
+
+SQUARE_WIDTH = 50
+
+class Main(Form):
+    file_location = __file__
+    
+    def get_square(self, x, y, colour):
+        
+        if colour == '':
+            image_name = 'blacksquare.png' if (x + y) % 2 == 1 else 'whitesquare.png'
+        elif colour == 'W':
+            image_name = 'whiteonblack.png'
+        elif colour == 'B':
+            image_name = 'blackonblack.png'
+        elif colour == 'WK':
+            image_name = 'whitekingonblack.png'
+        elif colour == 'BK':
+            image_name = 'blackkingonblack.png'
+        else:
+            assert False
+        
+        image_id = self.get_preloaded_image_id(image_name)
+        return {'type': 'image', 'x': x * SQUARE_WIDTH, 
+             'y': y * SQUARE_WIDTH, 'width': SQUARE_WIDTH, 
+             'height': SQUARE_WIDTH,
+             'name': '', 'visible': True, 'id':'', 
+             'preloaded_image': image_id}
+
+    def __init__(self, *args, **kwargs):
+        super(Main, self).__init__(*args, **kwargs)
+        self.squares = dict()
+        for x in range(8):
+            for y in range(8):
+                l = self.get_square(x, y, '')
+                self.squares[(x, y)] = l
+                self.add_control(l)
+                
+    def DrawBoard(self):
+        for x in range(8):
+            for y in range(8):
+                piece = self.board.GetPieceAt(x, y)
+                colour = ''
+                if piece is not None:
+                    colour = piece.pieceside + piece.piecetype
+                if colour == '':
+                    image_name = 'blacksquare.png' if (x + y) % 2 == 1 else 'whitesquare.png'
+                elif colour == 'W':
+                    image_name = 'whiteonblack.png'
+                elif colour == 'B':
+                    image_name = 'blackonblack.png'
+                elif colour == 'WK':
+                    image_name = 'whitekingonblack.png'
+                elif colour == 'BK':
+                    image_name = 'blackkingonblack.png'
+                else:
+                    assert False
+                image_id = self.get_preloaded_image_id(image_name)
+                self.squares[(x, y)]['preloaded_image'] = image_id
+        self.lblPlayer.caption = "Player: " + ("White" if self.board.GetTurnColour() == "W" else "Black")
+                
+    def on_historygraph_download_complete(self):
+        self.board = self.get_board()
+        
+        self.DrawBoard()
+     
+    def get_board(self):
+        from documents import CheckersGame
+        boards = dc.get_by_class(CheckersGame)
+        if len(boards) == 0:
+            board = CheckersGame(None)
+            dc.add_document_object(board)
+            board.CreateDefaultStartBoard()
+            post_document_collection()
+            return board
+        else:
+            return boards[0]
+    
