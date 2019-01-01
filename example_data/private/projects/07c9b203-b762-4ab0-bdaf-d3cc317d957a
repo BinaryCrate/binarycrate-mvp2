@@ -102,13 +102,24 @@ class Main(Form):
                     self.selected_square = selected_square
         else:
             # We have already selected a piece so we deselect it by clicking it
-            # Clickinf else where does nothing
+            # Clicking else where does nothing
             if self.mouse_x is not None and self.mouse_y is not None \
              and self.mouse_x < 8 * SQUARE_WIDTH and self.mouse_y < 8 * SQUARE_WIDTH:
                 # Translate the mouse position into the board co-ordinate system    
                 selected_square = (self.mouse_x / SQUARE_WIDTH, self.mouse_y / SQUARE_WIDTH)
                 if self.selected_square == selected_square:
                     self.selected_square = None
+                else:
+                    piece = self.board.GetPieceAt(self.selected_square[0], self.selected_square[1])
+                    if selected_square in piece.GetValidMoves():
+                        is_capture = selected_square in piece.GetValidCaptures()
+                        piece.MoveTo(selected_square[0], selected_square[1])
+                        if not is_capture or len(piece.GetValidCaptures()) == 0:
+                            self.selected_square = None
+                            self.board.turn.add(1)
+                        self.DrawBoard()
+                        return True
+                    
         self.UpdateSelectedSquare()
         return True
             
