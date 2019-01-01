@@ -117,6 +117,7 @@ class Main(Form):
                         if not is_capture or len(piece.GetValidCaptures()) == 0:
                             self.selected_square = None
                             self.board.turn.add(1)
+                        post_document_collection()
                         self.DrawBoard()
                         return True
                     
