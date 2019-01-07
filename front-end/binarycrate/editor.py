@@ -674,7 +674,8 @@ class EditorView(BCChrome):
         #print("on_body_click called self.context_menu=", self.context_menu)
         if self.program_is_running:
             #print('on_body_click called self.program_is_running')
-            if self.form_stack[-1].on_body_click():
+            if len(self.form_stack) > 0  and \
+               self.form_stack[-1].on_body_click():
                 #print('on_body_click redrawing screen')
                 self.mount_redraw()
                 Router.router.ResetHashChange()
