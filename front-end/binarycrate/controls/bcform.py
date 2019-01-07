@@ -226,8 +226,8 @@ class Form(object):
                     image = filter(lambda image: image['id'] == preloaded_image, self.images)[0]
                     i = image['name'].rfind('.')
                     extension = image['name'][i:]
-                    attribs_extra = {'src': '/images/images-{0}/{1}{2}'.format(project['id'],
-                                     image['id'], extension),
+                    attribs_extra = {'src': '/images/images-{0}/{1}{2}'.format(project.get('id', ''),
+                                     image.get('id', ''), extension),
                                      'preloaded_image': preloaded_image }
                 #attribs_extra = { 'src': 'text', 'preloaded_image': '' }
             elif form_item['type'] == 'label':
