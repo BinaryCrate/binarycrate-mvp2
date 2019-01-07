@@ -35,5 +35,6 @@ class HistoryEdge(models.Model):
     propertyvalue = models.CharField(max_length=250, blank=True)
     propertytype = models.CharField(max_length=250, blank=True)
     nonce = models.CharField(max_length=250, blank=True)
+    transaction_id = models.CharField(max_length=250, blank=True)
 
     objects = querysets.HistoryEdgeQuerySet.as_manager()

@@ -154,7 +154,8 @@ class HistoryGraphGetTestCase(APITestCase):
                  'propertyownerid':'F4',
                  'propertyname':'G4',
                  'propertyvalue':'H4',
-                 'propertytype':'I4'},
+                 'propertytype':'I4',
+                 'transaction_id':'J4'},
                 {'documentcollectionid':str(self.dcid2),
                  'documentid':'A5',
                  'documentclassname':'B5',
@@ -165,7 +166,8 @@ class HistoryGraphGetTestCase(APITestCase):
                  'propertyownerid':'F5',
                  'propertyname':'G5',
                  'propertyvalue':'H5',
-                 'propertytype':'I5'}]
+                 'propertytype':'I5',
+                 'transaction_id':'J5'}]
         """
         historyedges = [('A4',
                  'B4',
@@ -177,7 +179,8 @@ class HistoryGraphGetTestCase(APITestCase):
                  'G4',
                  'H4',
                  'I4',
-                 'J4'),
+                 'J4',
+                 'K4'),
                 ('A5',
                  'B5',
                  'C5',
@@ -188,7 +191,8 @@ class HistoryGraphGetTestCase(APITestCase):
                  'G5',
                  'H5',
                  'I5',
-                 'J5')]
+                 'J5',
+                 'K5')]
         data = {'history': json.dumps(historyedges), 'immutableobjects': json.dumps([])}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -247,7 +251,8 @@ class HistoryGraphGetTestCase(APITestCase):
                  'propertyownerid':'F4',
                  'propertyname':'G4',
                  'propertyvalue':'H4',
-                 'propertytype':'I4'},
+                 'propertytype':'I4',
+                 'transaction_id':'J4'},
                 {'documentcollectionid':str(self.dcid2),
                  'documentid':'A4',
                  'documentclassname':'B4',
@@ -258,7 +263,8 @@ class HistoryGraphGetTestCase(APITestCase):
                  'propertyownerid':'F4',
                  'propertyname':'G4',
                  'propertyvalue':'H4',
-                 'propertytype':'I4'}]
+                 'propertytype':'I4',
+                 'transaction_id':'J4'}]
         """
         historyedges = [('A4',
                  'B4',
@@ -270,7 +276,8 @@ class HistoryGraphGetTestCase(APITestCase):
                  'G4',
                  'H4',
                  'I4',
-                 'J4'),
+                 'J4',
+                 'K4'),
                 ('A4',
                  'B4',
                  'C4',
@@ -281,7 +288,8 @@ class HistoryGraphGetTestCase(APITestCase):
                  'G4',
                  'H4',
                  'I4',
-                 'J4')]
+                 'J4',
+                 'K4')]
         data = {'history': json.dumps(historyedges), 'immutableobjects': json.dumps([])}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
