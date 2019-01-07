@@ -63,7 +63,10 @@ class Main(Form):
                     assert False
                 image_id = self.get_preloaded_image_id(image_name)
                 self.squares[(x, y)]['preloaded_image'] = image_id
-        self.lblPlayer.caption = "Player: " + ("White" if self.board.GetTurnColour() == "W" else "Black")
+        if self.board.HasPlayerWon(self.board.GetTurnColour()):
+            self.lblPlayer.caption = "Player: " + ("White" if self.board.GetTurnColour() == "W" else "Black") + " has won"
+        else:
+            self.lblPlayer.caption = "Player: " + ("White" if self.board.GetTurnColour() == "W" else "Black")
         self.UpdateSelectedSquare()
                 
     def on_historygraph_download_complete(self):
@@ -91,6 +94,8 @@ class Main(Form):
         self.lblSelection.caption = "Selection: " + str(self.selected_square)
         
     def on_body_click(self):
+        if hasattr(self, 'board') and self.board.HasPlayerWon(self.board.GetTurnColour()):
+            return False
         if self.selected_square is None:
             if self.mouse_x is not None and self.mouse_y is not None \
              and self.mouse_x < 8 * SQUARE_WIDTH and self.mouse_y < 8 * SQUARE_WIDTH:
@@ -116,7 +121,8 @@ class Main(Form):
                         piece.MoveTo(selected_square[0], selected_square[1])
                         if not is_capture or len(piece.GetValidCaptures()) == 0:
                             self.selected_square = None
-                            self.board.turn.add(1)
+                            if not self.board.HasPlayerWon(self.board.GetTurnColour()):
+                                self.board.turn.add(1)
                         post_document_collection()
                         self.DrawBoard()
                         return True
