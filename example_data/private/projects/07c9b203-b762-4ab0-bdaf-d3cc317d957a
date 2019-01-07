@@ -41,6 +41,7 @@ class Main(Form):
         self.mouse_x = None
         self.mouse_y = None
         self.selected_square = None
+        self.lblNewGame.visible = False
                 
     def DrawBoard(self):
         for x in range(8):
@@ -65,8 +66,10 @@ class Main(Form):
                 self.squares[(x, y)]['preloaded_image'] = image_id
         if self.board.HasPlayerWon(self.board.GetTurnColour()):
             self.lblPlayer.caption = "Player: " + ("White" if self.board.GetTurnColour() == "W" else "Black") + " has won"
+            self.lblNewGame.visible = True
         else:
             self.lblPlayer.caption = "Player: " + ("White" if self.board.GetTurnColour() == "W" else "Black")
+            self.lblNewGame.visible = False
         self.UpdateSelectedSquare()
                 
     def on_historygraph_download_complete(self):
@@ -145,4 +148,8 @@ class Main(Form):
         self.UpdateSelectedSquare()
         return True
             
-    
+    def lblNewGame_onclick(self, e):
+        self.board.delete()
+        self.board = self.get_board()
+        self.DrawBoard()
+        
