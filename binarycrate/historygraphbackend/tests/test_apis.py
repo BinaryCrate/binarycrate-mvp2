@@ -298,3 +298,15 @@ class HistoryGraphGetTestCase(APITestCase):
         classnames = {edge.classname for edge in HistoryEdge.objects.by_document_collection_id(self.dcid2)}
         self.assertIn('C4', classnames)
         self.assertNotIn('C5', classnames)
+
+    def test_can_delete_all_edges_by_document_id(self):
+        u = UserFactory()
+        self.client.force_authenticate(user=u)
+        url = reverse('api:historygraph-list', kwargs=
+                      {'documentcollectionid': str(self.dcid2)})
+        self.assertEqual(HistoryEdge.objects.count(), 3)
+        data = {}
+        response = self.client.delete(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(HistoryEdge.objects.count(), 1)
+        self.assertEqual(HistoryEdge.objects.first().documentcollectionid, self.dcid1)

@@ -89,3 +89,7 @@ class HistoryGraphView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, documentcollectionid, format=None):
+        HistoryEdge.objects.filter(documentcollectionid=documentcollectionid).delete()
+        return Response({}, status=status.HTTP_204_NO_CONTENT)

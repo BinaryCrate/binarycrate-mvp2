@@ -1485,6 +1485,12 @@ class """ + class_name + """(Form):
         self.mount_redraw()
         Router.router.ResetHashChange()
 
+    def delete_document_collection(self, e):
+        def done_handler(xmlhttp, response):
+            js.globals.window.alert("Done")
+        if js.globals.window.confirm("Are you sure?"):
+            historygraphfrontend.delete_document_collection(project['id'], done_handler)
+
     def close_upload_modal(self, e):
         self.upload_modal = False
         self.mount_redraw()
@@ -1514,6 +1520,7 @@ class """ + class_name + """(Form):
                         drop_down_item('Rename File', '', self.display_rename_file_modal),
                         drop_down_item('Set Default', '', self.set_current_file_as_default),
                         drop_down_item('Upload images...', '', self.upload_images),
+                        drop_down_item('Delete document collection...', '', self.delete_document_collection),
 
                         #drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
                         #drop_down_item('Square', 'fa-square', None),

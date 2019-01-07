@@ -17,7 +17,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 import historygraph
-from cavorite.ajaxget import ajaxget, ajaxpost
+from cavorite.ajaxget import ajaxget, ajaxpost, ajaxdelete
 import json
 
 
@@ -67,3 +67,7 @@ def post_document_collection():
     #print('post_document_collection sending ', data)
     ajaxpost('/api/historygraph/' + str(documentcollection.id) + '/', data, historygraph_ajaxpost_handler)
     #print('post_document_collection 5')
+
+def delete_document_collection(project_id, callback):
+    # Download the global document collection
+    ajaxdelete('/api/historygraph/' + str(project_id) + '/', callback)
