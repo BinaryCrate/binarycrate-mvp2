@@ -72,6 +72,8 @@ class CodeMirrorHandlerVNode(textarea):
         #print("CodeMirrorHandlerVNode was_mounted called")
         super(CodeMirrorHandlerVNode, self).was_mounted()
         from cavorite import force_redraw_all
+        global global_editor
+        global global_textarea
         if force_redraw_all:
             should_init = True
             should_init = js.globals.document.getElementsByClassName('CodeMirror').length < 2
@@ -91,9 +93,7 @@ class CodeMirrorHandlerVNode(textarea):
                 assert global_change_callback_handler, 'CodeMirror global_change_callback_handler not set'
                 self.editor.on('change', global_change_callback_handler)
 
-                global global_editor
                 global_editor = self.editor
-                global global_textarea
                 global_textarea = textarea
                 #self.onchange_codemirror(None)
         else:
@@ -141,9 +141,7 @@ class CodeMirrorHandlerVNode(textarea):
                 assert global_change_callback_handler, 'CodeMirror global_change_callback_handler not set'
                 self.editor.on('change', global_change_callback_handler)
 
-                global global_editor
                 global_editor = self.editor
-                global global_textarea
                 global_textarea = textarea
                 #self.onchange_codemirror(None)
 
