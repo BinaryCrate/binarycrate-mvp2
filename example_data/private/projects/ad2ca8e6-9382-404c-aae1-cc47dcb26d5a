@@ -75,6 +75,9 @@ class CheckersGame(Document):
     player_w = fields.CharRegister()
     player_b = fields.CharRegister()
     pieces = fields.Collection(CheckersPiece)
+    in_multi_capture = fields.BooleanRegister()
+    multi_capture_x = fields.IntRegister()
+    multi_capture_y = fields.IntRegister()
 
     def GetSquareColour(self, x, y):
         return "W" if ((x + y) % 2 == 0) else "B"
