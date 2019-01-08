@@ -31,8 +31,9 @@ from rest_framework.mixins import UpdateModelMixin
 import copy
 from django.http import Http404
 from historygraphbackend.models import HistoryEdge
-from .serializers import HistoryGraphWriteSerializer
+from .serializers import HistoryGraphWriteSerializer, HistoryGraphReadSerializer
 import json
+from historygraphbackend.utils import get_unknown_edges
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -48,21 +49,27 @@ class HistoryGraphView(APIView):
         return HistoryEdge.objects.by_document_collection_id(documentcollectionid)
 
     def post(self, request, documentcollectionid, format=None):
-        edges = self.get_queryset(documentcollectionid)
-        #serializer = HistoryGraphSerializer(edges, many=True)
-        history = [(str(edge.documentid),
-                str(edge.documentclassname),
-                str(edge.classname),
-                str(edge.endnodeid),
-                str(edge.startnode1id),
-                str(edge.startnode2id),
-                str(edge.propertyownerid),
-                str(edge.propertyname),
-                str(edge.propertyvalue),
-                str(edge.propertytype),
-                str(edge.nonce),
-                str(edge.transaction_id)) for edge in edges]
-        return Response({'history': history, 'immutableobjects': []})
+        serializer = HistoryGraphReadSerializer(data=request.data, many=True)
+        if serializer.is_valid():
+            #edges = self.get_queryset(documentcollectionid)
+            d = {d2['documentid']:d2['clockhash'] for d2 in
+                 serializer.validated_data}
+            edges = get_unknown_edges(documentcollectionid, d)
+            history = [(str(edge.documentid),
+                    str(edge.documentclassname),
+                    str(edge.classname),
+                    str(edge.endnodeid),
+                    str(edge.startnode1id),
+                    str(edge.startnode2id),
+                    str(edge.propertyownerid),
+                    str(edge.propertyname),
+                    str(edge.propertyvalue),
+                    str(edge.propertytype),
+                    str(edge.nonce),
+                    str(edge.transaction_id)) for edge in edges]
+            return Response({'history': history, 'immutableobjects': []})
+        #print('serializer.errors=', serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class HistoryGraphWriteView(APIView):
     permission_classes = (permissions.IsAuthenticated, )

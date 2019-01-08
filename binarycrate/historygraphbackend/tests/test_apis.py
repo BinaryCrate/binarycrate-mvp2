@@ -21,9 +21,11 @@ from accounts.factories import UserFactory
 from historygraphbackend.models import HistoryEdge
 import uuid
 from django.urls import reverse
-from historygraphbackend.models import HistoryEdge
 from rest_framework import status
 import json
+from historygraph import Document, fields, DocumentCollection
+from historygraphbackend.utils import get_start_node1, get_start_node2
+from historygraphbackend.api.serializers import HistoryGraphWriteSerializer
 
 
 class HistoryGraphGetTestCase(APITestCase):
@@ -77,7 +79,7 @@ class HistoryGraphGetTestCase(APITestCase):
 
         url = reverse('api:historygraph-list', kwargs=
                       {'documentcollectionid': str(self.dcid1)})
-        data = { }
+        data = [ ]
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
@@ -100,7 +102,7 @@ class HistoryGraphGetTestCase(APITestCase):
 
         url = reverse('api:historygraph-list', kwargs=
                       {'documentcollectionid': str(self.dcid2)})
-        data = { }
+        data = [ ]
         response = self.client.post(url, data, format='json')
         self.assertEqual(len(response.data), 2)
         self.assertEqual(response.data['immutableobjects'], [])
@@ -120,7 +122,7 @@ class HistoryGraphGetTestCase(APITestCase):
     def test_login_is_required(self):
         url = reverse('api:historygraph-list',
                       kwargs={'documentcollectionid': str(self.dcid1)})
-        data = { }
+        data = [ ]
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(str(self.dcid1) in response.content)
@@ -134,7 +136,7 @@ class HistoryGraphGetTestCase(APITestCase):
 
         url = reverse('api:historygraph-list',
                       kwargs={'documentcollectionid': str(uuid.uuid4())})
-        data = { }
+        data = [ ]
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['history']), 0)
@@ -316,3 +318,68 @@ class HistoryGraphGetTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(HistoryEdge.objects.count(), 1)
         self.assertEqual(HistoryEdge.objects.first().documentcollectionid, self.dcid1)
+
+class HistoryGraphFilteredGetTestCase(APITestCase):
+    def test_return_subset_of_edges(self):
+        def save_historygraph(historygraph, documentcollectionid):
+            historyedges2 = [{'documentid': e.documentid,
+                    'documentclassname': e.documentclassname,
+                    'classname': e.__class__.__name__,
+                    'endnodeid': e.get_end_node(),
+                    'startnode1id':get_start_node1(e),
+                    'startnode2id': get_start_node2(e),
+                    'propertyownerid': e.propertyownerid,
+                    'propertyname': e.propertyname,
+                    'propertyvalue': e.propertyvalue,
+                    'propertytype': e.propertytype,
+                    'nonce': e.nonce,
+                    'transaction_id': e.transaction_hash,
+                    'documentcollectionid': documentcollectionid}
+                    for e in historygraph.get_all_edges()]
+            serializer = HistoryGraphWriteSerializer(data=historyedges2, many=True)
+            self.assertTrue(serializer.is_valid(), serializer.errors)
+            serializer.save()
+
+        # Create a document and make some changes
+        class Covers(Document):
+            covers = fields.IntRegister()
+            table = fields.IntRegister()
+        self.dc1 = DocumentCollection()
+        self.dc1.register(Covers)
+        self.test = Covers()
+        self.dc1.add_document_object(self.test)
+        self.test.covers = 1
+        self.clockhash1 = self.test._clockhash
+        self.test.covers = 2
+        save_historygraph(self.test.history, self.dc1.id)
+
+        self.dc2 = DocumentCollection()
+        self.dc2.register(Covers)
+        self.test2 = Covers()
+        self.dc2.add_document_object(self.test2)
+        self.test2.covers = 3
+        self.clockhash2 = self.test2._clockhash
+        self.test2.covers = 4
+        self.test3 = Covers()
+        self.dc2.add_document_object(self.test3)
+        self.test3.covers = 5
+        self.clockhash3 = self.test3._clockhash
+        self.test3.covers = 6
+        save_historygraph(self.test2.history, self.dc2.id)
+        save_historygraph(self.test3.history, self.dc2.id)
+
+        u = UserFactory()
+        self.client.force_authenticate(user=u)
+        url = reverse('api:historygraph-list', kwargs=
+                      {'documentcollectionid': str(self.dc2.id)})
+        data = [{'documentid':self.test2.id, 'clockhash':self.clockhash2} ]
+        response = self.client.post(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data['immutableobjects'], [])
+        historyedges = response.data['history']
+        self.assertEqual(len(historyedges), 3)
+        self.assertEqual({e[3] for e in historyedges},
+                         {self.test2._clockhash, self.clockhash3,
+                          self.test3._clockhash})

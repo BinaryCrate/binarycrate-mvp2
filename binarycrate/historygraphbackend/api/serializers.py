@@ -37,3 +37,8 @@ class HistoryGraphWriteSerializer(serializers.ModelSerializer):
             return super(HistoryGraphWriteSerializer, self).create(validated_data)
         else:
             return HistoryEdge.objects.by_endnodeid(validated_data['endnodeid']).get()
+
+
+class HistoryGraphReadSerializer(serializers.Serializer):
+    documentid = serializers.CharField(max_length=36)
+    clockhash = serializers.CharField(max_length=64)
