@@ -81,7 +81,11 @@ def get_unknown_edges(documentcollectionid, known_endnodes):
     # Return all of the edges for any document the client does not know about
     # This assumes the client does not know about these documents
     unknown_document_edges = HistoryEdge.objects.exclude(
-        documentid__in=known_documents).all()
+        documentid__in=known_documents).filter(
+            documentcollectionid=documentcollectionid)
+    #print('known_documents=', known_documents)
+    #print('documentcollectionid=', documentcollectionid)
+    #print('unknown_document_edges=', [(e.documentid, e.documentcollectionid) for e in unknown_document_edges])
     future_edges = list()
     for k, v in known_endnodes.iteritems():
         # Iterate over each known document seperately

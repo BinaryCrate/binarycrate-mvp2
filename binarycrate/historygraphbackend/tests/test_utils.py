@@ -70,3 +70,77 @@ class HistoryGraphFilterSingleDocumentTestCase(APITestCase):
                               {self.test.id: self.clockhash1})
         self.assertEqual(len(l), 1)
         self.assertEqual(l[0].endnodeid, self.test._clockhash)
+
+class HistoryGraphFilterMultipleDocumentTestCase(APITestCase):
+    def setUp(self):
+        def save_historygraph(historygraph, documentcollectionid):
+            historyedges2 = [{'documentid': e.documentid,
+                    'documentclassname': e.documentclassname,
+                    'classname': e.__class__.__name__,
+                    'endnodeid': e.get_end_node(),
+                    'startnode1id':get_start_node1(e),
+                    'startnode2id': get_start_node2(e),
+                    'propertyownerid': e.propertyownerid,
+                    'propertyname': e.propertyname,
+                    'propertyvalue': e.propertyvalue,
+                    'propertytype': e.propertytype,
+                    'nonce': e.nonce,
+                    'transaction_id': e.transaction_hash,
+                    'documentcollectionid': documentcollectionid}
+                    for e in historygraph.get_all_edges()]
+            serializer = HistoryGraphSerializer(data=historyedges2, many=True)
+            self.assertTrue(serializer.is_valid(), serializer.errors)
+            serializer.save()
+
+        # Create a document and make some changes
+        class Covers(Document):
+            covers = fields.IntRegister()
+            table = fields.IntRegister()
+        self.dc1 = DocumentCollection()
+        self.dc1.register(Covers)
+        self.test = Covers()
+        self.dc1.add_document_object(self.test)
+        self.test.covers = 1
+        self.clockhash1 = self.test._clockhash
+        self.test.covers = 2
+        save_historygraph(self.test.history, self.dc1.id)
+
+        self.dc2 = DocumentCollection()
+        self.dc2.register(Covers)
+        self.test2 = Covers()
+        self.dc2.add_document_object(self.test2)
+        self.test2.covers = 3
+        self.clockhash2 = self.test2._clockhash
+        self.test2.covers = 4
+        self.test3 = Covers()
+        self.dc2.add_document_object(self.test3)
+        self.test3.covers = 5
+        self.clockhash3 = self.test3._clockhash
+        self.test3.covers = 6
+        save_historygraph(self.test2.history, self.dc2.id)
+        save_historygraph(self.test3.history, self.dc2.id)
+
+
+    def test_get_all_edges_if_nothing_known(self):
+        l = get_unknown_edges(self.dc1.id, {})
+        self.assertEqual(len(l), 2)
+        self.assertEqual({e.endnodeid for e in l},
+                         {self.clockhash1, self.test._clockhash})
+
+    def test_get_no_edges_if_everything_known(self):
+        l = get_unknown_edges(self.dc1.id,
+                              {self.test.id: self.test._clockhash})
+        self.assertEqual(len(l), 0)
+
+    def test_get_some_edges_if_partially_known(self):
+        l = get_unknown_edges(self.dc1.id,
+                              {self.test.id: self.clockhash1})
+        self.assertEqual(len(l), 1)
+        self.assertEqual(l[0].endnodeid, self.test._clockhash)
+
+    def test_get_some_edges_if_some_partially_known_others_unknown(self):
+        l = get_unknown_edges(self.dc2.id,
+                              {self.test2.id: self.clockhash2})
+        self.assertEqual(len(l), 3)
+        self.assertEqual({e.endnodeid for e in l},
+                         {self.test2._clockhash, self.clockhash3, self.test3._clockhash})
