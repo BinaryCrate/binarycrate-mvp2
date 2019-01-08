@@ -47,7 +47,7 @@ class HistoryGraphView(APIView):
     def get_queryset(self, documentcollectionid):
         return HistoryEdge.objects.by_document_collection_id(documentcollectionid)
 
-    def get(self, request, documentcollectionid, format=None):
+    def post(self, request, documentcollectionid, format=None):
         edges = self.get_queryset(documentcollectionid)
         #serializer = HistoryGraphSerializer(edges, many=True)
         history = [(str(edge.documentid),
