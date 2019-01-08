@@ -75,7 +75,8 @@ class HistoryGraphGetTestCase(APITestCase):
 
         self.assertEqual(HistoryEdge.objects.count(), 3)
 
-        url = reverse('api:historygraph-list', kwargs={'documentcollectionid': str(self.dcid1)})
+        url = reverse('api:historygraph-list', kwargs=
+                      {'documentcollectionid': str(self.dcid1)})
         data = { }
         response = self.client.get(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -97,7 +98,8 @@ class HistoryGraphGetTestCase(APITestCase):
         def get_response_data_set(response_data, k):
             return {d[k] for d in response_data}
 
-        url = reverse('api:historygraph-list', kwargs={'documentcollectionid': str(self.dcid2)})
+        url = reverse('api:historygraph-list', kwargs=
+                      {'documentcollectionid': str(self.dcid2)})
         data = { }
         response = self.client.get(url, data, format='json')
         self.assertEqual(len(response.data), 2)
@@ -116,7 +118,8 @@ class HistoryGraphGetTestCase(APITestCase):
         self.assertEqual(get_response_data_set(historyedges, 8), {'H1', 'H2'})
 
     def test_login_is_required(self):
-        url = reverse('api:historygraph-list', kwargs={'documentcollectionid': str(self.dcid1)})
+        url = reverse('api:historygraph-list',
+                      kwargs={'documentcollectionid': str(self.dcid1)})
         data = { }
         response = self.client.get(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -124,13 +127,13 @@ class HistoryGraphGetTestCase(APITestCase):
 
     def test_get_unknown_historygraph(self):
         """
-        Ensure we can list an empty list if there are no historygraph edgess available
+        Ensure we can list an empty list if there are no historygraph edges available
         """
         u = UserFactory()
         self.client.force_authenticate(user=u)
 
-        url = reverse('api:historygraph-list', kwargs={'documentcollectionid': str(uuid.uuid4())})
-        print('url=', url)
+        url = reverse('api:historygraph-list',
+                      kwargs={'documentcollectionid': str(uuid.uuid4())})
         data = { }
         response = self.client.get(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -140,7 +143,8 @@ class HistoryGraphGetTestCase(APITestCase):
         u = UserFactory()
         self.client.force_authenticate(user=u)
 
-        url = reverse('api:historygraph-list', kwargs={'documentcollectionid': str(self.dcid2)})
+        url = reverse('api:historygraph-post',
+                      kwargs={'documentcollectionid': str(self.dcid2)})
         project_id = str(uuid.uuid4())
         self.assertEqual(HistoryEdge.objects.count(), 3)
         """
@@ -203,7 +207,8 @@ class HistoryGraphGetTestCase(APITestCase):
         self.assertIn('C5', classnames)
 
     def test_post_historygraph_edges_requires_login(self):
-        url = reverse('api:historygraph-list', kwargs={'documentcollectionid': str(self.dcid2)})
+        url = reverse('api:historygraph-post',
+                      kwargs={'documentcollectionid': str(self.dcid2)})
         project_id = str(uuid.uuid4())
         self.assertEqual(HistoryEdge.objects.count(), 3)
         data = [{'documentcollectionid':str(self.dcid2),
@@ -236,7 +241,8 @@ class HistoryGraphGetTestCase(APITestCase):
         u = UserFactory()
         self.client.force_authenticate(user=u)
 
-        url = reverse('api:historygraph-list', kwargs={'documentcollectionid': str(self.dcid2)})
+        url = reverse('api:historygraph-post',
+                      kwargs={'documentcollectionid': str(self.dcid2)})
         project_id = str(uuid.uuid4())
         self.assertEqual(HistoryEdge.objects.count(), 3)
         endnodeid = str(uuid.uuid4())
@@ -302,7 +308,7 @@ class HistoryGraphGetTestCase(APITestCase):
     def test_can_delete_all_edges_by_document_id(self):
         u = UserFactory()
         self.client.force_authenticate(user=u)
-        url = reverse('api:historygraph-list', kwargs=
+        url = reverse('api:historygraph-post', kwargs=
                       {'documentcollectionid': str(self.dcid2)})
         self.assertEqual(HistoryEdge.objects.count(), 3)
         data = {}
