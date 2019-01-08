@@ -31,7 +31,7 @@ from rest_framework.mixins import UpdateModelMixin
 import copy
 from django.http import Http404
 from historygraphbackend.models import HistoryEdge
-from .serializers import HistoryGraphSerializer
+from .serializers import HistoryGraphWriteSerializer
 import json
 
 
@@ -88,7 +88,7 @@ class HistoryGraphWriteView(APIView):
                 'documentcollectionid': documentcollectionid} for t in
                 historyedges if
                 HistoryEdge.objects.by_endnodeid(t[3]).count() == 0]
-        serializer = HistoryGraphSerializer(data=historyedges2, many=True)
+        serializer = HistoryGraphWriteSerializer(data=historyedges2, many=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)

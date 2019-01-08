@@ -21,7 +21,7 @@ from historygraphbackend.models import HistoryEdge
 from rest_framework import serializers
 
 
-class HistoryGraphSerializer(serializers.ModelSerializer):
+class HistoryGraphWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = HistoryEdge
         fields = ('documentcollectionid', 'documentid', 'documentclassname',
@@ -34,6 +34,6 @@ class HistoryGraphSerializer(serializers.ModelSerializer):
         #TODO: There is no meaningful validation of submit HistoryGraph edges. Pls fix
         if HistoryEdge.objects.by_endnodeid(validated_data['endnodeid']).count() == 0:
             # Duplicate HistoryEdges are ignored
-            return super(HistoryGraphSerializer, self).create(validated_data)
+            return super(HistoryGraphWriteSerializer, self).create(validated_data)
         else:
             return HistoryEdge.objects.by_endnodeid(validated_data['endnodeid']).get()

@@ -18,7 +18,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 from rest_framework.test import APITestCase
 from historygraph import DocumentCollection, Document, fields
-from historygraphbackend.api.serializers import HistoryGraphSerializer
+from historygraphbackend.api.serializers import HistoryGraphWriteSerializer
 from historygraphbackend.utils import get_unknown_edges, get_start_node1, get_start_node2
 
 
@@ -50,7 +50,7 @@ class HistoryGraphFilterSingleDocumentTestCase(APITestCase):
                 'transaction_id': e.transaction_hash,
                 'documentcollectionid': self.dc1.id}
                 for e in self.test.history.get_all_edges()]
-        serializer = HistoryGraphSerializer(data=historyedges2, many=True)
+        serializer = HistoryGraphWriteSerializer(data=historyedges2, many=True)
         self.assertTrue(serializer.is_valid(), serializer.errors)
         serializer.save()
 
@@ -88,7 +88,7 @@ class HistoryGraphFilterMultipleDocumentTestCase(APITestCase):
                     'transaction_id': e.transaction_hash,
                     'documentcollectionid': documentcollectionid}
                     for e in historygraph.get_all_edges()]
-            serializer = HistoryGraphSerializer(data=historyedges2, many=True)
+            serializer = HistoryGraphWriteSerializer(data=historyedges2, many=True)
             self.assertTrue(serializer.is_valid(), serializer.errors)
             serializer.save()
 
