@@ -53,7 +53,8 @@ def download_document_collection():
                 hashes.append({'documentid':doc.id, 'clockhash':doc._clockhash})
     # Download the global document collection
     ajaxpost('/api/historygraph/' + str(documentcollection.id) + '/list/',
-             hashes, historygraph_ajaxget_handler)
+             #hashes, historygraph_ajaxget_handler)
+             {'hashes':json.dumps(hashes)}, historygraph_ajaxget_handler)
 
 def historygraph_ajaxpost_handler(xmlhttp, response):
     pass

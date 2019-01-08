@@ -79,7 +79,7 @@ class HistoryGraphGetTestCase(APITestCase):
 
         url = reverse('api:historygraph-list', kwargs=
                       {'documentcollectionid': str(self.dcid1)})
-        data = [ ]
+        data = {'hashes':json.dumps([ ]) }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
@@ -102,8 +102,9 @@ class HistoryGraphGetTestCase(APITestCase):
 
         url = reverse('api:historygraph-list', kwargs=
                       {'documentcollectionid': str(self.dcid2)})
-        data = [ ]
+        data = {'hashes':json.dumps([ ]) }
         response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
         self.assertEqual(response.data['immutableobjects'], [])
         historyedges = response.data['history']
@@ -122,7 +123,7 @@ class HistoryGraphGetTestCase(APITestCase):
     def test_login_is_required(self):
         url = reverse('api:historygraph-list',
                       kwargs={'documentcollectionid': str(self.dcid1)})
-        data = [ ]
+        data = {'hashes':json.dumps([ ]) }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(str(self.dcid1) in response.content)
@@ -136,7 +137,7 @@ class HistoryGraphGetTestCase(APITestCase):
 
         url = reverse('api:historygraph-list',
                       kwargs={'documentcollectionid': str(uuid.uuid4())})
-        data = [ ]
+        data = {'hashes':json.dumps([ ]) }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['history']), 0)
@@ -372,7 +373,8 @@ class HistoryGraphFilteredGetTestCase(APITestCase):
         self.client.force_authenticate(user=u)
         url = reverse('api:historygraph-list', kwargs=
                       {'documentcollectionid': str(self.dc2.id)})
-        data = [{'documentid':self.test2.id, 'clockhash':self.clockhash2} ]
+        data = data = {'hashes':json.dumps([{'documentid':self.test2.id,
+                       'clockhash':self.clockhash2} ])}
         response = self.client.post(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
