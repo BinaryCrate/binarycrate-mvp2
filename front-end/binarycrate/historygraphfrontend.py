@@ -45,8 +45,15 @@ def historygraph_ajaxget_handler(xmlhttp, response):
         download_complete_callback()
 
 def download_document_collection():
+    # Get the known clockhashes
+    hashes = list()
+    for cls, d in documentcollection.objects.iteritems():
+        for doc in d.values():
+            if isinstance(doc, historygraph.Document):
+                hashes.append({'documentid':doc.id, 'clockhash':doc._clockhash})
     # Download the global document collection
-    ajaxpost('/api/historygraph/' + str(documentcollection.id) + '/list/', [ ], historygraph_ajaxget_handler)
+    ajaxpost('/api/historygraph/' + str(documentcollection.id) + '/list/',
+             hashes, historygraph_ajaxget_handler)
 
 def historygraph_ajaxpost_handler(xmlhttp, response):
     pass

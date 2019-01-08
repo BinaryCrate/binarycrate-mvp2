@@ -98,7 +98,8 @@ class TestHistoryGraph(object):
         historygraphfrontend.download_document_collection()
         js.globals.cavorite_ajaxPost.assert_called_with(
             '/api/historygraph/' + str(project_id) + '/list/',
-            str(dummy_uuid()), [])
+            str(dummy_uuid()), [{'documentid':scores[0].id,
+                                 'clockhash': scores[0]._clockhash}])
 
         historygraphfrontend.historygraph_ajaxget_handler(Mock(status=200, responseText=json.dumps(dc_edges2)),
                                               dc_edges2)
