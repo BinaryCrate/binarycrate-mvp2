@@ -416,6 +416,13 @@ class EditorView(BCChrome):
         return classes
 
     def on_historygraph_download_complete(self):
+        if self.program_is_running:
+            def handle_download_dc_time():
+                historygraphfrontend.download_document_collection()
+                self.historygraph_download_timeout = None
+
+            self.historygraph_download_timeout = timeouts.set_timeout(
+                handle_download_dc_time, 5000)
         for form in self.form_stack:
             form.on_historygraph_download_complete()
         self.mount_redraw()
@@ -428,6 +435,9 @@ class EditorView(BCChrome):
             form.clear_all_active_timeouts()
             form.clear_all_active_intervals()
         self.form_stack = []
+        if self.historygraph_download_timeout is not None:
+            timeouts.clear_timeout(self.historygraph_download_timeout)
+
         js.globals.document.print_to_secondary_output = False
         self.cleanup_project()
         self.mount_redraw()
@@ -1768,6 +1778,7 @@ class """ + class_name + """(Form):
             #print('original_modules=', original_modules)
         #TODO: Option arguments should be kwargs
         self.save_progress = 0 # The number of number processes to save a project.
+        self.historygraph_download_timeout = None # A timeout to keep polling the historygraph database
         super(EditorView, self).__init__(
             None,
             None,

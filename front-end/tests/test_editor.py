@@ -2673,8 +2673,24 @@ print('Hello folder i={}'.format(i))
 
         view.form_stack[-1].on_historygraph_download_complete = Mock()
         view.form_stack[-1].on_historygraph_download_complete.assert_not_called()
+        #js.globals.cavorite_setTimeout = Mock()
+        old_timeout = timeouts.set_timeout
+        timeouts.set_timeout = Mock()
+        assert view.historygraph_download_timeout is None
         view.on_historygraph_download_complete()
         view.form_stack[-1].on_historygraph_download_complete.assert_called_once()
+        #js.globals.cavorite_setTimeout.assert_called_once()
+        timeouts.set_timeout.assert_called_once()
+        assert view.historygraph_download_timeout is not None
+        #print('timeouts.set_timeout.call_args=', timeouts.set_timeout.call_args)
+        #print('timeouts.set_timeout.call_args[0][0]=', timeouts.set_timeout.call_args[0][0])
+        # Test that calling the timeout callback resets the timeout value
+        timeout_callback = timeouts.set_timeout.call_args[0][0]
+        #print('view.historygraph_download_timeout=',view.historygraph_download_timeout)
+        #assert False
+        timeout_callback()
+        assert view.historygraph_download_timeout is None
+        timeouts.set_timeout = old_timeout
 
         # Assert we can add a new form to the form stack
         view.form_stack[-1].open_child()
@@ -2713,11 +2729,17 @@ print('Hello folder i={}'.format(i))
         form.on_body_click.assert_called_with()
 
         result = defaultdict(bool)
+        # Test the timeout is cleared if it is set
+        view.historygraph_download_timeout = Mock()
+        old_clear_timeout = editor.timeouts.clear_timeout
+        editor.timeouts.clear_timeout = Mock()
         view.stop_project(Mock())
         assert view.program_is_running == False
         assert view.form_stack == []
         assert js.globals.document.print_to_secondary_output == False
+        timeouts.clear_timeout.assert_called_once()
         view.mount_redraw = Mock()
+        editor.timeouts.clear_timeout = old_clear_timeout
 
         virtual_node = view._build_virtual_dom()
         IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
@@ -2978,8 +3000,14 @@ print('Hello folder i={}'.format(i))
         assert set(timeouts.global_timeout_val_to_id.keys()) == {val}
         assert len(form._active_timeouts) == 1
 
+        view.historygraph_download_timeout = None
+        old_clear_timeout = editor.timeouts.clear_timeout
+        editor.timeouts.clear_timeout = Mock()
         view.stop_project(Mock())
         assert len(form._active_timeouts) == 0
+        # The 2 calls are fromt he other timeout in this program
+        assert timeouts.clear_timeout.call_count == 1
+        editor.timeouts.clear_timeout = old_clear_timeout
 
     def test_running_program_can_clear_timeouts(self, monkeypatch):
         def dummy_uuid():
