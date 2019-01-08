@@ -46,7 +46,7 @@ def historygraph_ajaxget_handler(xmlhttp, response):
 
 def download_document_collection():
     # Download the global document collection
-    ajaxget('/api/historygraph/' + str(documentcollection.id) + '/', historygraph_ajaxget_handler)
+    ajaxpost('/api/historygraph/' + str(documentcollection.id) + '/list/', [ ], historygraph_ajaxget_handler)
 
 def historygraph_ajaxpost_handler(xmlhttp, response):
     pass
@@ -65,7 +65,7 @@ def post_document_collection():
     data = {"history":json.dumps(historyedges),"immutableobjects":json.dumps(immutableobjects)}
     #print('post_document_collection 4')
     #print('post_document_collection sending ', data)
-    ajaxpost('/api/historygraph/' + str(documentcollection.id) + '/', data, historygraph_ajaxpost_handler)
+    ajaxpost('/api/historygraph/' + str(documentcollection.id) + '/write/', data, historygraph_ajaxpost_handler)
     #print('post_document_collection 5')
 
 def delete_document_collection(project_id, callback):
