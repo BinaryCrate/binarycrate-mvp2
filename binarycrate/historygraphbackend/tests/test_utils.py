@@ -57,6 +57,8 @@ class HistoryGraphFilterSingleDocumentTestCase(APITestCase):
     def test_get_all_edges_if_nothing_known(self):
         l = get_unknown_edges(self.dc1.id, {})
         self.assertEqual(len(l), 2)
+        self.assertEqual({e.endnodeid for e in l},
+                         {self.clockhash1, self.test._clockhash})
 
     def test_get_no_edges_if_everything_known(self):
         l = get_unknown_edges(self.dc1.id,
@@ -67,3 +69,4 @@ class HistoryGraphFilterSingleDocumentTestCase(APITestCase):
         l = get_unknown_edges(self.dc1.id,
                               {self.test.id: self.clockhash1})
         self.assertEqual(len(l), 1)
+        self.assertEqual(l[0].endnodeid, self.test._clockhash)
