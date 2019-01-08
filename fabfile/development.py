@@ -97,7 +97,9 @@ def test(testname=None):
     else:
         testcommand = ""
     with lcd('.'):
-        local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --entrypoint="pytest" "' + project_name + '"' + testcommand)
+        local('docker run --tty --interactive '
+              '--volume "' + local_pwd + '":/opt/project '
+              '--entrypoint="/opt/project/run-backend-tests" "' + project_name + '"' + testcommand)
 
 @task
 def frontend_test(testname=None):

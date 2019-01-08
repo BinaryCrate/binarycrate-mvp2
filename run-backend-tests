@@ -1,0 +1,5 @@
+#! /bin/bash
+cd /usr/local/lib/python2.7/dist-packages/
+ln -s /opt/project/historygraph/historygraph
+cd /opt/project/binarycrate
+pytest $*
