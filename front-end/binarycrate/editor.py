@@ -445,6 +445,9 @@ class EditorView(BCChrome):
         gc.collect()
 
     def run_project(self, e):
+        self.designer_visible = True
+        self.mount_redraw()
+        Router.router.ResetHashChange()
         print('EditorView run_project called')
         if self.get_default_directory_entry() is None:
             js.globals.window.alert('Error: You must select one of the files as the default to run')
@@ -643,6 +646,9 @@ class EditorView(BCChrome):
                          ]),
                          article({'class': 'col-md-12 row', 'id': 'editor'}, [
                              self.code_mirror,
+                         ] + (
+                         [ ] if not self.designer_visible else
+                         [
                              div({'class': 'row col-md-5 output-col'},
                                  (
                                      [
@@ -666,7 +672,7 @@ class EditorView(BCChrome):
                                          ]),
                                      ]),
                                  ])
-                         ]),
+                         ])),
                      ]),
                  ])
 
@@ -863,6 +869,14 @@ class EditorView(BCChrome):
         self.save_project(e)
         jquery = js.globals['$']
         jquery('#shareProj').modal('show')
+        e.stopPropagation()
+        e.preventDefault()
+
+    def show_hide_designer(self, e):
+        #print("show_hide_designer called")
+        self.designer_visible = not self.designer_visible
+        self.mount_redraw()
+        Router.router.ResetHashChange()
         e.stopPropagation()
         e.preventDefault()
 
@@ -1584,6 +1598,12 @@ class """ + class_name + """(Form):
                           a({'class': "btn btn-default navbar-btn crt-btn", 'href': get_current_hash(), 'onclick': self.display_share_project_modal}, "Share")
                         ]),
                       ]),
+                      li({'class': 'nav-item li-create-new dropdown-menu-header', 'style': {'margin-left':'20px'}}, [
+                        form({'action': '#'}, [
+                          #ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
+                          a({'class': "btn btn-default navbar-btn crt-btn", 'href': get_current_hash(), 'onclick': self.show_hide_designer}, "Hide Designer" if self.designer_visible else "Show Designer")
+                        ]),
+                      ]),
                       span({'style':{'color': 'white', # TODO: This is a really hacky way to display this. Add better styling
                                      'padding-top': '7px',
                                      'margin-left': '5px'}}, [
@@ -1792,7 +1812,7 @@ class """ + class_name + """(Form):
         self.form_stack = list()
         cavorite.force_redraw_all = True
         self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code',
-                                                   'class': 'col-md-5 CodeMirror',
+                                                   'class': lambda :'col-md-5 CodeMirror' if self.designer_visible else 'col-md-10 CodeMirror',
                                                    'style': {'height':'100%'}},
                                                   [t(self.get_selected_de_content)],
                                                   change_handler=self.code_mirror_change,
@@ -1809,6 +1829,7 @@ class """ + class_name + """(Form):
         self.save_progress = 0 # The number of number processes to save a project.
         self.historygraph_download_timeout = None # A timeout to keep polling the historygraph database
         self.scroll_positions = defaultdict(int)
+        self.designer_visible = True
 
         super(EditorView, self).__init__(
             None,

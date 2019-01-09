@@ -90,9 +90,10 @@ class CodeMirrorHandlerVNode(textarea):
         global_scroll_callback_handler = scroll_callback_handler
 
         if force_redraw_all:
-            should_init = True
+            elements = js.globals.document.getElementsByClassName('CodeMirror')
             should_init = js.globals.document.getElementsByClassName('CodeMirror').length < 2
             if should_init:
+                #print('Run init')
                 textarea = js.globals.document.getElementById("code")
                 read_only = lazy_eval(self.read_only)
                 self.editor = js.globals.CodeMirror.fromTextArea(textarea, {
@@ -110,7 +111,11 @@ class CodeMirrorHandlerVNode(textarea):
                 self.editor.on('scroll', global_scroll_callback_handler)
                 if self.editorview.selected_de:
                     self.editor.scrollTo(js.null, self.editorview.scroll_positions[self.editorview.selected_de['id']])
-                self.editor.setSize(js.null, "{}px".format(get_controls_height()))
+                #print('self.editor.getWrapperElement().offsetWidth=', self.editor.getWrapperElement().offsetWidth)
+                width = self.editor.getWrapperElement().offsetWidth
+                if self.editorview.designer_visible is False:
+                    width = width * 1.8
+                self.editor.setSize("{}px".format(width), "{}px".format(get_controls_height()))
 
                 global_editor = self.editor
                 global_textarea = textarea
@@ -162,7 +167,10 @@ class CodeMirrorHandlerVNode(textarea):
                 self.editor.on('scroll', global_scroll_callback_handler)
                 if self.editorview.selected_de:
                     self.editor.scrollTo(js.null, self.editorview.scroll_positions[self.editorview.selected_de['id']])
-                self.editor.setSize(js.null, "{}px".format(get_controls_height()))
+                width = self.editor.getWrapperElement().offsetWidth
+                if self.editorview.designer_visible is False:
+                    width = width * 1.8
+                self.editor.setSize("{}px".format(width), "{}px".format(get_controls_height()))
 
                 global_editor = self.editor
                 global_textarea = textarea

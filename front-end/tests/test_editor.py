@@ -2885,11 +2885,11 @@ print('Hello folder i={}'.format(i))
         assert counter['count'] == 0
 
         view.mount_redraw = Mock()
-        assert reset_hash_change_mock.call_count == 2
+        assert reset_hash_change_mock.call_count == 3
         js.globals.document.cavorite_timeouthandler(str(dummy_uuid()))
 
         view.mount_redraw.assert_called()
-        assert reset_hash_change_mock.call_count == 3
+        assert reset_hash_change_mock.call_count == 4
 
         assert counter['count'] == 1
         assert len(timeouts.global_timeout_callbacks) == 0
@@ -3142,12 +3142,12 @@ print('Hello folder i={}'.format(i))
         assert counter['count'] == 0
 
         view.mount_redraw = Mock()
-        assert reset_hash_change_mock.call_count == 2
+        assert reset_hash_change_mock.call_count == 3
         #js.globals.document.cavorite_timeouthandler(str(dummy_uuid()))
         view.form_stack[-1].clear_timeout(val)
 
         assert view.mount_redraw.call_count == 0
-        assert reset_hash_change_mock.call_count == 2
+        assert reset_hash_change_mock.call_count == 3
 
         assert counter['count'] == 0
         assert len(timeouts.global_timeout_callbacks) == 0
@@ -3275,11 +3275,11 @@ print('Hello folder i={}'.format(i))
         assert counter['count'] == 0
 
         view.mount_redraw = Mock()
-        assert reset_hash_change_mock.call_count == 2
+        assert reset_hash_change_mock.call_count == 3
         js.globals.document.cavorite_intervalhandler(str(dummy_uuid()))
 
         view.mount_redraw.assert_called()
-        assert reset_hash_change_mock.call_count == 3
+        assert reset_hash_change_mock.call_count == 4
 
         assert counter['count'] == 1
         assert set(timeouts.global_interval_callbacks.keys()) == {str(dummy_uuid())}
@@ -3416,11 +3416,11 @@ print('Hello folder i={}'.format(i))
         assert counter['count'] == 0
 
         view.mount_redraw = Mock()
-        assert reset_hash_change_mock.call_count == 2
+        assert reset_hash_change_mock.call_count == 3
         js.globals.document.cavorite_intervalhandler(str(dummy_uuid()))
 
         view.mount_redraw.assert_called()
-        assert reset_hash_change_mock.call_count == 3
+        assert reset_hash_change_mock.call_count == 4
 
         assert counter['count'] == 1
         assert set(timeouts.global_interval_callbacks.keys()) == {str(dummy_uuid())}
