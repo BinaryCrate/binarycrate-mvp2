@@ -47,7 +47,7 @@ class SharedView(EditorView):
             def images_api_ajax_result_handler2(xmlhttp, response):
                 # Get the images first then the projects
                 #TODO: Do this all in one query. Otherwise it get brittle
-                print('images_api_ajax_result_handler2')
+                #print('images_api_ajax_result_handler2')
                 #self.images_api_ajax_result_handler(xmlhttp, response)
                 if xmlhttp.status >= 200 and xmlhttp.status <= 299:
                     self.images = json.loads(str(xmlhttp.responseText))
