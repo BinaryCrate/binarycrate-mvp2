@@ -283,6 +283,8 @@ class TestEditor(object):
         node.set_current_file_as_default(Mock())
 
         # Test we send the correct stuff when we add a new button
+        node.contextmenu_x = 100
+        node.contextmenu_y = 100
         node.new_button(Mock(clientX=100, clientY=100))
 
         js.globals.cavorite_ajaxPut.reset_mock()
@@ -1311,7 +1313,7 @@ class TestContextMenuFormItems(object):
         button = view.selected_de['form_items'][0]
         assert button['type'] == 'button'
         assert button['x'] == 10
-        assert button['y'] == 20
+        assert button['y'] == 10
         assert button['width'] == 100
         assert button['height'] == 30
         assert button['caption'] == 'Button'
@@ -1380,7 +1382,7 @@ class TestContextMenuFormItems(object):
         Router.router.on_body_mousemove(Mock(clientX=520, clientY=530))
 
         assert button['x'] == 30
-        assert button['y'] == 50
+        assert button['y'] == 40
         assert button['width'] == 100
         assert button['height'] == 30
         vnode_button = get_matching_vnode(view, is_nvode_button)
@@ -1395,7 +1397,7 @@ class TestContextMenuFormItems(object):
         Router.router.on_body_mousemove(Mock(clientX=550, clientY=550))
 
         assert button['x'] == 30
-        assert button['y'] == 50
+        assert button['y'] == 40
         assert button['width'] == 100
         assert button['height'] == 30
         vnode_button = get_matching_vnode(view, is_nvode_button)
@@ -1420,7 +1422,7 @@ class TestContextMenuFormItems(object):
 
         Router.router.on_body_mousemove(Mock(clientX=540, clientY=540))
         assert button['x'] == 20
-        assert button['y'] == 40
+        assert button['y'] == 30
         assert button['width'] == 110
         assert button['height'] == 40
 
@@ -1438,7 +1440,7 @@ class TestContextMenuFormItems(object):
 
         Router.router.on_body_mousemove(Mock(clientX=550, clientY=545))
         assert button['x'] == 20
-        assert button['y'] == 45
+        assert button['y'] == 35
         assert button['width'] == 120
         assert button['height'] == 35
 
@@ -1456,7 +1458,7 @@ class TestContextMenuFormItems(object):
 
         Router.router.on_body_mousemove(Mock(clientX=565, clientY=555))
         assert button['x'] == 20
-        assert button['y'] == 45
+        assert button['y'] == 35
         assert button['width'] == 135
         assert button['height'] == 45
 
@@ -1474,7 +1476,7 @@ class TestContextMenuFormItems(object):
 
         Router.router.on_body_mousemove(Mock(clientX=555, clientY=550))
         assert button['x'] == 10
-        assert button['y'] == 45
+        assert button['y'] == 35
         assert button['width'] == 145
         assert button['height'] == 40
 
