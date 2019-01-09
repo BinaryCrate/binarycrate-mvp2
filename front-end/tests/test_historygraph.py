@@ -50,7 +50,9 @@ class TestHistoryGraph(object):
 
         js.globals.cavorite_ajaxPost = Mock()
         historygraphfrontend.download_document_collection()
-        js.globals.cavorite_ajaxPost.assert_called_with('/api/historygraph/' + str(project_id) + '/list/', str(dummy_uuid()), [])
+        js.globals.cavorite_ajaxPost.assert_called_with(
+            '/api/historygraph/' + str(project_id) + '/list/',
+            str(dummy_uuid()), {u'hashes': '[]'})
         assert historygraphfrontend.documentcollection_download_ready == False
 
         response = {'history': [], 'immutableobjects': []}
@@ -82,7 +84,9 @@ class TestHistoryGraph(object):
         historygraphfrontend.documentcollection.register(Score)
         js.globals.cavorite_ajaxPost = Mock()
         historygraphfrontend.download_document_collection()
-        js.globals.cavorite_ajaxPost.assert_called_with('/api/historygraph/' + str(project_id) + '/list/', str(dummy_uuid()), [])
+        js.globals.cavorite_ajaxPost.assert_called_with(
+            '/api/historygraph/' + str(project_id) + '/list/',
+            str(dummy_uuid()), {u'hashes': '[]'})
         dc_edges2 = {'history': json.loads(dc_edges['history']), 'immutableobjects': json.loads(dc_edges['immutableobjects'])}
         historygraphfrontend.historygraph_ajaxget_handler(Mock(status=200, responseText=json.dumps(dc_edges2)),
                                               dc_edges2)
@@ -96,10 +100,16 @@ class TestHistoryGraph(object):
         # Test that reloading when we already have edges just works
         js.globals.cavorite_ajaxPost = Mock()
         historygraphfrontend.download_document_collection()
-        js.globals.cavorite_ajaxPost.assert_called_with(
-            '/api/historygraph/' + str(project_id) + '/list/',
-            str(dummy_uuid()), [{'documentid':scores[0].id,
-                                 'clockhash': scores[0]._clockhash}])
+        js.globals.cavorite_ajaxPost.assert_called_once()
+        assert js.globals.cavorite_ajaxPost.call_args[0][0] == \
+            '/api/historygraph/' + str(project_id) + '/list/'
+        assert js.globals.cavorite_ajaxPost.call_args[0][1] == str(dummy_uuid())
+        payload = js.globals.cavorite_ajaxPost.call_args[0][2]
+        assert len(payload) == 1
+        hashes = json.loads(payload['hashes'])
+        assert len(hashes) == 1
+        assert hashes == [{'documentid':scores[0].id,
+                             'clockhash': scores[0]._clockhash}]
 
         historygraphfrontend.historygraph_ajaxget_handler(Mock(status=200, responseText=json.dumps(dc_edges2)),
                                               dc_edges2)
