@@ -37,6 +37,7 @@ from cavorite.HTML import *
 from binarycrate import historygraphfrontend
 import sys
 import pytest
+import binarycrate.frontend_utils
 
 
 class TestEditor(object):
@@ -587,6 +588,7 @@ class TestEditor(object):
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
@@ -790,6 +792,7 @@ class TestEditor(object):
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
@@ -1218,6 +1221,7 @@ class TestContextMenuFormItems(object):
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -1519,6 +1523,7 @@ class TestContextMenuFormItems(object):
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -1685,6 +1690,7 @@ class TestContextMenuFormItems(object):
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -1846,6 +1852,7 @@ class TestContextMenuFormItems(object):
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -2038,6 +2045,7 @@ class TestContextMenuFormItems(object):
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -2307,6 +2315,7 @@ class TestRunningAProgram(object):
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -2403,6 +2412,7 @@ class TestRunningAProgram(object):
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -2501,6 +2511,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -2767,6 +2778,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(timeouts, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -2899,6 +2911,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(timeouts, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -3025,6 +3038,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(timeouts, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -3154,6 +3168,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(timeouts, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -3294,6 +3309,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(timeouts, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -3428,6 +3444,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(codemirror, 'js', js)
         mock_download_document_collection = Mock()
         monkeypatch.setattr(historygraphfrontend, 'download_document_collection', mock_download_document_collection)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -3567,6 +3584,7 @@ historygraphfrontend.download_document_collection()
         monkeypatch.setattr(codemirror, 'js', js)
         mock_download_document_collection = Mock()
         monkeypatch.setattr(historygraphfrontend, 'download_document_collection', mock_download_document_collection)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -3667,6 +3685,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -3768,6 +3787,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
         #monkeypatch.setattr(binarycrate.controls.codemirror, 'js', js)
 
         callbacks.initialise_global_callbacks()
@@ -3978,6 +3998,7 @@ class TestNewFileContentPythonProject(object):
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
@@ -4136,6 +4157,7 @@ class TestNewFileContentPythonProject(object):
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
@@ -4301,6 +4323,7 @@ class Travel(Form):
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()

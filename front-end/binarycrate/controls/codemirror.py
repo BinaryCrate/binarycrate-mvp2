@@ -23,6 +23,7 @@ try:
 except ImportError:
     js = None
 import copy
+from binarycrate.frontend_utils import get_controls_height
 
 global_editor = None
 global_textarea = None
@@ -56,18 +57,6 @@ def initialise_codemirror_callbacks():
 
     global global_on_tab
     global_on_tab = on_tab
-
-    """
-    @js.Function
-    def scroll_callback_handler(cm):
-        print('scroll_callback_handler called')
-        print('scroll_callback_handler getScrollInfo().top=', cm.getScrollInfo().top)
-        print('scroll_callback_handler type(getScrollInfo().top)=', type(cm.getScrollInfo().top))
-        #callbacks.global_callbacks['onchange'][str(global_textarea.getAttribute('_cavorite_id'))](global_editor)
-
-    global global_scroll_callback_handler
-    global_scroll_callback_handler = scroll_callback_handler
-    """
 
 last_selection = 'lastsel'
 
@@ -121,6 +110,7 @@ class CodeMirrorHandlerVNode(textarea):
                 self.editor.on('scroll', global_scroll_callback_handler)
                 if self.editorview.selected_de:
                     self.editor.scrollTo(js.null, self.editorview.scroll_positions[self.editorview.selected_de['id']])
+                self.editor.setSize(js.null, "{}px".format(get_controls_height()))
 
                 global_editor = self.editor
                 global_textarea = textarea
@@ -172,6 +162,7 @@ class CodeMirrorHandlerVNode(textarea):
                 self.editor.on('scroll', global_scroll_callback_handler)
                 if self.editorview.selected_de:
                     self.editor.scrollTo(js.null, self.editorview.scroll_positions[self.editorview.selected_de['id']])
+                self.editor.setSize(js.null, "{}px".format(get_controls_height()))
 
                 global_editor = self.editor
                 global_textarea = textarea

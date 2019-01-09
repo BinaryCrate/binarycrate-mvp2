@@ -48,6 +48,7 @@ from binarycrate.controls.bcform import get_form_item_property, FormItemPropType
 from types import ModuleType
 import sys
 from binarycrate.controls import ContextMenu
+from binarycrate.frontend_utils import get_controls_height
 
 
 HANDLE_NONE = 0
@@ -630,7 +631,7 @@ class EditorView(BCChrome):
         global project
         return c("div",
                  {'class': "container-fluid code-area", 'style': 'padding-left: 1px; padding-top:1px height:100%;'}, [
-                     div({'class': 'row row-wrapper'}, [
+                     div({'class': 'row row-wrapper', 'style': {'height': "{}".format(get_controls_height())}}, [
                          div({'class': "project-fnf col-ms-2"}, [
                              div({'class': 'top-tree'}, [
                                  p({'style': 'display:inline'}, 'Files'),
@@ -1788,7 +1789,8 @@ class """ + class_name + """(Form):
         self.form_stack = list()
         cavorite.force_redraw_all = True
         self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code',
-                                                   'class': 'col-md-5 CodeMirror'},
+                                                   'class': 'col-md-5 CodeMirror',
+                                                   'style': {'height':'100%'}},
                                                   [t(self.get_selected_de_content)],
                                                   change_handler=self.code_mirror_change,
                                                   read_only=self.get_code_mirror_read_only,
