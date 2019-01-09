@@ -48,7 +48,7 @@ from binarycrate.controls.bcform import get_form_item_property, FormItemPropType
 from types import ModuleType
 import sys
 from binarycrate.controls import ContextMenu
-from binarycrate.frontend_utils import get_controls_height
+from binarycrate.frontend_utils import get_controls_height, get_controls_width
 
 
 HANDLE_NONE = 0
@@ -631,7 +631,10 @@ class EditorView(BCChrome):
         global project
         return c("div",
                  {'class': "container-fluid code-area", 'style': 'padding-left: 1px; padding-top:1px height:100%;'}, [
-                     div({'class': 'row row-wrapper', 'style': {'height': "{}".format(get_controls_height())}}, [
+                     div({'class': 'row row-wrapper',
+                          'style': {'height': "{}".format(get_controls_height()),
+                                    'width': "{}".format(get_controls_width())
+                                    }}, [
                          div({'class': "project-fnf col-ms-2"}, [
                              div({'class': 'top-tree'}, [
                                  p({'style': 'display:inline'}, 'Files'),
