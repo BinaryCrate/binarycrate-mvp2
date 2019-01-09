@@ -55,6 +55,11 @@ HANDLE_TOPLEFT = 1
 HANDLE_TOPRIGHT = 2
 HANDLE_BOTTOMRIGHT = 4
 HANDLE_BOTTOMLEFT = 3
+# Handles for manipulating the end points of lines are a special case
+HANDLE_X1Y1 = 5
+HANDLE_X2Y1 = 6
+HANDLE_X2Y2 = 8
+HANDLE_X1Y2 = 7
 
 python_module_dir = '/lib/pypyjs/lib_pypy/'
 
@@ -63,27 +68,6 @@ project = {}
 original_modules = set()
 
 project_files = [] #All the project files we have written to the virtual file system
-
-example_html = """<!doctype html>
-<html>
-  <head>
-    <meta charset=utf-8>
-    <title>HTML5 Demo</title>
-    <style>p {font-family: monospace;}</style>
-  </head>
-  <body>
-    <p>Canvas pane goes here:</p>
-    <canvas id=pane width=300 height=200></canvas>
-    <script>
-      var canvas = document.getElementById('pane');
-      var context = canvas.getContext('2d');
-      context.fillStyle = 'rgb(250,0,0)';
-      context.fillRect(10, 10, 55, 50);
-      context.fillStyle = 'rgba(0, 0, 250, 0.5)';
-      context.fillRect(30, 30, 55, 50);
-    </script>
-  </body>
-</html>"""
 
 
 def merge_dicts(d1, d2):
@@ -711,25 +695,28 @@ class EditorView(BCChrome):
                     self.mount_redraw()
                     Router.router.ResetHashChange()
         if self.mouse_is_down and self.selected_item != '':
-            fi = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item][0]
+            fi = [fi for fi in self.selected_de['form_items'] if
+                  fi['id'] == self.selected_item][0]
             if fi['type'] == 'line':
                 if self.selected_handler == HANDLE_NONE:
                     fi['x1'] += change_x
                     fi['y1'] += change_y
                     fi['x2'] += change_x
                     fi['y2'] += change_y
-                elif self.selected_handler == HANDLE_TOPLEFT:
+                elif self.selected_handler == HANDLE_X1Y1:
                     fi['x1'] += change_x
                     fi['y1'] += change_y
-                elif self.selected_handler == HANDLE_TOPRIGHT:
+                elif self.selected_handler == HANDLE_X2Y1:
                     fi['x2'] += change_x
                     fi['y1'] += change_y
-                elif self.selected_handler == HANDLE_BOTTOMRIGHT:
+                elif self.selected_handler == HANDLE_X2Y2:
                     fi['x2'] += change_x
                     fi['y2'] += change_y
-                elif self.selected_handler == HANDLE_BOTTOMLEFT:
+                elif self.selected_handler == HANDLE_X1Y2:
                     fi['x1'] += change_x
                     fi['y2'] += change_y
+                else:
+                    assert False
             else:
                 if self.selected_handler == HANDLE_NONE:
                     fi['x'] += change_x
@@ -754,6 +741,8 @@ class EditorView(BCChrome):
                     # fi['y'] += change_y
                     fi['width'] -= change_x
                     fi['height'] += change_y
+                else:
+                    assert False
             self.mount_redraw()
             Router.router.ResetHashChange()
             e.stopPropagation()
@@ -819,6 +808,36 @@ class EditorView(BCChrome):
     def on_handle_mouse_down(self, e, handle):
         if e.button == 0:
             self.mouse_is_down = True
+            fi = [fi for fi in self.selected_de['form_items'] if
+                  fi['id'] == self.selected_item][0]
+            if fi['type'] == 'line':
+                if fi['x1'] < fi['x2'] and fi['y1'] < fi['y2']:
+                    d = {HANDLE_TOPLEFT: HANDLE_X1Y1,
+                        HANDLE_TOPRIGHT: HANDLE_X2Y1,
+                        HANDLE_BOTTOMLEFT: HANDLE_X1Y2,
+                        HANDLE_BOTTOMRIGHT: HANDLE_X2Y2,
+                        }
+                elif fi['x1'] > fi['x2'] and fi['y1'] < fi['y2']:
+                    d = {HANDLE_TOPLEFT: HANDLE_X2Y1,
+                        HANDLE_TOPRIGHT: HANDLE_X1Y1,
+                        HANDLE_BOTTOMLEFT: HANDLE_X2Y2,
+                        HANDLE_BOTTOMRIGHT: HANDLE_X1Y2,
+                        }
+                elif fi['x1'] < fi['x2'] and fi['y1'] > fi['y2']:
+                    d = {HANDLE_TOPLEFT: HANDLE_X1Y2,
+                        HANDLE_TOPRIGHT: HANDLE_X2Y2,
+                        HANDLE_BOTTOMLEFT: HANDLE_X1Y1,
+                        HANDLE_BOTTOMRIGHT: HANDLE_X2Y1,
+                        }
+                elif fi['x1'] > fi['x2'] and fi['y1'] > fi['y2']:
+                    d = {HANDLE_TOPLEFT: HANDLE_X2Y2,
+                        HANDLE_TOPRIGHT: HANDLE_X1Y2,
+                        HANDLE_BOTTOMLEFT: HANDLE_X2Y1,
+                        HANDLE_BOTTOMRIGHT: HANDLE_X1Y1,
+                        }
+                else:
+                    assert False
+                handle = d[handle]
             self.selected_handler = handle
             # print('on_handle_house_down called handle=', handle)
 
@@ -939,8 +958,8 @@ class EditorView(BCChrome):
                 if form_item['type'] == 'line':
                     style = ''.join(('position: absolute; ',
                                      'z-index: 1; ',
-                                     'left: {};'.format(form_item['x1']),
-                                     'top: {};'.format(form_item['y1']),
+                                     'left: {};'.format(min(form_item['x1'], form_item['x2'])),
+                                     'top: {};'.format(min(form_item['y1'], form_item['y2'])),
                                      'width: {};'.format(abs(form_item['x2'] - form_item['x1'])),
                                      'height: {};'.format(abs(form_item['y2'] - form_item['y1']))
                                      ))
@@ -1078,8 +1097,8 @@ class EditorView(BCChrome):
                 selected_form_item = \
                 [form_item for form_item in self.selected_de['form_items'] if self.selected_item == form_item['id']][0]
                 if selected_form_item['type'] == 'line':
-                    selected_form_item_x = selected_form_item['x1']
-                    selected_form_item_y = selected_form_item['y1']
+                    selected_form_item_x = min(selected_form_item['x1'], selected_form_item['x2'])
+                    selected_form_item_y = min(selected_form_item['y1'], selected_form_item['y2'])
                     selected_form_item_width = abs(selected_form_item['x2'] - selected_form_item['x1'])
                     selected_form_item_height = abs(selected_form_item['y2'] - selected_form_item['y1'])
                 else:
