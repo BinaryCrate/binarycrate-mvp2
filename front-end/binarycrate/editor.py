@@ -1597,13 +1597,17 @@ class """ + class_name + """(Form):
                           #ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
                           a({'class': "btn btn-default navbar-btn crt-btn", 'href': get_current_hash(), 'onclick': self.display_share_project_modal}, "Share")
                         ]),
-                      ]),
+                      ])
+                    ] + (
+                    [] if (project.get('type', None) == 1) else
+                    [
                       li({'class': 'nav-item li-create-new dropdown-menu-header', 'style': {'margin-left':'20px'}}, [
                         form({'action': '#'}, [
                           #ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
                           a({'class': "btn btn-default navbar-btn crt-btn", 'href': get_current_hash(), 'onclick': self.show_hide_designer}, "Hide Designer" if self.designer_visible else "Show Designer")
                         ]),
-                      ]),
+                      ])
+                    ]) + [
                       span({'style':{'color': 'white', # TODO: This is a really hacky way to display this. Add better styling
                                      'padding-top': '7px',
                                      'margin-left': '5px'}}, [
