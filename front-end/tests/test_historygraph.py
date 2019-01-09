@@ -74,7 +74,8 @@ class TestHistoryGraph(object):
         #js.globals.cavorite_ajaxPost.assert_called_with('/api/historygraph/' + str(project_id) + '/', str(dummy_uuid()))
         #js.globals.cavorite_ajaxPost.assert_called()
         assert js.globals.cavorite_ajaxPost.call_count == 1
-        assert js.globals.cavorite_ajaxPost.call_args[0][0] == '/api/historygraph/' + str(project_id) + '/write/'
+        assert js.globals.cavorite_ajaxPost.call_args[0][0] == \
+            '/api/historygraph/' + str(project_id) + '/write/'
         dc_edges = js.globals.cavorite_ajaxPost.call_args[0][2]
         assert len(dc_edges) == 2
         assert len(json.loads(dc_edges['immutableobjects'])) == 0
@@ -87,9 +88,11 @@ class TestHistoryGraph(object):
         js.globals.cavorite_ajaxPost.assert_called_with(
             '/api/historygraph/' + str(project_id) + '/list/',
             str(dummy_uuid()), {u'hashes': '[]'})
-        dc_edges2 = {'history': json.loads(dc_edges['history']), 'immutableobjects': json.loads(dc_edges['immutableobjects'])}
-        historygraphfrontend.historygraph_ajaxget_handler(Mock(status=200, responseText=json.dumps(dc_edges2)),
-                                              dc_edges2)
+        dc_edges2 = {'history': json.loads(dc_edges['history']),
+                     'immutableobjects':
+                     json.loads(dc_edges['immutableobjects'])}
+        historygraphfrontend.historygraph_ajaxget_handler(
+            Mock(status=200, responseText=json.dumps(dc_edges2)), dc_edges2)
 
         scores = historygraphfrontend.documentcollection.get_by_class(Score)
 

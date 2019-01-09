@@ -564,6 +564,7 @@ class EditorView(BCChrome):
     def query_project(self):
         global project
         if len(project) == 0:
+            self.scroll_positions = defaultdict(int)
             # Only load the project if we don't alreayd have it
             def images_api_ajax_result_handler2(xmlhttp, response):
                 # Get the images first then the projects
@@ -1769,7 +1770,8 @@ class """ + class_name + """(Form):
                                                   [t(self.get_selected_de_content)],
                                                   change_handler=self.code_mirror_change,
                                                   read_only=self.get_code_mirror_read_only,
-                                                  current_selection_fn=self.get_selected_file_de)
+                                                  current_selection_fn=self.get_selected_file_de,
+                                                  editorview=self)
         self.upload_modal = None
         self.images = []
         global original_modules
@@ -1779,6 +1781,8 @@ class """ + class_name + """(Form):
         #TODO: Option arguments should be kwargs
         self.save_progress = 0 # The number of number processes to save a project.
         self.historygraph_download_timeout = None # A timeout to keep polling the historygraph database
+        self.scroll_positions = defaultdict(int)
+
         super(EditorView, self).__init__(
             None,
             None,

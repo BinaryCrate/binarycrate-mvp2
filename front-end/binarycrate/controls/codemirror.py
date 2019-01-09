@@ -28,11 +28,13 @@ global_editor = None
 global_textarea = None
 global_change_callback_handler = None
 global_on_tab = None
+global_scroll_callback_handler = None
 
 def initialise_codemirror_callbacks():
     @js.Function
     def change_callback_handler(a, b):
-        callbacks.global_callbacks['onchange'][str(global_textarea.getAttribute('_cavorite_id'))](global_editor)
+        callbacks.global_callbacks['onchange'][str(
+            global_textarea.getAttribute('_cavorite_id'))](global_editor)
 
     global global_change_callback_handler
     global_change_callback_handler = change_callback_handler
@@ -42,7 +44,8 @@ def initialise_codemirror_callbacks():
         if cm.somethingSelected():
             sel = global_editor.getSelection("\n");
             # Indent only if there are multiple lines selected, or if the selection spans a full line
-            if (sel.length > 0 and (sel.indexOf("\n") > -1 or sel.length == cm.getLine(cm.getCursor().line).length)):
+            if (sel.length > 0 and (sel.indexOf("\n") > -1 or
+               sel.length == cm.getLine(cm.getCursor().line).length)):
                 cm.indentSelection("add")
                 return
 
@@ -54,11 +57,23 @@ def initialise_codemirror_callbacks():
     global global_on_tab
     global_on_tab = on_tab
 
+    """
+    @js.Function
+    def scroll_callback_handler(cm):
+        print('scroll_callback_handler called')
+        print('scroll_callback_handler getScrollInfo().top=', cm.getScrollInfo().top)
+        print('scroll_callback_handler type(getScrollInfo().top)=', type(cm.getScrollInfo().top))
+        #callbacks.global_callbacks['onchange'][str(global_textarea.getAttribute('_cavorite_id'))](global_editor)
+
+    global global_scroll_callback_handler
+    global_scroll_callback_handler = scroll_callback_handler
+    """
+
 last_selection = 'lastsel'
 
 class CodeMirrorHandlerVNode(textarea):
     def __init__(self, attribs=None, children=None, change_handler=None,
-                 read_only=False, current_selection_fn=None, **kwargs):
+                 read_only=False, current_selection_fn=None, editorview=None, **kwargs):
         attribs = copy.copy(attribs)
         attribs.update({'onchange': self.onchange_codemirror})
         self.change_handler = change_handler
@@ -66,6 +81,7 @@ class CodeMirrorHandlerVNode(textarea):
         self.waiting_for_timeout = False
         self.read_only = read_only
         self.current_selection_fn = current_selection_fn
+        self.editorview = editorview
         super(CodeMirrorHandlerVNode, self).__init__(attribs, children, **kwargs)
 
     def was_mounted(self):
@@ -74,6 +90,16 @@ class CodeMirrorHandlerVNode(textarea):
         from cavorite import force_redraw_all
         global global_editor
         global global_textarea
+
+        @js.Function
+        def scroll_callback_handler(cm):
+            self.editorview.scroll_positions[self.editorview.selected_de['id']] \
+                = int(cm.getScrollInfo().top)
+            #callbacks.global_callbacks['onchange'][str(global_textarea.getAttribute('_cavorite_id'))](global_editor)
+
+        global global_scroll_callback_handler
+        global_scroll_callback_handler = scroll_callback_handler
+
         if force_redraw_all:
             should_init = True
             should_init = js.globals.document.getElementsByClassName('CodeMirror').length < 2
@@ -92,6 +118,9 @@ class CodeMirrorHandlerVNode(textarea):
 
                 assert global_change_callback_handler, 'CodeMirror global_change_callback_handler not set'
                 self.editor.on('change', global_change_callback_handler)
+                self.editor.on('scroll', global_scroll_callback_handler)
+                if self.editorview.selected_de:
+                    self.editor.scrollTo(js.null, self.editorview.scroll_positions[self.editorview.selected_de['id']])
 
                 global_editor = self.editor
                 global_textarea = textarea
@@ -140,6 +169,9 @@ class CodeMirrorHandlerVNode(textarea):
 
                 assert global_change_callback_handler, 'CodeMirror global_change_callback_handler not set'
                 self.editor.on('change', global_change_callback_handler)
+                self.editor.on('scroll', global_scroll_callback_handler)
+                if self.editorview.selected_de:
+                    self.editor.scrollTo(js.null, self.editorview.scroll_positions[self.editorview.selected_de['id']])
 
                 global_editor = self.editor
                 global_textarea = textarea
