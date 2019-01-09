@@ -146,7 +146,8 @@ class BCPFolder(li):
 
     def on_contextmenu(self, e):
         posx, posy = ContextMenu.xy_from_e(e)
-        self.editor_view.context_menu = ContextMenu(self, posx, posy, (
+        self.editor_view.context_menu = ContextMenu(self, posx,
+                                        posy, (
                                         ('Delete Folder', self.delete_file),
                                         ))
         self.editor_view.mount_redraw()
@@ -776,8 +777,9 @@ class EditorView(BCChrome):
         return posx, posy
 
     def contextmenu_preview(self, e):
-        posx, posy = self.xy_from_e(e)
-        self.context_menu = ContextMenuFormItems(posx, posy, (
+        self.contextmenu_x, self.contextmenu_y = self.xy_from_e(e)
+        self.context_menu = ContextMenuFormItems(self.contextmenu_x,
+                                        self.contextmenu_y, (
                                         ('New Button', self.new_button),
                                         ('New Textbox', self.new_textbox),
                                         ('New Image', self.new_image),
@@ -1152,8 +1154,8 @@ class EditorView(BCChrome):
     def new_control(self, e, control_dict):
         if not self.selected_de:
             return
-        posx = e.clientX
-        posy = e.clientY
+        posx = self.contextmenu_x
+        posy = self.contextmenu_y
         rect = js.globals.document.getElementById('preview').getBoundingClientRect()
         posx = posx - rect.left
         posy = posy - rect.top
