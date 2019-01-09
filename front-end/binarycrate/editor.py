@@ -1420,13 +1420,14 @@ class EditorView(BCChrome):
 class """ + class_name + """(Form):
     file_location = __file__
 """
+        first_file = len([de for de in project['directory_entry'] if de['is_file']]) == 0
         new_de = {'id': str(uuid.uuid4()),
                    'name': file_name,
                    'content': content,
                    'is_file': True,
                    'form_items': [],
                    'parent_id': parent_de['id'],
-                   'is_default': False,
+                   'is_default': first_file,
                   }
         project['directory_entry'].append(new_de)
         self.selected_de = new_de
