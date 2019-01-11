@@ -168,10 +168,10 @@ class CodeMirrorHandlerVNode(textarea):
                 assert global_change_callback_handler, 'CodeMirror global_change_callback_handler not set'
                 self.editor.on('change', global_change_callback_handler)
                 self.editor.on('scroll', global_scroll_callback_handler)
-                if self.editorview.selected_de:
-                    self.editor.scrollTo(js.null, self.editorview.scroll_positions[self.editorview.selected_de['id']])
+                if global_editorview.selected_de:
+                    self.editor.scrollTo(js.null, global_editorview.scroll_positions[global_editorview.selected_de['id']])
                 width = self.editor.getWrapperElement().offsetWidth
-                if self.editorview.designer_visible is False:
+                if global_editorview.designer_visible is False:
                     width = width * 1.8
                 self.editor.setSize("{}px".format(width), "{}px".format(get_controls_height()))
 
