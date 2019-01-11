@@ -58,6 +58,16 @@ def initialise_codemirror_callbacks():
     global global_on_tab
     global_on_tab = on_tab
 
+    @js.Function
+    def scroll_callback_handler(cm):
+        self.editorview.scroll_positions[self.editorview.selected_de['id']] \
+            = int(cm.getScrollInfo().top)
+        #callbacks.global_callbacks['onchange'][str(global_textarea.getAttribute('_cavorite_id'))](global_editor)
+
+    global global_scroll_callback_handler
+    global_scroll_callback_handler = scroll_callback_handler
+
+
 last_selection = 'lastsel'
 
 class CodeMirrorHandlerVNode(textarea):
@@ -79,15 +89,6 @@ class CodeMirrorHandlerVNode(textarea):
         from cavorite import force_redraw_all
         global global_editor
         global global_textarea
-
-        @js.Function
-        def scroll_callback_handler(cm):
-            self.editorview.scroll_positions[self.editorview.selected_de['id']] \
-                = int(cm.getScrollInfo().top)
-            #callbacks.global_callbacks['onchange'][str(global_textarea.getAttribute('_cavorite_id'))](global_editor)
-
-        global global_scroll_callback_handler
-        global_scroll_callback_handler = scroll_callback_handler
 
         if force_redraw_all:
             elements = js.globals.document.getElementsByClassName('CodeMirror')
