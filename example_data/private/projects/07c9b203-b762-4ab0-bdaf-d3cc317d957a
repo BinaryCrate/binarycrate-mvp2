@@ -1,0 +1,155 @@
+from __future__ import unicode_literals, absolute_import, print_function
+from binarycrate.controls import Form
+from binarycrate.historygraphfrontend import documentcollection as dc
+from binarycrate.historygraphfrontend import post_document_collection
+
+SQUARE_WIDTH = 50
+
+class Main(Form):
+    file_location = __file__
+    
+    def get_square(self, x, y, colour):
+        
+        if colour == '':
+            image_name = 'blacksquare.png' if (x + y) % 2 == 1 else 'whitesquare.png'
+        elif colour == 'W':
+            image_name = 'whiteonblack.png'
+        elif colour == 'B':
+            image_name = 'blackonblack.png'
+        elif colour == 'WK':
+            image_name = 'whitekingonblack.png'
+        elif colour == 'BK':
+            image_name = 'blackkingonblack.png'
+        else:
+            assert False
+        
+        image_id = self.get_preloaded_image_id(image_name)
+        return {'type': 'image', 'x': x * SQUARE_WIDTH, 
+             'y': y * SQUARE_WIDTH, 'width': SQUARE_WIDTH, 
+             'height': SQUARE_WIDTH,
+             'name': '', 'visible': True, 'id':'', 
+             'preloaded_image': image_id}
+
+    def __init__(self, *args, **kwargs):
+        super(Main, self).__init__(*args, **kwargs)
+        self.squares = dict()
+        for x in range(8):
+            for y in range(8):
+                l = self.get_square(x, y, '')
+                self.squares[(x, y)] = l
+                self.add_control(l)
+        self.mouse_x = None
+        self.mouse_y = None
+        self.selected_square = None
+        self.lblNewGame.visible = False
+                
+    def DrawBoard(self):
+        for x in range(8):
+            for y in range(8):
+                piece = self.board.GetPieceAt(x, y)
+                colour = ''
+                if piece is not None:
+                    colour = piece.pieceside + piece.piecetype
+                if colour == '':
+                    image_name = 'blacksquare.png' if (x + y) % 2 == 1 else 'whitesquare.png'
+                elif colour == 'W':
+                    image_name = 'whiteonblack.png'
+                elif colour == 'B':
+                    image_name = 'blackonblack.png'
+                elif colour == 'WK':
+                    image_name = 'whitekingonblack.png'
+                elif colour == 'BK':
+                    image_name = 'blackkingonblack.png'
+                else:
+                    assert False
+                image_id = self.get_preloaded_image_id(image_name)
+                self.squares[(x, y)]['preloaded_image'] = image_id
+        if self.board.HasPlayerWon(self.board.GetTurnColour()):
+            self.lblPlayer.caption = "Player: " + ("White" if self.board.GetTurnColour() == "W" else "Black") + " has won"
+            self.lblNewGame.visible = True
+        else:
+            self.lblPlayer.caption = "Player: " + ("White" if self.board.GetTurnColour() == "W" else "Black")
+            self.lblNewGame.visible = False
+        self.UpdateSelectedSquare()
+                
+    def on_historygraph_download_complete(self):
+        self.board = self.get_board()
+        if self.board.in_multi_capture:
+            self.selected_square = (self.board.multi_capture_x,
+                                    self.board.multi_capture_y)
+        
+        self.DrawBoard()
+     
+    def get_board(self):
+        from documents import CheckersGame
+        boards = dc.get_by_class(CheckersGame)
+        if len(boards) == 0:
+            board = CheckersGame(None)
+            dc.add_document_object(board)
+            board.CreateDefaultStartBoard()
+            post_document_collection()
+            return board
+        else:
+            return boards[0]
+        
+    def on_body_mousemove(self, x, y):
+        self.mouse_x = x
+        self.mouse_y = y
+        
+    def UpdateSelectedSquare(self):
+        self.lblSelection.caption = "Selection: " + str(self.selected_square)
+        
+    def on_body_click(self):
+        if hasattr(self, 'board') and self.board.HasPlayerWon(self.board.GetTurnColour()):
+            return False
+        if self.selected_square is None:
+            if self.mouse_x is not None and self.mouse_y is not None \
+             and self.mouse_x < 8 * SQUARE_WIDTH and self.mouse_y < 8 * SQUARE_WIDTH:
+                # Translate the mouse position into the board co-ordinate system    
+                selected_square = (self.mouse_x / SQUARE_WIDTH, self.mouse_y / SQUARE_WIDTH)
+                piece = self.board.GetPieceAt(selected_square[0], selected_square[1])
+                if piece is not None and piece.pieceside == self.board.GetTurnColour():
+                    # If the piece is one of ours we can select it
+                    self.selected_square = selected_square
+        else:
+            # We have already selected a piece so we deselect it by clicking it
+            # Clicking else where does nothing
+            if self.mouse_x is not None and self.mouse_y is not None \
+             and self.mouse_x < 8 * SQUARE_WIDTH and self.mouse_y < 8 * SQUARE_WIDTH:
+                # Translate the mouse position into the board co-ordinate system    
+                selected_square = (self.mouse_x / SQUARE_WIDTH, self.mouse_y / SQUARE_WIDTH)
+                if self.selected_square == selected_square:
+                    self.selected_square = None
+                    if self.board.in_multi_capture: # Player may be voluntarily ending the multicapture
+                        self.board.in_multi_capture = False
+                        self.board.turn.add(1)
+                        post_document_collection()
+                        self.DrawBoard()
+                        return True
+                else:
+                    piece = self.board.GetPieceAt(self.selected_square[0], self.selected_square[1])
+                    if selected_square in piece.GetValidMoves():
+                        is_capture = selected_square in piece.GetValidCaptures()[0]
+                        piece.MoveTo(selected_square[0], selected_square[1])
+                        if is_capture and len(piece.GetValidCaptures()[0]):
+                            self.board.in_multi_capture = True
+                            self.selected_square = selected_square
+                            self.board.multi_capture_x = selected_square[0]
+                            self.board.multi_capture_y = selected_square[1]
+                        else:                            
+                            self.board.in_multi_capture = False
+                            self.selected_square = None
+                            if not self.board.HasPlayerWon(self.board.GetTurnColour()):
+                                self.board.turn.add(1)
+                        post_document_collection()
+                        self.DrawBoard()
+                        return True
+                    
+        self.UpdateSelectedSquare()
+        return True
+            
+    def lblNewGame_onclick(self, e):
+        self.board.delete()
+        self.board = self.get_board()
+        self.DrawBoard()
+        

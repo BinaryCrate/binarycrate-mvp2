@@ -31,8 +31,9 @@ from rest_framework.mixins import UpdateModelMixin
 import copy
 from django.http import Http404
 from historygraphbackend.models import HistoryEdge
-from .serializers import HistoryGraphSerializer
+from .serializers import HistoryGraphWriteSerializer, HistoryGraphReadSerializer
 import json
+from historygraphbackend.utils import get_unknown_edges
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -47,28 +48,44 @@ class HistoryGraphView(APIView):
     def get_queryset(self, documentcollectionid):
         return HistoryEdge.objects.by_document_collection_id(documentcollectionid)
 
-    def get(self, request, documentcollectionid, format=None):
-        edges = self.get_queryset(documentcollectionid)
-        #serializer = HistoryGraphSerializer(edges, many=True)
-        history = [(str(edge.documentid),
-                str(edge.documentclassname),
-                str(edge.classname),
-                str(edge.endnodeid),
-                str(edge.startnode1id),
-                str(edge.startnode2id),
-                str(edge.propertyownerid),
-                str(edge.propertyname),
-                str(edge.propertyvalue),
-                str(edge.propertytype),
-                str(edge.nonce)) for edge in edges]
-        return Response({'history': history, 'immutableobjects': []})
+    def post(self, request, documentcollectionid, format=None):
+        #print('post request.data=', request.data)
+        errors = 'hashes missing'
+        if 'hashes' in request.data:
+            json_data = json.loads(request.data['hashes'])
+            #print('post json_data=', json_data)
+            serializer = HistoryGraphReadSerializer(data=json_data, many=True)
+            if serializer.is_valid():
+                #edges = self.get_queryset(documentcollectionid)
+                d = {d2['documentid']:d2['clockhash'] for d2 in
+                     serializer.validated_data}
+                edges = get_unknown_edges(documentcollectionid, d)
+                history = [(str(edge.documentid),
+                        str(edge.documentclassname),
+                        str(edge.classname),
+                        str(edge.endnodeid),
+                        str(edge.startnode1id),
+                        str(edge.startnode2id),
+                        str(edge.propertyownerid),
+                        str(edge.propertyname),
+                        str(edge.propertyvalue),
+                        str(edge.propertytype),
+                        str(edge.nonce),
+                        str(edge.transaction_id)) for edge in edges]
+                #print('post history=', history)
+                return Response({'history': history, 'immutableobjects': []})
+            #print('serializer.errors=', serializer.errors)
+            errors = serializer.errors
+        return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
+class HistoryGraphWriteView(APIView):
+    permission_classes = (permissions.IsAuthenticated, )
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+
+    def get_queryset(self, documentcollectionid):
+        return HistoryEdge.objects.by_document_collection_id(documentcollectionid)
 
     def post(self, request, documentcollectionid, format=None):
-        #print('HistoryGraphView post received=', request.data)
-        #print('HistoryGraphView post received history=', request.data['history'])
-        #print('HistoryGraphView post received type history=', type(request.data['history']))
-        #print('HistoryGraphView post received imutableobjects=', request.data['immutableobjects'])
-        #print('HistoryGraphView post received type imutableobjects=', type(request.data['immutableobjects']))
         historyedges = json.loads(request.data['history']) # Ignore immutable objects for now
         historyedges2 = [{'documentid': t[0],
                 'documentclassname': t[1],
@@ -80,10 +97,17 @@ class HistoryGraphView(APIView):
                 'propertyname': t[7],
                 'propertyvalue': t[8],
                 'propertytype': t[9],
-                'nonce': t[10], 'documentcollectionid': documentcollectionid} for t in historyedges if HistoryEdge.objects.by_endnodeid(t[3]).count() == 0]
-        #print('HistoryGraphView post received historyedges2=', historyedges2)
-        serializer = HistoryGraphSerializer(data=historyedges2, many=True)
+                'nonce': t[10],
+                'transaction_id': t[11],
+                'documentcollectionid': documentcollectionid} for t in
+                historyedges if
+                HistoryEdge.objects.by_endnodeid(t[3]).count() == 0]
+        serializer = HistoryGraphWriteSerializer(data=historyedges2, many=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, documentcollectionid, format=None):
+        HistoryEdge.objects.filter(documentcollectionid=documentcollectionid).delete()
+        return Response({}, status=status.HTTP_204_NO_CONTENT)

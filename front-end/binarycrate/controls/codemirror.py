@@ -23,16 +23,19 @@ try:
 except ImportError:
     js = None
 import copy
+from binarycrate.frontend_utils import get_controls_height
 
 global_editor = None
 global_textarea = None
 global_change_callback_handler = None
 global_on_tab = None
+global_scroll_callback_handler = None
 
 def initialise_codemirror_callbacks():
     @js.Function
     def change_callback_handler(a, b):
-        callbacks.global_callbacks['onchange'][str(global_textarea.getAttribute('_cavorite_id'))](global_editor)
+        callbacks.global_callbacks['onchange'][str(
+            global_textarea.getAttribute('_cavorite_id'))](global_editor)
 
     global global_change_callback_handler
     global_change_callback_handler = change_callback_handler
@@ -42,7 +45,8 @@ def initialise_codemirror_callbacks():
         if cm.somethingSelected():
             sel = global_editor.getSelection("\n");
             # Indent only if there are multiple lines selected, or if the selection spans a full line
-            if (sel.length > 0 and (sel.indexOf("\n") > -1 or sel.length == cm.getLine(cm.getCursor().line).length)):
+            if (sel.length > 0 and (sel.indexOf("\n") > -1 or
+               sel.length == cm.getLine(cm.getCursor().line).length)):
                 cm.indentSelection("add")
                 return
 
@@ -54,11 +58,21 @@ def initialise_codemirror_callbacks():
     global global_on_tab
     global_on_tab = on_tab
 
+    @js.Function
+    def scroll_callback_handler(cm):
+        self.editorview.scroll_positions[self.editorview.selected_de['id']] \
+            = int(cm.getScrollInfo().top)
+        #callbacks.global_callbacks['onchange'][str(global_textarea.getAttribute('_cavorite_id'))](global_editor)
+
+    global global_scroll_callback_handler
+    global_scroll_callback_handler = scroll_callback_handler
+
+
 last_selection = 'lastsel'
 
 class CodeMirrorHandlerVNode(textarea):
     def __init__(self, attribs=None, children=None, change_handler=None,
-                 read_only=False, current_selection_fn=None, **kwargs):
+                 read_only=False, current_selection_fn=None, editorview=None, **kwargs):
         attribs = copy.copy(attribs)
         attribs.update({'onchange': self.onchange_codemirror})
         self.change_handler = change_handler
@@ -66,60 +80,102 @@ class CodeMirrorHandlerVNode(textarea):
         self.waiting_for_timeout = False
         self.read_only = read_only
         self.current_selection_fn = current_selection_fn
+        self.editorview = editorview
         super(CodeMirrorHandlerVNode, self).__init__(attribs, children, **kwargs)
 
     def was_mounted(self):
         #print("CodeMirrorHandlerVNode was_mounted called")
         super(CodeMirrorHandlerVNode, self).was_mounted()
-        #should_init = True
-        global last_selection
-        should_init = last_selection != self.current_selection_fn()
-        last_selection = self.current_selection_fn()
-        #print("CodeMirrorHandlerVNode was_mounted  last_selection=", last_selection)
-        #print("CodeMirrorHandlerVNode was_mounted  should_init=", should_init)
-        if should_init:
-            #should_init = js.globals.document.getElementsByClassName('CodeMirror').length < 2
-            code_mirrors = js.globals.document.getElementsByClassName('CodeMirror')
-            #print('CodeMirror was_mounted self.editor=', self.editor)
-            #if self.editor is not None:
-            #    self.editor.parentNode.removeChild(self.editor);
-            js.globals.code_mirrors = code_mirrors
+        from cavorite import force_redraw_all
+        global global_editor
+        global global_textarea
 
-            #print('was_mounted code_mirrors=', code_mirrors)
-            to_delete = []
-            for i in range(code_mirrors.length):
-                #print('code_mirrors[i].tagName=', code_mirrors[i].tagName)
-                if str(code_mirrors[i].tagName) == "DIV":
-                    to_delete.append(code_mirrors[i])
+        if force_redraw_all:
+            elements = js.globals.document.getElementsByClassName('CodeMirror')
+            should_init = js.globals.document.getElementsByClassName('CodeMirror').length < 2
+            if should_init:
+                #print('Run init')
+                textarea = js.globals.document.getElementById("code")
+                read_only = lazy_eval(self.read_only)
+                self.editor = js.globals.CodeMirror.fromTextArea(textarea, {
+                    'lineNumbers': True,
+                    #'mode': 'text/html',
+                    'mode': 'python',
+                    'indentUnit': 4,
+                    'viewportMargin': js.globals.Infinity,
+                    'readOnly': read_only,
+                  })
+                self.editor.addKeyMap({'Tab': global_on_tab,})
 
-            #while code_mirrors.length > 1:
-            #    code_mirrors.item(1).parentNode.removeChild(code_mirrors.item(1));
-            for div in to_delete:
-                div.parentNode.removeChild(div);
+                assert global_change_callback_handler, 'CodeMirror global_change_callback_handler not set'
+                self.editor.on('change', global_change_callback_handler)
+                self.editor.on('scroll', global_scroll_callback_handler)
+                if self.editorview.selected_de:
+                    self.editor.scrollTo(js.null, self.editorview.scroll_positions[self.editorview.selected_de['id']])
+                #print('self.editor.getWrapperElement().offsetWidth=', self.editor.getWrapperElement().offsetWidth)
+                width = self.editor.getWrapperElement().offsetWidth
+                if self.editorview.designer_visible is False:
+                    width = width * 1.8
+                self.editor.setSize("{}px".format(width), "{}px".format(get_controls_height()))
+
+                global_editor = self.editor
+                global_textarea = textarea
+                #self.onchange_codemirror(None)
+        else:
+            #should_init = True
+            global last_selection
+            should_init = last_selection != self.current_selection_fn()
+            last_selection = self.current_selection_fn()
+            #print("CodeMirrorHandlerVNode was_mounted  last_selection=", last_selection)
+            #print("CodeMirrorHandlerVNode was_mounted  should_init=", should_init)
+            if should_init:
+                #should_init = js.globals.document.getElementsByClassName('CodeMirror').length < 2
+                code_mirrors = js.globals.document.getElementsByClassName('CodeMirror')
+                #print('CodeMirror was_mounted self.editor=', self.editor)
+                #if self.editor is not None:
+                #    self.editor.parentNode.removeChild(self.editor);
+                js.globals.code_mirrors = code_mirrors
+
+                #print('was_mounted code_mirrors=', code_mirrors)
+                to_delete = []
+                for i in range(code_mirrors.length):
+                    #print('code_mirrors[i].tagName=', code_mirrors[i].tagName)
+                    if str(code_mirrors[i].tagName) == "DIV":
+                        to_delete.append(code_mirrors[i])
+
+                #while code_mirrors.length > 1:
+                #    code_mirrors.item(1).parentNode.removeChild(code_mirrors.item(1));
+                for div in to_delete:
+                    div.parentNode.removeChild(div);
 
 
 
-            #print("CodeMirrorHandlerVNode should_init=", should_init)
-            textarea = js.globals.document.getElementById("code")
-            read_only = lazy_eval(self.read_only)
-            self.editor = js.globals.CodeMirror.fromTextArea(textarea, {
-                'lineNumbers': True,
-                #'mode': 'text/html',
-                'mode': 'python',
-                'indentUnit': 4,
-                'viewportMargin': js.globals.Infinity,
-                'readOnly': read_only,
-              })
-            self.editor.addKeyMap({'Tab': global_on_tab,})
+                #print("CodeMirrorHandlerVNode should_init=", should_init)
+                textarea = js.globals.document.getElementById("code")
+                read_only = lazy_eval(self.read_only)
+                self.editor = js.globals.CodeMirror.fromTextArea(textarea, {
+                    'lineNumbers': True,
+                    #'mode': 'text/html',
+                    'mode': 'python',
+                    'indentUnit': 4,
+                    'viewportMargin': js.globals.Infinity,
+                    'readOnly': read_only,
+                  })
+                self.editor.addKeyMap({'Tab': global_on_tab,})
 
-            assert global_change_callback_handler, 'CodeMirror global_change_callback_handler not set'
-            self.editor.on('change', global_change_callback_handler)
+                assert global_change_callback_handler, 'CodeMirror global_change_callback_handler not set'
+                self.editor.on('change', global_change_callback_handler)
+                self.editor.on('scroll', global_scroll_callback_handler)
+                if self.editorview.selected_de:
+                    self.editor.scrollTo(js.null, self.editorview.scroll_positions[self.editorview.selected_de['id']])
+                width = self.editor.getWrapperElement().offsetWidth
+                if self.editorview.designer_visible is False:
+                    width = width * 1.8
+                self.editor.setSize("{}px".format(width), "{}px".format(get_controls_height()))
 
-            global global_editor
-            global_editor = self.editor
-            global global_textarea
-            global_textarea = textarea
-            #self.onchange_codemirror(None)
+                global_editor = self.editor
+                global_textarea = textarea
+                #self.onchange_codemirror(None)
 
     """
     def codemirror_init(self):

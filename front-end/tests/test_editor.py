@@ -37,6 +37,7 @@ from cavorite.HTML import *
 from binarycrate import historygraphfrontend
 import sys
 import pytest
+import binarycrate.frontend_utils
 
 
 class TestEditor(object):
@@ -283,6 +284,8 @@ class TestEditor(object):
         node.set_current_file_as_default(Mock())
 
         # Test we send the correct stuff when we add a new button
+        node.contextmenu_x = 100
+        node.contextmenu_y = 100
         node.new_button(Mock(clientX=100, clientY=100))
 
         js.globals.cavorite_ajaxPut.reset_mock()
@@ -585,6 +588,7 @@ class TestEditor(object):
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
@@ -788,6 +792,7 @@ class TestEditor(object):
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
@@ -1216,6 +1221,7 @@ class TestContextMenuFormItems(object):
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -1311,7 +1317,7 @@ class TestContextMenuFormItems(object):
         button = view.selected_de['form_items'][0]
         assert button['type'] == 'button'
         assert button['x'] == 10
-        assert button['y'] == 20
+        assert button['y'] == 10
         assert button['width'] == 100
         assert button['height'] == 30
         assert button['caption'] == 'Button'
@@ -1380,7 +1386,7 @@ class TestContextMenuFormItems(object):
         Router.router.on_body_mousemove(Mock(clientX=520, clientY=530))
 
         assert button['x'] == 30
-        assert button['y'] == 50
+        assert button['y'] == 40
         assert button['width'] == 100
         assert button['height'] == 30
         vnode_button = get_matching_vnode(view, is_nvode_button)
@@ -1395,7 +1401,7 @@ class TestContextMenuFormItems(object):
         Router.router.on_body_mousemove(Mock(clientX=550, clientY=550))
 
         assert button['x'] == 30
-        assert button['y'] == 50
+        assert button['y'] == 40
         assert button['width'] == 100
         assert button['height'] == 30
         vnode_button = get_matching_vnode(view, is_nvode_button)
@@ -1420,7 +1426,7 @@ class TestContextMenuFormItems(object):
 
         Router.router.on_body_mousemove(Mock(clientX=540, clientY=540))
         assert button['x'] == 20
-        assert button['y'] == 40
+        assert button['y'] == 30
         assert button['width'] == 110
         assert button['height'] == 40
 
@@ -1438,7 +1444,7 @@ class TestContextMenuFormItems(object):
 
         Router.router.on_body_mousemove(Mock(clientX=550, clientY=545))
         assert button['x'] == 20
-        assert button['y'] == 45
+        assert button['y'] == 35
         assert button['width'] == 120
         assert button['height'] == 35
 
@@ -1456,7 +1462,7 @@ class TestContextMenuFormItems(object):
 
         Router.router.on_body_mousemove(Mock(clientX=565, clientY=555))
         assert button['x'] == 20
-        assert button['y'] == 45
+        assert button['y'] == 35
         assert button['width'] == 135
         assert button['height'] == 45
 
@@ -1474,7 +1480,7 @@ class TestContextMenuFormItems(object):
 
         Router.router.on_body_mousemove(Mock(clientX=555, clientY=550))
         assert button['x'] == 10
-        assert button['y'] == 45
+        assert button['y'] == 35
         assert button['width'] == 145
         assert button['height'] == 40
 
@@ -1517,6 +1523,7 @@ class TestContextMenuFormItems(object):
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -1683,6 +1690,7 @@ class TestContextMenuFormItems(object):
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -1844,6 +1852,7 @@ class TestContextMenuFormItems(object):
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -2036,6 +2045,7 @@ class TestContextMenuFormItems(object):
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -2305,6 +2315,7 @@ class TestRunningAProgram(object):
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -2401,6 +2412,7 @@ class TestRunningAProgram(object):
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -2499,6 +2511,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -2673,8 +2686,24 @@ print('Hello folder i={}'.format(i))
 
         view.form_stack[-1].on_historygraph_download_complete = Mock()
         view.form_stack[-1].on_historygraph_download_complete.assert_not_called()
+        #js.globals.cavorite_setTimeout = Mock()
+        old_timeout = timeouts.set_timeout
+        timeouts.set_timeout = Mock()
+        assert view.historygraph_download_timeout is None
         view.on_historygraph_download_complete()
         view.form_stack[-1].on_historygraph_download_complete.assert_called_once()
+        #js.globals.cavorite_setTimeout.assert_called_once()
+        timeouts.set_timeout.assert_called_once()
+        assert view.historygraph_download_timeout is not None
+        #print('timeouts.set_timeout.call_args=', timeouts.set_timeout.call_args)
+        #print('timeouts.set_timeout.call_args[0][0]=', timeouts.set_timeout.call_args[0][0])
+        # Test that calling the timeout callback resets the timeout value
+        timeout_callback = timeouts.set_timeout.call_args[0][0]
+        #print('view.historygraph_download_timeout=',view.historygraph_download_timeout)
+        #assert False
+        timeout_callback()
+        assert view.historygraph_download_timeout is None
+        timeouts.set_timeout = old_timeout
 
         # Assert we can add a new form to the form stack
         view.form_stack[-1].open_child()
@@ -2713,11 +2742,17 @@ print('Hello folder i={}'.format(i))
         form.on_body_click.assert_called_with()
 
         result = defaultdict(bool)
+        # Test the timeout is cleared if it is set
+        view.historygraph_download_timeout = Mock()
+        old_clear_timeout = editor.timeouts.clear_timeout
+        editor.timeouts.clear_timeout = Mock()
         view.stop_project(Mock())
         assert view.program_is_running == False
         assert view.form_stack == []
         assert js.globals.document.print_to_secondary_output == False
+        timeouts.clear_timeout.assert_called_once()
         view.mount_redraw = Mock()
+        editor.timeouts.clear_timeout = old_clear_timeout
 
         virtual_node = view._build_virtual_dom()
         IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
@@ -2743,6 +2778,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(timeouts, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -2849,11 +2885,11 @@ print('Hello folder i={}'.format(i))
         assert counter['count'] == 0
 
         view.mount_redraw = Mock()
-        assert reset_hash_change_mock.call_count == 2
+        assert reset_hash_change_mock.call_count == 3
         js.globals.document.cavorite_timeouthandler(str(dummy_uuid()))
 
         view.mount_redraw.assert_called()
-        assert reset_hash_change_mock.call_count == 3
+        assert reset_hash_change_mock.call_count == 4
 
         assert counter['count'] == 1
         assert len(timeouts.global_timeout_callbacks) == 0
@@ -2875,6 +2911,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(timeouts, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -2978,8 +3015,14 @@ print('Hello folder i={}'.format(i))
         assert set(timeouts.global_timeout_val_to_id.keys()) == {val}
         assert len(form._active_timeouts) == 1
 
+        view.historygraph_download_timeout = None
+        old_clear_timeout = editor.timeouts.clear_timeout
+        editor.timeouts.clear_timeout = Mock()
         view.stop_project(Mock())
         assert len(form._active_timeouts) == 0
+        # The 2 calls are fromt he other timeout in this program
+        assert timeouts.clear_timeout.call_count == 1
+        editor.timeouts.clear_timeout = old_clear_timeout
 
     def test_running_program_can_clear_timeouts(self, monkeypatch):
         def dummy_uuid():
@@ -2995,6 +3038,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(timeouts, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -3098,12 +3142,12 @@ print('Hello folder i={}'.format(i))
         assert counter['count'] == 0
 
         view.mount_redraw = Mock()
-        assert reset_hash_change_mock.call_count == 2
+        assert reset_hash_change_mock.call_count == 3
         #js.globals.document.cavorite_timeouthandler(str(dummy_uuid()))
         view.form_stack[-1].clear_timeout(val)
 
         assert view.mount_redraw.call_count == 0
-        assert reset_hash_change_mock.call_count == 2
+        assert reset_hash_change_mock.call_count == 3
 
         assert counter['count'] == 0
         assert len(timeouts.global_timeout_callbacks) == 0
@@ -3124,6 +3168,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(timeouts, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -3230,11 +3275,11 @@ print('Hello folder i={}'.format(i))
         assert counter['count'] == 0
 
         view.mount_redraw = Mock()
-        assert reset_hash_change_mock.call_count == 2
+        assert reset_hash_change_mock.call_count == 3
         js.globals.document.cavorite_intervalhandler(str(dummy_uuid()))
 
         view.mount_redraw.assert_called()
-        assert reset_hash_change_mock.call_count == 3
+        assert reset_hash_change_mock.call_count == 4
 
         assert counter['count'] == 1
         assert set(timeouts.global_interval_callbacks.keys()) == {str(dummy_uuid())}
@@ -3264,6 +3309,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(timeouts, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -3370,11 +3416,11 @@ print('Hello folder i={}'.format(i))
         assert counter['count'] == 0
 
         view.mount_redraw = Mock()
-        assert reset_hash_change_mock.call_count == 2
+        assert reset_hash_change_mock.call_count == 3
         js.globals.document.cavorite_intervalhandler(str(dummy_uuid()))
 
         view.mount_redraw.assert_called()
-        assert reset_hash_change_mock.call_count == 3
+        assert reset_hash_change_mock.call_count == 4
 
         assert counter['count'] == 1
         assert set(timeouts.global_interval_callbacks.keys()) == {str(dummy_uuid())}
@@ -3398,6 +3444,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(codemirror, 'js', js)
         mock_download_document_collection = Mock()
         monkeypatch.setattr(historygraphfrontend, 'download_document_collection', mock_download_document_collection)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -3537,6 +3584,7 @@ historygraphfrontend.download_document_collection()
         monkeypatch.setattr(codemirror, 'js', js)
         mock_download_document_collection = Mock()
         monkeypatch.setattr(historygraphfrontend, 'download_document_collection', mock_download_document_collection)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -3637,6 +3685,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
 
         callbacks.initialise_global_callbacks()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
@@ -3738,6 +3787,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(timeouts, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
         monkeypatch.setattr(codemirror, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
         #monkeypatch.setattr(binarycrate.controls.codemirror, 'js', js)
 
         callbacks.initialise_global_callbacks()
@@ -3948,6 +3998,7 @@ class TestNewFileContentPythonProject(object):
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
@@ -4106,6 +4157,7 @@ class TestNewFileContentPythonProject(object):
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
@@ -4271,6 +4323,7 @@ class Travel(Form):
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         monkeypatch.setattr(cavorite.svg, 'js', js)
+        monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
@@ -4416,7 +4469,7 @@ class Travel(Form):
         print(new_de['content'])
         assert new_de['content'] == """from __future__ import unicode_literals, absolute_import, print_function
 from binarycrate.controls import Form
-from binarycrate.historygraphfrontend.documentcollection import dc
+from binarycrate.historygraphfrontend import documentcollection as dc
 
 class Travel(Form):
     file_location = __file__

@@ -48,6 +48,7 @@ from binarycrate.controls.bcform import get_form_item_property, FormItemPropType
 from types import ModuleType
 import sys
 from binarycrate.controls import ContextMenu
+from binarycrate.frontend_utils import get_controls_height, get_controls_width
 
 
 HANDLE_NONE = 0
@@ -55,6 +56,11 @@ HANDLE_TOPLEFT = 1
 HANDLE_TOPRIGHT = 2
 HANDLE_BOTTOMRIGHT = 4
 HANDLE_BOTTOMLEFT = 3
+# Handles for manipulating the end points of lines are a special case
+HANDLE_X1Y1 = 5
+HANDLE_X2Y1 = 6
+HANDLE_X2Y2 = 8
+HANDLE_X1Y2 = 7
 
 python_module_dir = '/lib/pypyjs/lib_pypy/'
 
@@ -63,27 +69,6 @@ project = {}
 original_modules = set()
 
 project_files = [] #All the project files we have written to the virtual file system
-
-example_html = """<!doctype html>
-<html>
-  <head>
-    <meta charset=utf-8>
-    <title>HTML5 Demo</title>
-    <style>p {font-family: monospace;}</style>
-  </head>
-  <body>
-    <p>Canvas pane goes here:</p>
-    <canvas id=pane width=300 height=200></canvas>
-    <script>
-      var canvas = document.getElementById('pane');
-      var context = canvas.getContext('2d');
-      context.fillStyle = 'rgb(250,0,0)';
-      context.fillRect(10, 10, 55, 50);
-      context.fillStyle = 'rgba(0, 0, 250, 0.5)';
-      context.fillRect(30, 30, 55, 50);
-    </script>
-  </body>
-</html>"""
 
 
 def merge_dicts(d1, d2):
@@ -146,7 +131,8 @@ class BCPFolder(li):
 
     def on_contextmenu(self, e):
         posx, posy = ContextMenu.xy_from_e(e)
-        self.editor_view.context_menu = ContextMenu(self, posx, posy, (
+        self.editor_view.context_menu = ContextMenu(self, posx,
+                                        posy, (
                                         ('Delete Folder', self.delete_file),
                                         ))
         self.editor_view.mount_redraw()
@@ -416,6 +402,13 @@ class EditorView(BCChrome):
         return classes
 
     def on_historygraph_download_complete(self):
+        if self.program_is_running:
+            def handle_download_dc_time():
+                historygraphfrontend.download_document_collection()
+                self.historygraph_download_timeout = None
+
+            self.historygraph_download_timeout = timeouts.set_timeout(
+                handle_download_dc_time, 5000)
         for form in self.form_stack:
             form.on_historygraph_download_complete()
         self.mount_redraw()
@@ -428,6 +421,9 @@ class EditorView(BCChrome):
             form.clear_all_active_timeouts()
             form.clear_all_active_intervals()
         self.form_stack = []
+        if self.historygraph_download_timeout is not None:
+            timeouts.clear_timeout(self.historygraph_download_timeout)
+
         js.globals.document.print_to_secondary_output = False
         self.cleanup_project()
         self.mount_redraw()
@@ -449,6 +445,9 @@ class EditorView(BCChrome):
         gc.collect()
 
     def run_project(self, e):
+        self.designer_visible = True
+        self.mount_redraw()
+        Router.router.ResetHashChange()
         print('EditorView run_project called')
         if self.get_default_directory_entry() is None:
             js.globals.window.alert('Error: You must select one of the files as the default to run')
@@ -554,6 +553,7 @@ class EditorView(BCChrome):
     def query_project(self):
         global project
         if len(project) == 0:
+            self.scroll_positions = defaultdict(int)
             # Only load the project if we don't alreayd have it
             def images_api_ajax_result_handler2(xmlhttp, response):
                 # Get the images first then the projects
@@ -634,7 +634,10 @@ class EditorView(BCChrome):
         global project
         return c("div",
                  {'class': "container-fluid code-area", 'style': 'padding-left: 1px; padding-top:1px height:100%;'}, [
-                     div({'class': 'row row-wrapper'}, [
+                     div({'class': 'row row-wrapper',
+                          'style': {'height': "{}".format(get_controls_height()),
+                                    'width': "{}".format(get_controls_width())
+                                    }}, [
                          div({'class': "project-fnf col-ms-2"}, [
                              div({'class': 'top-tree'}, [
                                  p({'style': 'display:inline'}, 'Files'),
@@ -643,6 +646,9 @@ class EditorView(BCChrome):
                          ]),
                          article({'class': 'col-md-12 row', 'id': 'editor'}, [
                              self.code_mirror,
+                         ] + (
+                         [ ] if not self.designer_visible else
+                         [
                              div({'class': 'row col-md-5 output-col'},
                                  (
                                      [
@@ -666,7 +672,7 @@ class EditorView(BCChrome):
                                          ]),
                                      ]),
                                  ])
-                         ]),
+                         ])),
                      ]),
                  ])
 
@@ -674,7 +680,8 @@ class EditorView(BCChrome):
         #print("on_body_click called self.context_menu=", self.context_menu)
         if self.program_is_running:
             #print('on_body_click called self.program_is_running')
-            if self.form_stack[-1].on_body_click():
+            if len(self.form_stack) > 0  and \
+               self.form_stack[-1].on_body_click():
                 #print('on_body_click redrawing screen')
                 self.mount_redraw()
                 Router.router.ResetHashChange()
@@ -698,25 +705,28 @@ class EditorView(BCChrome):
                     self.mount_redraw()
                     Router.router.ResetHashChange()
         if self.mouse_is_down and self.selected_item != '':
-            fi = [fi for fi in self.selected_de['form_items'] if fi['id'] == self.selected_item][0]
+            fi = [fi for fi in self.selected_de['form_items'] if
+                  fi['id'] == self.selected_item][0]
             if fi['type'] == 'line':
                 if self.selected_handler == HANDLE_NONE:
                     fi['x1'] += change_x
                     fi['y1'] += change_y
                     fi['x2'] += change_x
                     fi['y2'] += change_y
-                elif self.selected_handler == HANDLE_TOPLEFT:
+                elif self.selected_handler == HANDLE_X1Y1:
                     fi['x1'] += change_x
                     fi['y1'] += change_y
-                elif self.selected_handler == HANDLE_TOPRIGHT:
+                elif self.selected_handler == HANDLE_X2Y1:
                     fi['x2'] += change_x
                     fi['y1'] += change_y
-                elif self.selected_handler == HANDLE_BOTTOMRIGHT:
+                elif self.selected_handler == HANDLE_X2Y2:
                     fi['x2'] += change_x
                     fi['y2'] += change_y
-                elif self.selected_handler == HANDLE_BOTTOMLEFT:
+                elif self.selected_handler == HANDLE_X1Y2:
                     fi['x1'] += change_x
                     fi['y2'] += change_y
+                else:
+                    assert False
             else:
                 if self.selected_handler == HANDLE_NONE:
                     fi['x'] += change_x
@@ -741,6 +751,8 @@ class EditorView(BCChrome):
                     # fi['y'] += change_y
                     fi['width'] -= change_x
                     fi['height'] += change_y
+                else:
+                    assert False
             self.mount_redraw()
             Router.router.ResetHashChange()
             e.stopPropagation()
@@ -764,8 +776,9 @@ class EditorView(BCChrome):
         return posx, posy
 
     def contextmenu_preview(self, e):
-        posx, posy = self.xy_from_e(e)
-        self.context_menu = ContextMenuFormItems(posx, posy, (
+        self.contextmenu_x, self.contextmenu_y = self.xy_from_e(e)
+        self.context_menu = ContextMenuFormItems(self.contextmenu_x,
+                                        self.contextmenu_y, (
                                         ('New Button', self.new_button),
                                         ('New Textbox', self.new_textbox),
                                         ('New Image', self.new_image),
@@ -805,6 +818,36 @@ class EditorView(BCChrome):
     def on_handle_mouse_down(self, e, handle):
         if e.button == 0:
             self.mouse_is_down = True
+            fi = [fi for fi in self.selected_de['form_items'] if
+                  fi['id'] == self.selected_item][0]
+            if fi['type'] == 'line':
+                if fi['x1'] < fi['x2'] and fi['y1'] < fi['y2']:
+                    d = {HANDLE_TOPLEFT: HANDLE_X1Y1,
+                        HANDLE_TOPRIGHT: HANDLE_X2Y1,
+                        HANDLE_BOTTOMLEFT: HANDLE_X1Y2,
+                        HANDLE_BOTTOMRIGHT: HANDLE_X2Y2,
+                        }
+                elif fi['x1'] > fi['x2'] and fi['y1'] < fi['y2']:
+                    d = {HANDLE_TOPLEFT: HANDLE_X2Y1,
+                        HANDLE_TOPRIGHT: HANDLE_X1Y1,
+                        HANDLE_BOTTOMLEFT: HANDLE_X2Y2,
+                        HANDLE_BOTTOMRIGHT: HANDLE_X1Y2,
+                        }
+                elif fi['x1'] < fi['x2'] and fi['y1'] > fi['y2']:
+                    d = {HANDLE_TOPLEFT: HANDLE_X1Y2,
+                        HANDLE_TOPRIGHT: HANDLE_X2Y2,
+                        HANDLE_BOTTOMLEFT: HANDLE_X1Y1,
+                        HANDLE_BOTTOMRIGHT: HANDLE_X2Y1,
+                        }
+                elif fi['x1'] > fi['x2'] and fi['y1'] > fi['y2']:
+                    d = {HANDLE_TOPLEFT: HANDLE_X2Y2,
+                        HANDLE_TOPRIGHT: HANDLE_X1Y2,
+                        HANDLE_BOTTOMLEFT: HANDLE_X2Y1,
+                        HANDLE_BOTTOMRIGHT: HANDLE_X1Y1,
+                        }
+                else:
+                    assert False
+                handle = d[handle]
             self.selected_handler = handle
             # print('on_handle_house_down called handle=', handle)
 
@@ -826,6 +869,14 @@ class EditorView(BCChrome):
         self.save_project(e)
         jquery = js.globals['$']
         jquery('#shareProj').modal('show')
+        e.stopPropagation()
+        e.preventDefault()
+
+    def show_hide_designer(self, e):
+        #print("show_hide_designer called")
+        self.designer_visible = not self.designer_visible
+        self.mount_redraw()
+        Router.router.ResetHashChange()
         e.stopPropagation()
         e.preventDefault()
 
@@ -925,8 +976,8 @@ class EditorView(BCChrome):
                 if form_item['type'] == 'line':
                     style = ''.join(('position: absolute; ',
                                      'z-index: 1; ',
-                                     'left: {};'.format(form_item['x1']),
-                                     'top: {};'.format(form_item['y1']),
+                                     'left: {};'.format(min(form_item['x1'], form_item['x2'])),
+                                     'top: {};'.format(min(form_item['y1'], form_item['y2'])),
                                      'width: {};'.format(abs(form_item['x2'] - form_item['x1'])),
                                      'height: {};'.format(abs(form_item['y2'] - form_item['y1']))
                                      ))
@@ -1064,8 +1115,8 @@ class EditorView(BCChrome):
                 selected_form_item = \
                 [form_item for form_item in self.selected_de['form_items'] if self.selected_item == form_item['id']][0]
                 if selected_form_item['type'] == 'line':
-                    selected_form_item_x = selected_form_item['x1']
-                    selected_form_item_y = selected_form_item['y1']
+                    selected_form_item_x = min(selected_form_item['x1'], selected_form_item['x2'])
+                    selected_form_item_y = min(selected_form_item['y1'], selected_form_item['y2'])
                     selected_form_item_width = abs(selected_form_item['x2'] - selected_form_item['x1'])
                     selected_form_item_height = abs(selected_form_item['y2'] - selected_form_item['y1'])
                 else:
@@ -1140,8 +1191,8 @@ class EditorView(BCChrome):
     def new_control(self, e, control_dict):
         if not self.selected_de:
             return
-        posx = e.clientX
-        posy = e.clientY
+        posx = self.contextmenu_x
+        posy = self.contextmenu_y
         rect = js.globals.document.getElementById('preview').getBoundingClientRect()
         posx = posx - rect.left
         posy = posy - rect.top
@@ -1402,17 +1453,18 @@ class EditorView(BCChrome):
         print("""str(form_values['selFileType'])=""", str(form_values['selFileType']))
         if str(form_values['selFileType']) == 'graphical-py-file':
             content += """from binarycrate.controls import Form
-""" + ('from binarycrate.historygraphfrontend.documentcollection import dc\n' if project['type'] == 2 else '' ) + """
+""" + ('from binarycrate.historygraphfrontend import documentcollection as dc\n' if project['type'] == 2 else '' ) + """
 class """ + class_name + """(Form):
     file_location = __file__
 """
+        first_file = len([de for de in project['directory_entry'] if de['is_file']]) == 0
         new_de = {'id': str(uuid.uuid4()),
                    'name': file_name,
                    'content': content,
                    'is_file': True,
                    'form_items': [],
                    'parent_id': parent_de['id'],
-                   'is_default': False,
+                   'is_default': first_file,
                   }
         project['directory_entry'].append(new_de)
         self.selected_de = new_de
@@ -1485,6 +1537,12 @@ class """ + class_name + """(Form):
         self.mount_redraw()
         Router.router.ResetHashChange()
 
+    def delete_document_collection(self, e):
+        def done_handler(xmlhttp, response):
+            js.globals.window.alert("Done")
+        if js.globals.window.confirm("Are you sure?"):
+            historygraphfrontend.delete_document_collection(project['id'], done_handler)
+
     def close_upload_modal(self, e):
         self.upload_modal = False
         self.mount_redraw()
@@ -1514,6 +1572,7 @@ class """ + class_name + """(Form):
                         drop_down_item('Rename File', '', self.display_rename_file_modal),
                         drop_down_item('Set Default', '', self.set_current_file_as_default),
                         drop_down_item('Upload images...', '', self.upload_images),
+                        drop_down_item('Delete document collection...', '', self.delete_document_collection),
 
                         #drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
                         #drop_down_item('Square', 'fa-square', None),
@@ -1536,9 +1595,26 @@ class """ + class_name + """(Form):
                       li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
                         form({'action': '#'}, [
                           #ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
-                          a({'class': "btn btn-default navbar-btn crt-btn", 'href': get_current_hash(), 'onclick': self.display_share_project_modal}, "Share")
+                          a({'class': "btn btn-default navbar-btn crt-btn",
+                             'href': get_current_hash(),
+                              'onclick': self.display_share_project_modal},
+                             "Share")
                         ]),
-                      ]),
+                      ])
+                    ] + (
+                    [] if (project.get('type', None) == 1) else
+                    [
+                      li({'class': 'nav-item li-create-new dropdown-menu-header', 'style': {'margin-left':'20px'}}, [
+                        form({'action': '#'}, [
+                          #ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
+                          a({'class': "btn btn-default navbar-btn crt-btn",
+                             'href': get_current_hash(),
+                             'onclick': self.show_hide_designer},
+                            "Hide Designer" if self.designer_visible else
+                            "Show Designer")
+                        ]),
+                      ])
+                    ]) + [
                       span({'style':{'color': 'white', # TODO: This is a really hacky way to display this. Add better styling
                                      'padding-top': '7px',
                                      'margin-left': '5px'}}, [
@@ -1747,11 +1823,13 @@ class """ + class_name + """(Form):
         self.form_stack = list()
         cavorite.force_redraw_all = True
         self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code',
-                                                   'class': 'col-md-5 CodeMirror'},
+                                                   'class': lambda :'col-md-5 CodeMirror' if self.designer_visible else 'col-md-10 CodeMirror',
+                                                   'style': {'height':'100%'}},
                                                   [t(self.get_selected_de_content)],
                                                   change_handler=self.code_mirror_change,
                                                   read_only=self.get_code_mirror_read_only,
-                                                  current_selection_fn=self.get_selected_file_de)
+                                                  current_selection_fn=self.get_selected_file_de,
+                                                  editorview=self)
         self.upload_modal = None
         self.images = []
         global original_modules
@@ -1760,6 +1838,10 @@ class """ + class_name + """(Form):
             #print('original_modules=', original_modules)
         #TODO: Option arguments should be kwargs
         self.save_progress = 0 # The number of number processes to save a project.
+        self.historygraph_download_timeout = None # A timeout to keep polling the historygraph database
+        self.scroll_positions = defaultdict(int)
+        self.designer_visible = True
+
         super(EditorView, self).__init__(
             None,
             None,
