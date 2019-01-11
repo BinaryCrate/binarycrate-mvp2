@@ -30,6 +30,7 @@ global_textarea = None
 global_change_callback_handler = None
 global_on_tab = None
 global_scroll_callback_handler = None
+global_editorview = None
 
 def initialise_codemirror_callbacks():
     @js.Function
@@ -60,7 +61,7 @@ def initialise_codemirror_callbacks():
 
     @js.Function
     def scroll_callback_handler(cm):
-        self.editorview.scroll_positions[self.editorview.selected_de['id']] \
+        global_editorview.scroll_positions[global_editorview.selected_de['id']] \
             = int(cm.getScrollInfo().top)
         #callbacks.global_callbacks['onchange'][str(global_textarea.getAttribute('_cavorite_id'))](global_editor)
 
@@ -80,7 +81,8 @@ class CodeMirrorHandlerVNode(textarea):
         self.waiting_for_timeout = False
         self.read_only = read_only
         self.current_selection_fn = current_selection_fn
-        self.editorview = editorview
+        global global_editorview
+        global_editorview = editorview
         super(CodeMirrorHandlerVNode, self).__init__(attribs, children, **kwargs)
 
     def was_mounted(self):
@@ -110,11 +112,11 @@ class CodeMirrorHandlerVNode(textarea):
                 assert global_change_callback_handler, 'CodeMirror global_change_callback_handler not set'
                 self.editor.on('change', global_change_callback_handler)
                 self.editor.on('scroll', global_scroll_callback_handler)
-                if self.editorview.selected_de:
-                    self.editor.scrollTo(js.null, self.editorview.scroll_positions[self.editorview.selected_de['id']])
+                if global_editorview.selected_de:
+                    self.editor.scrollTo(js.null, global_editorview.scroll_positions[global_editorview.selected_de['id']])
                 #print('self.editor.getWrapperElement().offsetWidth=', self.editor.getWrapperElement().offsetWidth)
                 width = self.editor.getWrapperElement().offsetWidth
-                if self.editorview.designer_visible is False:
+                if global_editorview.designer_visible is False:
                     width = width * 1.8
                 self.editor.setSize("{}px".format(width), "{}px".format(get_controls_height()))
 
