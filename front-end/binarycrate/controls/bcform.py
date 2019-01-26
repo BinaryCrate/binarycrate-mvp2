@@ -394,3 +394,12 @@ class Form(object):
 
     def on_body_mousemove(self, x, y):
         pass
+
+    def on_body_keyup(self, e):
+        pass
+
+    def on_body_keydown(self, e):
+        pass
+
+    def on_body_keypress(self, e):
+        pass

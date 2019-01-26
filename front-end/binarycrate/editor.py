@@ -760,6 +760,24 @@ class EditorView(BCChrome):
             # print('Mouse is down mousemove e=', change_x, ',', change_y)
         # Router.router.ResetHashChange()
 
+    def on_body_keyup(self, e):
+        if self.program_is_running:
+            if self.form_stack[-1].on_body_keyup(e):
+                self.mount_redraw()
+                Router.router.ResetHashChange()
+
+    def on_body_keydown(self, e):
+        if self.program_is_running:
+            if self.form_stack[-1].on_body_keydown(e):
+                self.mount_redraw()
+                Router.router.ResetHashChange()
+
+    def on_body_keypress(self, e):
+        if self.program_is_running:
+            if self.form_stack[-1].on_body_keypress(e):
+                self.mount_redraw()
+                Router.router.ResetHashChange()
+
     def get_context_menu(self):
         return self.context_menu
 
