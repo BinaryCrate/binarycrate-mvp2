@@ -645,7 +645,18 @@ class EditorView(BCChrome):
                              self.get_project_tree(),
                          ]),
                          article({'class': 'col-md-12 row', 'id': 'editor'}, [
-                             self.code_mirror,
+                             div({'class': lambda :'col-md-5' if self.designer_visible else 'col-md-10', 'style':'padding:0px'}, [
+                               div([
+                                 html_button({'type':"button",
+                                              'class':"btn btn-sm btn-default",
+                                              'style': 'float:right',
+                                              'onclick': self.show_hide_designer},
+                                              lambda: [t('.')] if self.program_is_running else ([t(">>")] if
+                                                   self.designer_visible else
+                                                   [t("<<")])),
+                               ]),
+                               self.code_mirror,
+                             ]),
                          ] + (
                          [ ] if not self.designer_visible else
                          [
@@ -892,6 +903,8 @@ class EditorView(BCChrome):
 
     def show_hide_designer(self, e):
         #print("show_hide_designer called")
+        if self.program_is_running:
+            return
         self.designer_visible = not self.designer_visible
         self.mount_redraw()
         Router.router.ResetHashChange()
@@ -1619,20 +1632,7 @@ class """ + class_name + """(Form):
                              "Share")
                         ]),
                       ])
-                    ] + (
-                    [] if (project.get('type', None) == 1) else
-                    [
-                      li({'class': 'nav-item li-create-new dropdown-menu-header', 'style': {'margin-left':'20px'}}, [
-                        form({'action': '#'}, [
-                          #ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
-                          a({'class': "btn btn-default navbar-btn crt-btn",
-                             'href': get_current_hash(),
-                             'onclick': self.show_hide_designer},
-                            "Hide Designer" if self.designer_visible else
-                            "Show Designer")
-                        ]),
-                      ])
-                    ]) + [
+                    ] + [
                       span({'style':{'color': 'white', # TODO: This is a really hacky way to display this. Add better styling
                                      'padding-top': '7px',
                                      'margin-left': '5px'}}, [
@@ -1841,8 +1841,9 @@ class """ + class_name + """(Form):
         self.form_stack = list()
         cavorite.force_redraw_all = True
         self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code',
-                                                   'class': lambda :'col-md-5 CodeMirror' if self.designer_visible else 'col-md-10 CodeMirror',
-                                                   'style': {'height':'100%'}},
+                                                   #'class': lambda :'col-md-5 CodeMirror' if self.designer_visible else 'col-md-10 CodeMirror',
+                                                   'class':'CodeMirror',
+                                                   'style': {'height':'calc(100% - 31px)', 'width': '100%'}},
                                                   [t(self.get_selected_de_content)],
                                                   change_handler=self.code_mirror_change,
                                                   read_only=self.get_code_mirror_read_only,

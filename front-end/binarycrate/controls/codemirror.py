@@ -116,9 +116,8 @@ class CodeMirrorHandlerVNode(textarea):
                     self.editor.scrollTo(js.null, global_editorview.scroll_positions[global_editorview.selected_de['id']])
                 #print('self.editor.getWrapperElement().offsetWidth=', self.editor.getWrapperElement().offsetWidth)
                 width = self.editor.getWrapperElement().offsetWidth
-                if global_editorview.designer_visible is False:
-                    width = width * 1.8
-                self.editor.setSize("{}px".format(width), "{}px".format(get_controls_height()))
+                width = width * 2
+                self.editor.setSize("{}px".format(width), "{}px".format(get_controls_height() - 31))
 
                 global_editor = self.editor
                 global_textarea = textarea
@@ -171,8 +170,7 @@ class CodeMirrorHandlerVNode(textarea):
                 if global_editorview.selected_de:
                     self.editor.scrollTo(js.null, global_editorview.scroll_positions[global_editorview.selected_de['id']])
                 width = self.editor.getWrapperElement().offsetWidth
-                if global_editorview.designer_visible is False:
-                    width = width * 1.8
+                width = width * 2
                 self.editor.setSize("{}px".format(width), "{}px".format(get_controls_height()))
 
                 global_editor = self.editor
