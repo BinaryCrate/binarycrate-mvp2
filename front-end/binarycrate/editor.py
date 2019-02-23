@@ -300,6 +300,7 @@ class EditorView(BCChrome):
                 de_copy = copy.copy(de)
                 #print('de_copy[form_items]=', de_copy['form_items'])
                 de_copy['form_items'] = json.dumps(de_copy['form_items'])
+                de_copy['form_properties'] = json.dumps(de_copy['form_properties'])
                 ajaxput('/api/projects/directoryentry/' + de['id'] + '/', de_copy, dummy_put_result_handler)
                 self.save_progress += 1
         for de_id in project['deleted_directory_entries']:
@@ -536,6 +537,10 @@ class EditorView(BCChrome):
                             # Some of the form controls in the demo content don't have visibility set
                             if 'visible' not in fi:
                                 fi['visible'] = True
+                    if de['form_properties'] == '':
+                        de['form_properties'] = {}
+                    else:
+                        de['form_properties'] = json.loads(de['form_properties'])
                 self.mount_redraw()
                 Router.router.ResetHashChange()
 

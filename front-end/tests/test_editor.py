@@ -124,6 +124,7 @@ class TestEditor(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '', # Test when we get a completely empty result may be necessary for some transitional things
+                        'form_properties': '{}',
                         'parent_id': None,
                         'is_default': False,
                        },
@@ -133,6 +134,7 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -142,6 +144,7 @@ class TestEditor(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -151,6 +154,7 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]',
+                        'form_properties': '{"width": "200", "height": "400"}',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'is_default': True,
                        },
@@ -165,6 +169,10 @@ class TestEditor(object):
                 assert de['form_items'] == []
             else:
                 assert de['form_items'] == [{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30, "visible": True}]
+            if de['id'] != '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a':
+                assert de['form_properties'] == {}
+            else:
+                assert de['form_properties'] == {"width": "200", "height": "400"}
 
         tree = node.get_project_tree()
 
@@ -298,7 +306,7 @@ class TestEditor(object):
         was_found2 = False
         for url, data in calls:
             if url == '/api/projects/directoryentry/ae935c72-cf56-48ed-ab35-575cb9a983ea/':
-                assert len(data) == 7
+                assert len(data) == 8
                 assert data['id'] == node.selected_de['id']
                 assert data['name'] == node.selected_de['name']
                 assert data['is_file'] == node.selected_de['is_file']
@@ -306,11 +314,13 @@ class TestEditor(object):
                 assert data['parent_id'] == node.selected_de['parent_id']
                 assert data['is_default'] == True
                 assert json.loads(data['form_items']) == json.loads('[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30, "visible": true}]')
+                assert json.loads(data['form_properties']) == json.loads('{}')
                 was_found = True
             if url == '/api/projects/directoryentry/6a05e63e-6db4-4898-a3eb-2aad50dd5f9a/':
-                assert len(data) == 7
+                assert len(data) == 8
                 assert data['name'] == 'hello_folder.py'
                 assert data['is_default'] == False
+                assert json.loads(data['form_properties']) == json.loads('{"width": "200", "height": "400"}')
                 was_found2 = True
 
         assert was_found
@@ -353,7 +363,7 @@ class TestEditor(object):
 
         assert type(tree) == BCProjectTree
         root_folder = tree.get_children()
-        print('root_folde=',root_folder)
+        #print('root_folde=',root_folder)
         assert len(root_folder) == 0
 
         # Simulate the query which is sent after the screen is drawn
@@ -382,6 +392,7 @@ class TestEditor(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '', # Test when we get a completely empty result may be necessary for some transitional things
+                        'form_properties': '{}',
                         'parent_id': None,
                         'is_default': False,
                        },
@@ -391,6 +402,7 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -400,6 +412,7 @@ class TestEditor(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -409,6 +422,7 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[{"width": 100, "name": "button1", "caption": "Button", "y": 100, "x": 100, "type": "button", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "height": 30}]',
+                        'form_properties': '{}',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'is_default': True,
                        },
@@ -554,7 +568,7 @@ class TestEditor(object):
         was_found2 = False
         for url, data in calls:
             if url == '/api/projects/directoryentry/ae935c72-cf56-48ed-ab35-575cb9a983ea/':
-                assert len(data) == 7
+                assert len(data) == 8
                 assert data['id'] == node.selected_de['id']
                 assert data['name'] == node.selected_de['name']
                 assert data['is_file'] == node.selected_de['is_file']
@@ -564,7 +578,7 @@ class TestEditor(object):
                 assert json.loads(data['form_items']) == json.loads('[{"x2": 150, "name": "line1", "y1": 100, "x1": 100, "type": "line", "id": "236a5a73-0ffd-4329-95c0-9deaa95830f4", "y2": 150, "visible": true, "stroke": "rgb(0,0,0)", "stroke_width": 5}]')
                 was_found = True
             if url == '/api/projects/directoryentry/6a05e63e-6db4-4898-a3eb-2aad50dd5f9a/':
-                assert len(data) == 7
+                assert len(data) == 8
                 assert data['name'] == 'hello_folder.py'
                 assert data['is_default'] == False
                 was_found2 = True
@@ -620,6 +634,7 @@ class TestEditor(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': None,
                         'is_default': False,
                        },
@@ -629,6 +644,7 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -638,6 +654,7 @@ class TestEditor(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -647,6 +664,7 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'is_default': False,
                        },
@@ -824,6 +842,7 @@ class TestEditor(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': None,
                         'is_default': False,
                        },
@@ -833,6 +852,7 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -842,6 +862,7 @@ class TestEditor(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -851,6 +872,7 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'is_default': False,
                        },
@@ -1018,6 +1040,7 @@ class TestEditor(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': None,
                         'is_default': False,
                        },
@@ -1027,6 +1050,7 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -1036,6 +1060,7 @@ class TestEditor(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -1045,6 +1070,7 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'is_default': False,
                        },
@@ -1135,6 +1161,7 @@ class TestEditor(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': None,
                         'is_default': False,
                        },
@@ -1144,6 +1171,7 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -1153,6 +1181,7 @@ class TestEditor(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -1162,6 +1191,7 @@ class TestEditor(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'is_default': False,
                        },
@@ -1255,6 +1285,7 @@ class TestContextMenuFormItems(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': None,
                         'is_default': False,
                        },
@@ -1264,6 +1295,7 @@ class TestContextMenuFormItems(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -1273,6 +1305,7 @@ class TestContextMenuFormItems(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -1282,6 +1315,7 @@ class TestContextMenuFormItems(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'is_default': False,
                        },
@@ -1562,6 +1596,7 @@ class TestContextMenuFormItems(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': None,
                         'is_default': False,
                        },
@@ -1571,6 +1606,7 @@ class TestContextMenuFormItems(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -1580,6 +1616,7 @@ class TestContextMenuFormItems(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -1589,6 +1626,7 @@ class TestContextMenuFormItems(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'is_default': False,
                        },
@@ -1729,6 +1767,7 @@ class TestContextMenuFormItems(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': None,
                         'is_default': False,
                        },
@@ -1738,6 +1777,7 @@ class TestContextMenuFormItems(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -1747,6 +1787,7 @@ class TestContextMenuFormItems(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -1756,6 +1797,7 @@ class TestContextMenuFormItems(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'is_default': False,
                        },
@@ -1891,6 +1933,7 @@ class TestContextMenuFormItems(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': None,
                         'is_default': False,
                        },
@@ -1900,6 +1943,7 @@ class TestContextMenuFormItems(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -1909,6 +1953,7 @@ class TestContextMenuFormItems(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -1918,6 +1963,7 @@ class TestContextMenuFormItems(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'is_default': False,
                        },
@@ -2084,6 +2130,7 @@ class TestContextMenuFormItems(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': None,
                         'is_default': False,
                        },
@@ -2093,6 +2140,7 @@ class TestContextMenuFormItems(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -2102,6 +2150,7 @@ class TestContextMenuFormItems(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -2111,6 +2160,7 @@ class TestContextMenuFormItems(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'is_default': False,
                        },
@@ -2356,6 +2406,7 @@ class TestRunningAProgram(object):
                             'is_file': False,
                             'content': '',
                             'form_items': '[]',
+                            'form_properties': '{}',
                             'parent_id': None,
                             'is_default': False,
                            },
@@ -2365,6 +2416,7 @@ class TestRunningAProgram(object):
                             'is_file': True,
                             'content': hello_world_content,
                             'form_items': '[]',
+                            'form_properties': '{}',
                             'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                             'is_default': True,
                            },
@@ -2374,6 +2426,7 @@ class TestRunningAProgram(object):
                             'is_file': False,
                             'content': '',
                             'form_items': '[]',
+                            'form_properties': '{}',
                             'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                             'is_default': False,
                            },
@@ -2383,6 +2436,7 @@ class TestRunningAProgram(object):
                             'is_file': True,
                             'content': hello_folder_content,
                             'form_items': '[]',
+                            'form_properties': '{}',
                             'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                             'is_default': False,
                            },
@@ -4069,6 +4123,7 @@ print('Hello folder i={}'.format(i))
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': None,
                         'is_default': False,
                        },
@@ -4078,6 +4133,7 @@ print('Hello folder i={}'.format(i))
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -4087,6 +4143,7 @@ print('Hello folder i={}'.format(i))
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -4096,6 +4153,7 @@ print('Hello folder i={}'.format(i))
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'is_default': False,
                        },
@@ -4271,6 +4329,7 @@ class TestNewFileContentPythonProject(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': None,
                         'is_default': False,
                        },
@@ -4280,6 +4339,7 @@ class TestNewFileContentPythonProject(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -4289,6 +4349,7 @@ class TestNewFileContentPythonProject(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -4298,6 +4359,7 @@ class TestNewFileContentPythonProject(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'is_default': False,
                        },
@@ -4430,6 +4492,7 @@ class TestNewFileContentPythonProject(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': None,
                         'is_default': False,
                        },
@@ -4439,6 +4502,7 @@ class TestNewFileContentPythonProject(object):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -4448,6 +4512,7 @@ class TestNewFileContentPythonProject(object):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -4457,6 +4522,7 @@ class TestNewFileContentPythonProject(object):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'is_default': False,
                        },
@@ -4596,6 +4662,7 @@ class Travel(Form):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': None,
                         'is_default': False,
                        },
@@ -4605,6 +4672,7 @@ class Travel(Form):
                         'is_file': True,
                         'content': hello_world_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -4614,6 +4682,7 @@ class Travel(Form):
                         'is_file': False,
                         'content': '',
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'df6b6e0f-f796-40f3-9b97-df7a20899054',
                         'is_default': False,
                        },
@@ -4623,6 +4692,7 @@ class Travel(Form):
                         'is_file': True,
                         'content': hello_folder_content,
                         'form_items': '[]',
+                        'form_properties': '{}',
                         'parent_id': 'c1a4bc81-1ade-4c55-b457-81e59b785b01',
                         'is_default': False,
                        },
