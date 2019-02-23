@@ -27,6 +27,8 @@ def save_de_content(sender, instance, created, raw, **kwargs):
         project_media_storage.save(str(instance.id), StringIO(instance._content))
         project_media_storage.delete(str(instance.id) + '-form-items')
         project_media_storage.save(str(instance.id) + '-form-items', StringIO(instance._form_items))
+        project_media_storage.delete(str(instance.id) + '-form-properties')
+        project_media_storage.save(str(instance.id) + '-form-properties', StringIO(instance._form_properties))
 
 
 def load_de_content(sender, instance, **kwargs):
@@ -37,6 +39,9 @@ def load_de_content(sender, instance, **kwargs):
     if project_media_storage.exists(str(instance.id) + '-form-items'):
         with project_media_storage.open(str(instance.id) + '-form-items', 'r') as project_file:
             instance._form_items = project_file.read()
+    if project_media_storage.exists(str(instance.id) + '-form-properties'):
+        with project_media_storage.open(str(instance.id) + '-form-properties', 'r') as project_file:
+            instance._form_properties = project_file.read()
 
 
 def save_project(sender, instance, created, raw, **kwargs):
