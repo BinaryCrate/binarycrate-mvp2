@@ -45,7 +45,25 @@ class PropertiesModal(object):
                         div({'class': 'upload-files-modal-content'}, [
                           div({'style': {'width': '100%', 'height': 'calc(100% - 40px - 10px)',
                                          'padding': '20px', 'box-shadow': 'inset 0 0 10px darkgrey'}}, [
-                            p('Dummy content'),
+                            #p('Dummy content'),
+                            table({'cellpadding':"2", 'cellspacing':"2", 'style':"width: 100%; xwhite-space: nowrap; xtable-layout: fixed; border: 1px solid black;"}, [
+                              tr({'style': 'border: 1px solid black;'}, [
+                                td({'style':"width: 50%; border: 1px solid black;"}, [
+                                  p({'style': 'padding:5px'}, "Prop Name")
+                                ]),
+                                td({'style':"width: 50%; border: 1px solid black;"}, [
+                                  p({'style': 'padding:5px'}, "Prop Value")
+                                ])
+                              ]),
+                              tr([
+                                td({'style':"width: 50%; border: 1px solid black;"}, [
+                                  p({'style': 'padding:5px'}, "Prop Name")
+                                ]),
+                                td({'style':"width: 50%; border: 1px solid black;"}, [
+                                  p({'style': 'padding:5px'}, "Prop Value")
+                                ])
+                              ])
+                            ]),
                           ]),
                           div({'style': {'width': '100%', 'height': '40px', 'padding-left': '20px',
                                          'padding-right': '20px', 'margin-top': '10px'}}, [
