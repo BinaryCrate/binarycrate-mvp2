@@ -49,6 +49,7 @@ from types import ModuleType
 import sys
 from binarycrate.controls import ContextMenu
 from binarycrate.frontend_utils import get_controls_height, get_controls_width
+from .propertiesmodal import PropertiesModal
 
 
 HANDLE_NONE = 0
@@ -1408,11 +1409,9 @@ class EditorView(BCChrome):
             })
 
     def form_properties(self, e):
-        js.globals.window.alert('form_properties called')
+        self.form_properties_modal = PropertiesModal(self)
         self.mount_redraw()
         Router.router.ResetHashChange()
-        e.stopPropagation()
-        e.preventDefault()
 
     def get_selected_de_content(self):
         if self.selected_file_de is None:
@@ -1589,6 +1588,11 @@ class """ + class_name + """(Form):
 
     def close_upload_modal(self, e):
         self.upload_modal = False
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
+    def close_form_properties_modal(self, e):
+        self.form_properties_modal = False
         self.mount_redraw()
         Router.router.ResetHashChange()
 
@@ -1835,7 +1839,9 @@ class """ + class_name + """(Form):
                         ]),
                       ], self.renameFile_ok),
                     ] + \
-                    (self.upload_modal.get_modal_vnodes() if self.upload_modal else [])  + (self.licence_modal.get_modal_vnodes() if self.licence_modal else [])
+                    (self.upload_modal.get_modal_vnodes() if self.upload_modal else []) + \
+                    (self.form_properties_modal.get_modal_vnodes() if self.form_properties_modal else []) + \
+                    (self.licence_modal.get_modal_vnodes() if self.licence_modal else [])
 
     def get_code_mirror_read_only(self):
         return self.selected_file_de is None
@@ -1869,6 +1875,7 @@ class """ + class_name + """(Form):
                                                   current_selection_fn=self.get_selected_file_de,
                                                   editorview=self)
         self.upload_modal = None
+        self.form_properties_modal = None
         self.images = []
         global original_modules
         if len(original_modules) == 0:
