@@ -342,6 +342,7 @@ class ProjectCanSaveTestCase(APITestCase):
                           'content': "print('Hello world2')",
                           'parent_id': str(self.de_rootfolder.id),
                           'form_items': "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]",
+                          'form_properties': "{'width': '200', 'height': '400'}",
                           'is_default': True,
                          }
         response = self.client.put(url, data, format='json')
@@ -350,6 +351,7 @@ class ProjectCanSaveTestCase(APITestCase):
         self.assertEqual(DirectoryEntry.objects.get(id=self.de_hello_world.id).content, "print('Hello world2')")
         self.assertEqual(DirectoryEntry.objects.get(id=self.de_hello_world.id).form_items, "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]")
         self.assertEqual(DirectoryEntry.objects.get(id=self.de_hello_world.id).is_default, True)
+        self.assertEqual(DirectoryEntry.objects.get(id=self.de_hello_world.id).form_properties, "{'width': '200', 'height': '400'}")
 
     def test_put_can_create_a_new_directory_entry(self):
         data = {'id': str(uuid.uuid4()),
@@ -358,6 +360,7 @@ class ProjectCanSaveTestCase(APITestCase):
                           'content': "print('Hello world4')",
                           'parent_id': str(self.de_rootfolder.id),
                           'form_items': "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]",
+                          'form_properties': "{'width': '200', 'height': '400'}",
                           'is_default': True,
                          }
         url = reverse('api:directoryentry-detail', kwargs={'pk':data['id']})
@@ -368,6 +371,7 @@ class ProjectCanSaveTestCase(APITestCase):
         self.assertEqual(DirectoryEntry.objects.get(id=data['id']).form_items, "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]")
         self.assertEqual(str(DirectoryEntry.objects.get(id=data['id']).parent_id), data['parent_id'])
         self.assertEqual(DirectoryEntry.objects.get(id=data['id']).is_default, True)
+        self.assertEqual(DirectoryEntry.objects.get(id=data['id']).form_properties, "{'width': '200', 'height': '400'}")
 
     def test_delete_a_directory_entry(self):
         url = reverse('api:directoryentry-detail', kwargs={'pk':str(self.de_hello_world.id)})
