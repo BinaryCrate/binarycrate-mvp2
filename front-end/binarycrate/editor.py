@@ -825,6 +825,7 @@ class EditorView(BCChrome):
                                         ('New Ellipse', self.new_ellipse),
                                         ('New Line', self.new_line),
                                         ('New Hexagon', self.new_hexagon),
+                                        ('Form Properties', self.form_properties),
                                         ))
         self.mount_redraw()
         Router.router.ResetHashChange()
@@ -1405,6 +1406,13 @@ class EditorView(BCChrome):
              'fill': 'none',
              'visible': True,
             })
+
+    def form_properties(self, e):
+        js.globals.window.alert('form_properties called')
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+        e.stopPropagation()
+        e.preventDefault()
 
     def get_selected_de_content(self):
         if self.selected_file_de is None:
