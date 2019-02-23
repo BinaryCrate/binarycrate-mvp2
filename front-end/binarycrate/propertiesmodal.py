@@ -49,31 +49,38 @@ class PropertiesModal(object):
                             table({'cellpadding':"2", 'cellspacing':"2", 'style':"width: 100%; xwhite-space: nowrap; xtable-layout: fixed; border: 1px solid black;"}, [
                               tr({'style': 'border: 1px solid black;'}, [
                                 td({'style':"width: 50%; border: 1px solid black;"}, [
-                                  p({'style': 'padding:5px'}, "Prop Name")
+                                  p({'style': 'padding:5px'}, "Height")
                                 ]),
                                 td({'style':"width: 50%; border: 1px solid black;"}, [
-                                  p({'style': 'padding:5px'}, "Prop Value")
+                                  #p({'style': 'padding:5px'}, "Prop Value")
+                                  html_input({'type': "text", 'id':"txtheight",
+                                               'style': 'width:calc(100% - 10px); margin:5px;',
+                                               'value':'123'})
                                 ])
                               ]),
                               tr([
                                 td({'style':"width: 50%; border: 1px solid black;"}, [
-                                  p({'style': 'padding:5px'}, "Prop Name")
+                                  p({'style': 'padding:5px'}, "Width")
                                 ]),
                                 td({'style':"width: 50%; border: 1px solid black;"}, [
-                                  p({'style': 'padding:5px'}, "Prop Value")
+                                  #p({'style': 'padding:5px'}, "Prop Value")
+                                  html_input({'type': "text", 'id':"txtwidth",
+                                               'style': 'width:calc(100% - 10px); margin:5px;',
+                                               'value':'321'})
                                 ])
                               ])
                             ]),
                           ]),
                           div({'style': {'width': '100%', 'height': '40px', 'padding-left': '20px',
                                          'padding-right': '20px', 'margin-top': '10px'}}, [
-                            div({'style': {'width': 'calc(100% - 120px)', 'height': '40px',
+                            div({'style': {'width': 'calc(100% - 200px)', 'height': '40px',
                                            'padding-left': '20px', 'padding-right': '20px',
                                            'display': 'inline-block'}}, [
                             ]),
-                            div({'style': {'width': '120px', 'height': '40px', 'padding-left': '20px',
+                            div({'style': {'width': '200px', 'height': '40px', 'padding-left': '20px',
                                            'padding-right': '20px', 'display': 'inline-block'}}, [
-                              html_button({'onclick': self.ownerview.close_form_properties_modal}, 'Close'),
+                              html_button({'style': 'margin-right:10px', 'onclick': self.ownerview.close_form_properties_modal}, 'OK'),
+                              html_button({'onclick': self.ownerview.close_form_properties_modal}, 'Cancel'),
                             ]),
                           ]),
                         ]),
