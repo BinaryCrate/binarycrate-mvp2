@@ -28,6 +28,7 @@ import traceback
 import sys
 import uuid
 from binarycrate.controls import ContextMenu
+from cavorite import merge_dicts
 
 
 class PropertiesModal(object):
@@ -36,8 +37,13 @@ class PropertiesModal(object):
         self.ownerview = ownerview
         self.images = []
         self.popup = None
+        self.form_properties = merge_dicts({'height': '0', 'width': '0'},
+            self.ownerview.selected_de['form_properties'])
+        #print('self.form_properties=', self.form_properties)
+        #print('type(self.form_properties)=', type(self.form_properties))
 
     def get_modal_vnodes(self):
+        keys = sorted(self.form_properties.keys())
         #print('UploadModal get_modal_vnodes called')
         # Return the vnodes to inject into the Virtual DOM to display the modal
         return       [
@@ -49,26 +55,15 @@ class PropertiesModal(object):
                             table({'cellpadding':"2", 'cellspacing':"2", 'style':"width: 100%; xwhite-space: nowrap; xtable-layout: fixed; border: 1px solid black;"}, [
                               tr({'style': 'border: 1px solid black;'}, [
                                 td({'style':"width: 50%; border: 1px solid black;"}, [
-                                  p({'style': 'padding:5px'}, "Height")
+                                  p({'style': 'padding:5px'}, k)
                                 ]),
                                 td({'style':"width: 50%; border: 1px solid black;"}, [
                                   #p({'style': 'padding:5px'}, "Prop Value")
                                   html_input({'type': "text", 'id':"txtheight",
                                                'style': 'width:calc(100% - 10px); margin:5px;',
-                                               'value':'123'})
+                                               'value':self.form_properties[k]})
                                 ])
-                              ]),
-                              tr([
-                                td({'style':"width: 50%; border: 1px solid black;"}, [
-                                  p({'style': 'padding:5px'}, "Width")
-                                ]),
-                                td({'style':"width: 50%; border: 1px solid black;"}, [
-                                  #p({'style': 'padding:5px'}, "Prop Value")
-                                  html_input({'type': "text", 'id':"txtwidth",
-                                               'style': 'width:calc(100% - 10px); margin:5px;',
-                                               'value':'321'})
-                                ])
-                              ])
+                              ]) for k in keys
                             ]),
                           ]),
                           div({'style': {'width': '100%', 'height': '40px', 'padding-left': '20px',
