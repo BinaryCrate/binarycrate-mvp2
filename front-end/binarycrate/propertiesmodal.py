@@ -48,9 +48,10 @@ class PropertiesModal(object):
         for k in keys:
             control = js.globals.document.getElementById("prop" + k)
             if control == js.null:
-                print(k + " control not found")
+                #print(k + " control not found")
+                pass
             else:
-                print(k + "=" + str(control.value))
+                #print(k + "=" + str(control.value))
                 self.ownerview.selected_de['form_properties'][k] = str(control.value)
         self.ownerview.close_form_properties_modal(e)
 

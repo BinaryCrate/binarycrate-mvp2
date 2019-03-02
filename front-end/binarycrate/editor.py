@@ -683,10 +683,21 @@ class EditorView(BCChrome):
                                  if (project.get('type', None) == 1) else
                                      [
                                         # Generate preview for python projects
+                                        #div({'id': 'preview', 'class': 'col-12 code-output',
+                                        #'oncontextmenu': self.contextmenu_preview,
+                                        #'style': 'padding-left: 0px; overflow: auto',
+                                        #'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up}, [
+                                        #  div(self.get_selected_de_form_controls())
+                                        #]
+                                        #),
+                                        # Generate preview for python projects
                                         div({'id': 'preview', 'class': 'col-12 code-output',
-                                        'oncontextmenu': self.contextmenu_preview, 'style': 'padding-left: 0px',
-                                        'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up},
-                                        self.get_selected_de_form_controls()),
+                                        'oncontextmenu': self.contextmenu_preview,
+                                        'style': 'padding-left: 0px; overflow: auto',
+                                        'onmousedown': self.handle_div_mouse_down, 'onmouseup': self.on_mouse_up},
+                                          self.get_selected_de_form_controls()
+
+                                        ),
                                      ]
                                  ) +
                                  [
@@ -1084,6 +1095,8 @@ class EditorView(BCChrome):
             svg_list = list()
             form_height = smart_int(self.selected_de['form_properties'].get('height', '0'))
             form_width = smart_int(self.selected_de['form_properties'].get('width', '0'))
+            svg_width = form_width
+            svg_height = form_height
             if form_height > 0 and form_width > 0:
                 svg_list.append(svg('rect', {'x': 0,
                              'y':0,
@@ -1106,6 +1119,8 @@ class EditorView(BCChrome):
                                  'onmouseup': self.on_mouse_up,
                                  'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e),
                                  'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                    svg_width = max(svg_width,  form_item['x'] + form_item['width'])
+                    svg_height = max(svg_height,  form_item['y'] + form_item['height'])
                 if form_item['type'] == 'circle':
                     svg_list.append(svg('circle', {'cx': form_item['x'] + form_item['width'] / 2,
                                  'cy':form_item['y'] + form_item['height'] / 2,
@@ -1118,6 +1133,8 @@ class EditorView(BCChrome):
                                  'onmouseup': self.on_mouse_up,
                                  'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e),
                                  'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                    svg_width = max(svg_width,  form_item['x'] + form_item['width'])
+                    svg_height = max(svg_height,  form_item['y'] + form_item['height'])
                 if form_item['type'] == 'ellipse':
                     svg_list.append(svg('ellipse', {'cx': form_item['x'] + form_item['width'] / 2,
                                  'cy':form_item['y'] + form_item['height'] / 2,
@@ -1130,6 +1147,8 @@ class EditorView(BCChrome):
                                  'onmouseup': self.on_mouse_up,
                                  'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e),
                                  'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                    svg_width = max(svg_width,  form_item['x'] + form_item['width'])
+                    svg_height = max(svg_height,  form_item['y'] + form_item['height'])
                 if form_item['type'] == 'line':
                     svg_list.append(svg('line', {'x1': form_item['x1'],
                                  'y1':form_item['y1'],
@@ -1142,6 +1161,8 @@ class EditorView(BCChrome):
                                  'onmouseup': self.on_mouse_up,
                                  'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e),
                                  'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                    svg_width = max(svg_width,  form_item['x2'])
+                    svg_height = max(svg_height,  form_item['y2'])
                 if form_item['type'] == 'hexagon':
                     # Draw a hexagon
                     x1 = form_item['x'] + form_item['width'] / 2
@@ -1167,6 +1188,8 @@ class EditorView(BCChrome):
                                                         'id']: self.select_new_item(form_item_id, e),
                                                     'oncontextmenu': lambda e, form_item_id=form_item[
                                                         'id']: self.contextmenu_control(form_item_id, e)}))
+                    svg_width = max(svg_width,  form_item['x'] + form_item['width'])
+                    svg_height = max(svg_height,  form_item['y'] + form_item['height'])
             if self.selected_item != '':
                 #print('self.selected_item=', self.selected_item)
                 selected_form_item = \
@@ -1226,16 +1249,34 @@ class EditorView(BCChrome):
                                            #'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)
                                            }),
                             ])
-            ret.append(svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%', 'oncontextmenu': self.contextmenu_preview, 'z-index':-5, 'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up}, svg_list))
+                svg_width = max(svg_width,  selected_form_item_x + selected_form_item_width + 5)
+                svg_height = max(svg_height,  selected_form_item_y + selected_form_item_height + 5)
+            ret.append(svg('svg', {'id': 'preview-svg', 'height': svg_height, 'width': svg_width,
+                                    'oncontextmenu': self.contextmenu_preview,
+                                    'z-index':-5, 'onmousedown': self.handle_root_svg_mouse_down,
+                                    'onmouseup': self.on_mouse_up}, svg_list))
         if self.program_is_running and len(self.form_stack) > 0:
             #print('get_selected_de_form_controls getting form controls from from_stack')
             ret = self.form_stack[-1].get_form_control_elements()
             #print('get_selected_de_form_controls ret=', ret)
         return ret
 
+    def handle_div_mouse_down(self, e):
+        # Ignore click on the div which dont click the SVG they are clicking
+        # on the scroll bar
+        #pass
+        #print("handle_div_mouse_down called")
+        e.stopPropagation()
+        e.preventDefault()
+        #self.clear_selected_item(e)
+
+    def handle_root_svg_mouse_down(self, e):
+        #print("handle_root_svg_mouse_down called")
+        self.clear_selected_item(e)
+
     def clear_selected_item(self, e):
         # self.mouse_is_down = True
-        # print('clear_selected_item called')
+        #print('clear_selected_item called e=', e)
         if self.selected_item != '':
             self.selected_handler = HANDLE_NONE
             # print('clearing item')
