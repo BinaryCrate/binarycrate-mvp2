@@ -42,6 +42,18 @@ class PropertiesModal(object):
         #print('self.form_properties=', self.form_properties)
         #print('type(self.form_properties)=', type(self.form_properties))
 
+    def handle_ok(self, e):
+        print('handle_ok called')
+        keys = sorted(self.form_properties.keys())
+        for k in keys:
+            control = js.globals.document.getElementById("prop" + k)
+            if control == js.null:
+                print(k + " control not found")
+            else:
+                print(k + "=" + str(control.value))
+                self.ownerview.selected_de['form_properties'][k] = str(control.value)
+        self.ownerview.close_form_properties_modal(e)
+
     def get_modal_vnodes(self):
         keys = sorted(self.form_properties.keys())
         #print('UploadModal get_modal_vnodes called')
@@ -59,7 +71,7 @@ class PropertiesModal(object):
                                 ]),
                                 td({'style':"width: 50%; border: 1px solid black;"}, [
                                   #p({'style': 'padding:5px'}, "Prop Value")
-                                  html_input({'type': "text", 'id':"txtheight",
+                                  html_input({'type': "text", 'id': "prop" + k,
                                                'style': 'width:calc(100% - 10px); margin:5px;',
                                                'value':self.form_properties[k]})
                                 ])
@@ -74,7 +86,7 @@ class PropertiesModal(object):
                             ]),
                             div({'style': {'width': '200px', 'height': '40px', 'padding-left': '20px',
                                            'padding-right': '20px', 'display': 'inline-block'}}, [
-                              html_button({'style': 'margin-right:10px', 'onclick': self.ownerview.close_form_properties_modal}, 'OK'),
+                              html_button({'style': 'margin-right:10px', 'onclick': self.handle_ok}, 'OK'),
                               html_button({'onclick': self.ownerview.close_form_properties_modal}, 'Cancel'),
                             ]),
                           ]),
