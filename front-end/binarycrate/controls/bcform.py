@@ -403,3 +403,11 @@ class Form(object):
 
     def on_body_keypress(self, e):
         pass
+
+    def get_output_width(self):
+        # Return the width of the output area
+        return int(js.globals.document.getElementById("preview").offsetWidth)
+
+    def get_output_height(self):
+        # Return the width of the output area
+        return int(js.globals.document.getElementById("preview").offsetHeight)
