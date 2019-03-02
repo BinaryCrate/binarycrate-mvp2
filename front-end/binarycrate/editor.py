@@ -286,6 +286,14 @@ class ContextMenuFormItems(nav):
         ]
 
 
+def smart_int(s):
+    # Attempt to parse the passed in string as an integer, returning 0 if
+    # we can't convert to
+    try:
+        return int(s)
+    except ValueError as ex:
+        return 0
+
 class EditorView(BCChrome):
     def save_project(self, e):
         print('save_project called')
@@ -1074,6 +1082,17 @@ class EditorView(BCChrome):
                     control = control_class(attribs, form_item.get('caption', ''))
                     ret.append(control)
             svg_list = list()
+            form_height = smart_int(self.selected_de['form_properties'].get('height', '0'))
+            form_width = smart_int(self.selected_de['form_properties'].get('width', '0'))
+            if form_height > 0 and form_width > 0:
+                svg_list.append(svg('rect', {'x': 0,
+                             'y':0,
+                             'width': form_width,
+                             'height': form_height,
+                             'fill': 'None',
+                             'stroke-width':  1,
+                             'stroke': 'rgb(112, 128, 144)',
+                             }))
             for form_item in self.selected_de['form_items']:
                 if form_item['type'] == 'rect':
                     svg_list.append(svg('rect', {'x': form_item['x'],
@@ -1506,6 +1525,7 @@ class """ + class_name + """(Form):
                    'content': content,
                    'is_file': True,
                    'form_items': [],
+                   'form_properties': {},
                    'parent_id': parent_de['id'],
                    'is_default': first_non_document_file,
                   }
