@@ -128,6 +128,26 @@ class Form(object):
             #print('get_form_items type returning=', type(de['form_items']))
             return de['form_items']
 
+    def get_form_properties(self, loc=None, parent_id=None):
+        from binarycrate.editor import project
+        # Return the form items for this form
+        if loc is None:
+            loc = self.get_file_location()
+        if parent_id is None:
+            de = [de for de in project['directory_entry'] if de['parent_id'] is None][0]
+            parent_id = de['id']
+        i = loc.find('/')
+        if i > 0:
+            # This is directory
+            dir_name = loc[:i]
+            rest = loc[i + 1:]
+            de = [de for de in project['directory_entry'] if de['parent_id'] == parent_id and de['name'] == dir_name][0]
+            return self.get_form_items(rest, de['id'])
+        else:
+            de = [de for de in project['directory_entry'] if de['parent_id'] == parent_id and de['name'] == loc][0]
+            #print('get_form_items returning=', de['form_items'])
+            #print('get_form_items type returning=', type(de['form_items']))
+            return de['form_properties']
 
 
     def get_file_location(self):
@@ -151,9 +171,29 @@ class Form(object):
         for control in self._static_form_controls:
             setattr(self, control['name'], control)
 
+        #Initialise the form properties
+        form_properties = self.get_form_properties()
+        self.form_width = form_properties['width']
+        self.form_height = form_properties['height']
+        #print('initialise_form_controls self.form_width=', self.form_width, ' self.form_height=', self.form_height)
+
+
     def get_form_controls(self):
         #print('get_form_controls self._dynamic_form_controls=', self._dynamic_form_controls)
-        return self._static_form_controls + self._dynamic_form_controls
+        all_form_controls = self._static_form_controls + self._dynamic_form_controls
+        if self.form_width == 0 or self.form_height == 0:
+            return all_form_controls
+        ret = []
+        for fc in all_form_controls:
+            if fc['type'] == 'line':
+                if fc['x2'] < self.form_width and fc['y2'] < self.form_height \
+                   and fc['x1'] >= 0 and fc['y1'] >= 0:
+                    ret.append(fc)
+            else:
+                if (fc['x'] + fc['width']) < self.form_width and (fc['y'] + fc['height']) < self.form_height \
+                   and fc['x'] >= 0 and fc['y'] >= 0:
+                    ret.append(fc)
+        return ret
 
     def add_control(self, control):
         #print('add_control control=', control)
