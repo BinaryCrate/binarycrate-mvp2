@@ -173,8 +173,8 @@ class Form(object):
 
         #Initialise the form properties
         form_properties = self.get_form_properties()
-        self.form_width = form_properties['width']
-        self.form_height = form_properties['height']
+        self.form_width = form_properties.get('width', 0)
+        self.form_height = form_properties.get('height', 0)
         #print('initialise_form_controls self.form_width=', self.form_width, ' self.form_height=', self.form_height)
 
 
