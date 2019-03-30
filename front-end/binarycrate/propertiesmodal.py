@@ -33,18 +33,17 @@ from cavorite import merge_dicts
 
 class PropertiesModal(object):
     def __init__(self, ownerview):
-        print('PropertiesModal __init__ called')
+        #print('PropertiesModal __init__ called')
         self.ownerview = ownerview
         self.images = []
         self.popup = None
-        self.form_properties = merge_dicts({'height': '0', 'width': '0'},
-            self.ownerview.selected_de['form_properties'])
+        self.properties = self.get_initial_properties()
         #print('self.form_properties=', self.form_properties)
         #print('type(self.form_properties)=', type(self.form_properties))
 
     def handle_ok(self, e):
-        print('handle_ok called')
-        keys = sorted(self.form_properties.keys())
+        #print('handle_ok called')
+        keys = sorted(self.properties.keys())
         for k in keys:
             control = js.globals.document.getElementById("prop" + k)
             if control == js.null:
@@ -52,11 +51,11 @@ class PropertiesModal(object):
                 pass
             else:
                 #print(k + "=" + str(control.value))
-                self.ownerview.selected_de['form_properties'][k] = str(control.value)
+                self.save_value(k, str(control.value))
         self.ownerview.close_form_properties_modal(e)
 
     def get_modal_vnodes(self):
-        keys = sorted(self.form_properties.keys())
+        keys = sorted(self.properties.keys())
         #print('UploadModal get_modal_vnodes called')
         # Return the vnodes to inject into the Virtual DOM to display the modal
         return       [
@@ -74,7 +73,7 @@ class PropertiesModal(object):
                                   #p({'style': 'padding:5px'}, "Prop Value")
                                   html_input({'type': "text", 'id': "prop" + k,
                                                'style': 'width:calc(100% - 10px); margin:5px;',
-                                               'value':self.form_properties[k]})
+                                               'value':self.properties[k]})
                                 ])
                               ]) for k in keys
                             ]),
