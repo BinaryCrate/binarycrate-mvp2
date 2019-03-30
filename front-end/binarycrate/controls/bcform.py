@@ -142,7 +142,7 @@ class Form(object):
             dir_name = loc[:i]
             rest = loc[i + 1:]
             de = [de for de in project['directory_entry'] if de['parent_id'] == parent_id and de['name'] == dir_name][0]
-            return self.get_form_items(rest, de['id'])
+            return self.get_form_properties(rest, de['id'])
         else:
             de = [de for de in project['directory_entry'] if de['parent_id'] == parent_id and de['name'] == loc][0]
             #print('get_form_items returning=', de['form_items'])
@@ -173,6 +173,8 @@ class Form(object):
 
         #Initialise the form properties
         form_properties = self.get_form_properties()
+        print('initialise_form_controls form_properties=', form_properties)
+        print('initialise_form_controls get_file_location=', self.get_file_location())
         self.form_width = form_properties.get('width', 0)
         self.form_height = form_properties.get('height', 0)
         #print('initialise_form_controls self.form_width=', self.form_width, ' self.form_height=', self.form_height)
@@ -367,7 +369,7 @@ class Form(object):
         else:
             svg_height = self.form_height
         if self.form_width == 0:
-            form_width = '100%'
+            svg_width = '100%'
         else:
             svg_width = self.form_width
         ret.append(svg('svg', {'id': 'preview-svg', 'height': svg_height, 'width': svg_width}, svg_list))

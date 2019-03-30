@@ -49,7 +49,7 @@ from types import ModuleType
 import sys
 from binarycrate.controls import ContextMenu
 from binarycrate.frontend_utils import get_controls_height, get_controls_width
-from .propertiesmodal import PropertiesModal
+from .formpropertiesmodal import FormPropertiesModal
 
 
 HANDLE_NONE = 0
@@ -1462,7 +1462,7 @@ class EditorView(BCChrome):
             })
 
     def form_properties(self, e):
-        self.form_properties_modal = PropertiesModal(self)
+        self.form_properties_modal = FormPropertiesModal(self)
         self.mount_redraw()
         Router.router.ResetHashChange()
 
