@@ -289,6 +289,15 @@ class Form(object):
                 html_controls[form_item['name']] = control
                 ret.append(control)
         svg_list = list()
+        if self.form_height > 0 and self.form_width > 0:
+            svg_list.append(svg('rect', {'x': 0,
+                         'y':0,
+                         'width': self.form_width,
+                         'height': self.form_height,
+                         'fill': 'None',
+                         'stroke-width':  1,
+                         'stroke': 'rgb(112, 128, 144)',
+                         }))
         for form_item in self.get_form_controls():
             if form_item['type'] == 'rect':
                 control = svg('rect', {'x': form_item['x'],
@@ -353,7 +362,15 @@ class Form(object):
                 svg_list.append(control)
                 html_controls[form_item['name']] = control
 
-        ret.append(svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%'}, svg_list))
+        if self.form_height == 0:
+            svg_height = '100%'
+        else:
+            svg_height = self.form_height
+        if self.form_width == 0:
+            form_width = '100%'
+        else:
+            svg_width = self.form_width
+        ret.append(svg('svg', {'id': 'preview-svg', 'height': svg_height, 'width': svg_width}, svg_list))
         return ret
 
     def __init__(self, parent=None, *args, **kwargs):

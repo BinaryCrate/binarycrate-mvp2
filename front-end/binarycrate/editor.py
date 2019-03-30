@@ -685,7 +685,8 @@ class EditorView(BCChrome):
                                         # Generate preview for python projects
                                         div({'id': 'preview', 'class': 'col-12 code-output',
                                         'oncontextmenu': self.contextmenu_preview,
-                                        'style': {'padding-left': '0px', 'overflow': 'hidden' if self.program_is_running else 'auto'},
+                                        #'style': {'padding-left': '0px', 'overflow': 'hidden' if self.program_is_running else 'auto'},
+                                        'style': {'padding-left': '0px', 'overflow': 'auto'},
                                         'onmousedown': self.handle_div_mouse_down, 'onmouseup': self.on_mouse_up},
                                           self.get_selected_de_form_controls()
 
