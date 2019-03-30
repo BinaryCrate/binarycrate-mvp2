@@ -50,6 +50,7 @@ import sys
 from binarycrate.controls import ContextMenu
 from binarycrate.frontend_utils import get_controls_height, get_controls_width
 from .formpropertiesmodal import FormPropertiesModal
+from .formitempropertiesmodal import FormItemPropertiesModal
 
 
 HANDLE_NONE = 0
@@ -906,6 +907,11 @@ class EditorView(BCChrome):
         self.mount_redraw()
         Router.router.ResetHashChange()
 
+    def popup_form_item_properties_modal(self, form_item_id, e):
+        self.form_properties_modal = FormItemPropertiesModal(self, form_item_id)
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
     def display_new_file_modal(self, e):
         jquery = js.globals['$']
         jquery('#newFile').modal('show')
@@ -1003,13 +1009,17 @@ class EditorView(BCChrome):
 
     def contextmenu_control(self, form_item_id, e):
         posx, posy = self.xy_from_e(e)
-        form_item = [form_item for form_item in self.selected_de['form_items'] if form_item_id == form_item['id']][0]
-        change_items = tuple(sorted([('Change {}'.format(prop_name),
-                                      lambda e, prop_name=prop_name: self.display_property_change_modal(e, form_item,
-                                                                                                        prop_name)) for
-                                     prop_name in get_form_item_property(form_item['type'])],
-                                    key=itemgetter(0)))
-        self.context_menu = ContextMenuFormItems(posx, posy, change_items + (
+        #form_item = [form_item for form_item in self.selected_de['form_items'] if form_item_id == form_item['id']][0]
+        #change_items = tuple(sorted([('Change {}'.format(prop_name),
+        #                              lambda e, prop_name=prop_name: self.display_property_change_modal(e, form_item,
+        #                                                                                                prop_name)) for
+        #                             prop_name in get_form_item_property(form_item['type'])],
+        #                            key=itemgetter(0)))
+        #self.context_menu = ContextMenuFormItems(posx, posy, change_items + (
+        #                                ('Delete', lambda e: self.delete_selected_form_item(form_item_id, e)),
+        #                                ))
+        self.context_menu = ContextMenuFormItems(posx, posy, (
+                                        ('Properties', lambda e: self.popup_form_item_properties_modal(form_item_id, e)),
                                         ('Delete', lambda e: self.delete_selected_form_item(form_item_id, e)),
                                         ))
         self.mount_redraw()
@@ -1646,7 +1656,7 @@ class """ + class_name + """(Form):
         Router.router.ResetHashChange()
 
     def close_form_properties_modal(self, e):
-        self.form_properties_modal = False
+        self.form_properties_modal = None
         self.mount_redraw()
         Router.router.ResetHashChange()
 
