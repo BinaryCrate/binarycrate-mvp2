@@ -18,6 +18,7 @@
 from __future__ import unicode_literals, absolute_import, print_function
 from .propertiesmodal import PropertiesModal
 from cavorite import merge_dicts
+from cavorite.HTML import *
 
 
 class FormPropertiesModal(PropertiesModal):
@@ -27,3 +28,8 @@ class FormPropertiesModal(PropertiesModal):
 
     def save_value(self, key, value):
         self.ownerview.selected_de['form_properties'][key] = str(value)
+
+    def get_cell(self, k):
+        return html_input({'type': "text", 'id': "prop" + k,
+                     'style': 'width:calc(100% - 10px); margin:5px;',
+                     'value':self.properties[k]})

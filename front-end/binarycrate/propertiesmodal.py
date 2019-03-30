@@ -71,9 +71,7 @@ class PropertiesModal(object):
                                 ]),
                                 td({'style':"width: 50%; border: 1px solid black;"}, [
                                   #p({'style': 'padding:5px'}, "Prop Value")
-                                  html_input({'type': "text", 'id': "prop" + k,
-                                               'style': 'width:calc(100% - 10px); margin:5px;',
-                                               'value':self.properties[k]})
+                                  self.get_cell(k)
                                 ])
                               ]) for k in keys
                             ]),
