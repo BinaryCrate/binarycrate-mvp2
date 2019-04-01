@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'accounts',
     'historygraphbackend',
     'landingpage',
+    'parser',
     'project',
     'share',
     'content',

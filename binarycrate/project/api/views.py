@@ -39,6 +39,7 @@ from .permissions import IsReadOnlyOrAuthenticated
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
+    #TODO: This class appears in multiple places remove or put in library
 
     def enforce_csrf(self, request):
         return  # To not perform the csrf check previously happening
