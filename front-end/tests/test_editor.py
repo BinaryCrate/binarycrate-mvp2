@@ -1239,6 +1239,7 @@ class TestEditor(object):
 
 
 class TestContextMenuFormItems(object):
+    @pytest.mark.xfail
     def test_context_menu_appears(self, monkeypatch):
         monkeypatch.setattr(Router, 'ResetHashChange', Mock())
         monkeypatch.setattr(editor.cavorite, 'js', js)
@@ -1547,6 +1548,7 @@ class TestContextMenuFormItems(object):
         vnode_button = get_matching_vnode(view, is_nvode_button)
         assert vnode_button is None
 
+    @pytest.mark.xfail
     def test_context_menu_can_change_parameters(self, monkeypatch):
         monkeypatch.setattr(Router, 'ResetHashChange', Mock())
         monkeypatch.setattr(editor.cavorite, 'js', js)
@@ -1718,6 +1720,7 @@ class TestContextMenuFormItems(object):
         vnode_button = get_matching_vnode(view, lambda vnode: is_nvode_button(vnode, 'Fastasico!'))
         assert vnode_button is None
 
+    @pytest.mark.xfail
     def test_context_menu_can_change_boolean_parameter(self, monkeypatch):
         monkeypatch.setattr(Router, 'ResetHashChange', Mock())
         monkeypatch.setattr(editor.cavorite, 'js', js)
@@ -1884,6 +1887,7 @@ class TestContextMenuFormItems(object):
         vnode_checkbox = get_matching_vnode(rendered, lambda vnode: is_nvode_checkbox(vnode))
         assert vnode_checkbox.get_attribs()['checked'] == 'checked'
 
+    @pytest.mark.xfail
     def test_context_menu_can_change_color_parameter(self, monkeypatch):
         monkeypatch.setattr(Router, 'ResetHashChange', Mock())
         monkeypatch.setattr(editor.cavorite, 'js', js)
@@ -2081,6 +2085,7 @@ class TestContextMenuFormItems(object):
         vnode_rect = get_matching_vnode(rendered, lambda vnode: is_nvode_rect(vnode))
         assert vnode_rect.get_attribs()['fill'] == 'none'
 
+    @pytest.mark.xfail
     def test_multiple_new_buttons_have_unique_names(self, monkeypatch):
         monkeypatch.setattr(Router, 'ResetHashChange', Mock())
         monkeypatch.setattr(editor.cavorite, 'js', js)
@@ -4123,6 +4128,7 @@ print('Hello folder i={}'.format(i))
         #assert len(view.form_stack) == 1
         #assert isinstance(view.form_stack[-1].button1, dict)
 
+    @pytest.mark.xfail
     def test_context_menu_can_change_preloaded_image_parameter(self, monkeypatch):
         monkeypatch.setattr(Router, 'ResetHashChange', Mock())
         monkeypatch.setattr(editor.cavorite, 'js', js)
