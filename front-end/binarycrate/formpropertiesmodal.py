@@ -33,3 +33,16 @@ class FormPropertiesModal(PropertiesModal):
         return html_input({'type': "text", 'id': "prop" + k,
                      'style': 'width:calc(100% - 10px); margin:5px;',
                      'value':self.properties[k]})
+
+    def handle_ok(self, e):
+        #print('handle_ok called')
+        keys = sorted(self.properties.keys())
+        for k in keys:
+            control = js.globals.document.getElementById("prop" + k)
+            if control == js.null:
+                #print(k + " control not found")
+                pass
+            else:
+                #print(k + "=" + str(control.value))
+                self.save_value(k, str(control.value))
+        self.ownerview.close_form_properties_modal(e)

@@ -41,19 +41,6 @@ class PropertiesModal(object):
         #print('self.form_properties=', self.form_properties)
         #print('type(self.form_properties)=', type(self.form_properties))
 
-    def handle_ok(self, e):
-        #print('handle_ok called')
-        keys = sorted(self.properties.keys())
-        for k in keys:
-            control = js.globals.document.getElementById("prop" + k)
-            if control == js.null:
-                #print(k + " control not found")
-                pass
-            else:
-                #print(k + "=" + str(control.value))
-                self.save_value(k, str(control.value))
-        self.ownerview.close_form_properties_modal(e)
-
     def get_modal_vnodes(self):
         keys = sorted(self.properties.keys())
         #print('UploadModal get_modal_vnodes called')

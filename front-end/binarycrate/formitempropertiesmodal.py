@@ -22,6 +22,7 @@ import six
 from cavorite.HTML import *
 from binarycrate.controls.bcform import get_form_item_property, FormItemPropType
 import re
+import js
 
 
 class FormItemPropertiesModal(PropertiesModal):
@@ -39,9 +40,49 @@ class FormItemPropertiesModal(PropertiesModal):
         #return merge_dicts({'height': '0', 'width': '0'},
         #    self.ownerview.selected_de['form_properties'])
 
+    def handle_ok(self, e):
+        #print('handle_ok called')
+        keys = sorted(self.properties.keys())
+        for k in keys:
+            control = js.globals.document.getElementById("prop" + k)
+            #print(k + "=" + str(control.value))
+            prop_type = get_form_item_property(self.form_item['type'])[k]
+            if prop_type == FormItemPropType.BOOLEAN:
+                if control != js.null:
+                    self.save_value(k, bool(control.checked))
+            elif prop_type == FormItemPropType.COLOR:
+                controlCheck = js.globals.document.getElementById("chkEmpty" + k)
+                controlRed = js.globals.document.getElementById("txtRed" + k)
+                controlGreen = js.globals.document.getElementById("txtGreen" + k)
+                controlBlue = js.globals.document.getElementById("txtBlue" + k)
+                if controlCheck == js.null or controlRed == js.null or \
+                   controlGreen == js.null or controlBlue == js.null:
+                    continue
+                if (bool(controlCheck.checked)):
+                    self.save_value(k, "none")
+                else:
+                    value = "rgb({}, {}, {})".format(str(controlRed.value),
+                                                     str(controlGreen.value),
+                                                     str(controlBlue.value))
+                    self.save_value(k, value)
+            else:
+                if control != js.null:
+                    self.save_value(k, str(control.value))
+
+        self.ownerview.close_form_properties_modal(e)
+
     def save_value(self, key, value):
-        pass
-        #self.ownerview.selected_de['form_properties'][key] = str(value)
+        #print('save_value key=', key, ' value=', value)
+        prop_type = get_form_item_property(self.form_item['type'])[key]
+        if prop_type == FormItemPropType.INT:
+            self.form_item[key] = int(value)
+        elif prop_type == FormItemPropType.STRING or \
+           prop_type == FormItemPropType.PRELOADED_IMAGE:
+            self.form_item[key] = str(value)
+        elif prop_type == FormItemPropType.BOOLEAN:
+            self.form_item[key] = value
+        elif prop_type == FormItemPropType.COLOR:
+            self.form_item[key] = str(value)
 
     def get_cell(self, k):
         prop_type = get_form_item_property(self.form_item['type'])[k]
