@@ -47,7 +47,7 @@ def find_functions(red):
     assert classes[0].parent == red, 'Class not in the global scope'
     cls = classes[0]
     fns = cls.find_all("DefNode")
-    return [fn.name for fn in fns]
+    return [[fn.name, fn.absolute_bounding_box.top_left.line] for fn in fns]
     #fns = [fn for fn in fns if fn.name == fn_name]
     #assert len(fns) == 1, str(fns)
     #fn = fns[0]
