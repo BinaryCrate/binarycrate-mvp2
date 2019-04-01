@@ -21,3 +21,9 @@ from rest_framework import serializers
 
 class MemberFunctionsSerializer(serializers.Serializer):
     content = serializers.CharField()
+
+
+class AddMemberFunctionSerializer(serializers.Serializer):
+    content = serializers.CharField()
+    newfunction = serializers.CharField()
+    function_name = serializers.CharField()

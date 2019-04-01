@@ -55,3 +55,33 @@ class ParserTestCase(APITestCase):
         self.assertEqual(len(response.data), 2)
         self.assertEqual(response.data[0], ["__init__", 2])
         self.assertEqual(response.data[1], ["button1_onclick", 6])
+
+
+class AddFunctionToClassTestCase(APITestCase):
+    def setUp(self):
+        u = UserFactory()
+        self.client.force_authenticate(user=u)
+
+    def test_simple_add_member_function(self):
+        url = reverse('api:parser-add-member-function')
+        data = {'content': """class MyForm(Form):
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.name = ""
+""",
+        'function_name': 'button1_onclick',
+        'newfunction': """def button1_onclick(self, e):
+    pass
+"""}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data['content'], """class MyForm(Form):
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.name = ""
+    def button1_onclick(self, e):
+        pass
+""")
+        self.assertEqual(response.data['new_functions'], [["__init__", 2],
+                         ["button1_onclick", 5]])

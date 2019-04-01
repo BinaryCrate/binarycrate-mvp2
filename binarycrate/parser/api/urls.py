@@ -23,6 +23,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 urlpatterns = [
     url(r'^get-functions/$', views.MemberFunctionsView.as_view(), name='parser-get-member-functions'),
+    url(r'^add-function/$', views.AddMemberFunctionView.as_view(), name='parser-add-member-function'),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

@@ -22,7 +22,7 @@ from rest_framework.authentication import SessionAuthentication, BasicAuthentica
 from rest_framework.response import Response
 from rest_framework import status
 from redbaron import RedBaron
-from .serializers import MemberFunctionsSerializer
+from .serializers import MemberFunctionsSerializer, AddMemberFunctionSerializer
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -55,6 +55,16 @@ def find_functions(red):
     #print(dir(fn.absolute_bounding_box.top_left.line))
     #return fn.absolute_bounding_box.top_left.line
 
+def add_function(red, fn_name, fn_text):
+    classes = red.find_all("ClassNode")
+    assert len(classes) == 1, str(classes)
+    assert classes[0].parent == red, 'Class not in the global scope'
+    cls = classes[0]
+    fns = cls.find_all("DefNode")
+    if not any([fn.name == fn_name for fn in fns]):
+        cls.append(fn_text)
+    return red.dumps()
+
 class MemberFunctionsView(APIView):
     permission_classes = (permissions.IsAuthenticated, )
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
@@ -65,3 +75,20 @@ class MemberFunctionsView(APIView):
             red = process_prog(serializer.data['content'])
             fns = find_functions(red)
             return Response(fns, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AddMemberFunctionView(APIView):
+    permission_classes = (permissions.IsAuthenticated, )
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+
+    def post(self, request, format=None):
+        serializer = AddMemberFunctionSerializer(data=request.data)
+        if serializer.is_valid():
+            red = process_prog(serializer.data['content'])
+            result = add_function(red, serializer.data['function_name'],
+                                  serializer.data['newfunction'])
+            fns = find_functions(red)
+            return Response({'content': result, 'new_functions': fns},
+                            status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
