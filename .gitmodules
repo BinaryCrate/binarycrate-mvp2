@@ -13,3 +13,15 @@
 [submodule "pypyjs_modules/six"]
 	path = pypyjs_modules/six
 	url = https://github.com/BinaryCrate/six.git
+[submodule "pypyjs_modules/appdirs"]
+	path = pypyjs_modules/appdirs
+	url = https://github.com/ActiveState/appdirs.git
+[submodule "pypyjs_modules/baron"]
+	path = pypyjs_modules/baron
+	url = https://github.com/PyCQA/baron.git
+[submodule "pypyjs_modules/redbaron"]
+	path = pypyjs_modules/redbaron
+	url = https://github.com/PyCQA/redbaron.git
+[submodule "pypyjs_modules/rply"]
+	path = pypyjs_modules/rply
+	url = https://github.com/alex/rply.git
