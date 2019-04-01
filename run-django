@@ -5,10 +5,20 @@ python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py add /o
 python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py add /opt/project/pypyjs-release/pypyjs-release/lib/modules/ /opt/project/pypyjs_modules/beautifulsoup4-4.6.0/bs4/
 python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py add /opt/project/pypyjs-release/pypyjs-release/lib/modules/ /opt/project/pypyjs_modules/munch/munch/
 python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py add /opt/project/pypyjs-release/pypyjs-release/lib/modules/ /opt/project/pypyjs_modules/six/six.py
+python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py add /opt/project/pypyjs-release/pypyjs-release/lib/modules/ /opt/project/pypyjs_modules/appdirs/appdirs.py
+python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py add /opt/project/pypyjs-release/pypyjs-release/lib/modules/ /opt/project/pypyjs_modules/baron/baron/
+python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py add /opt/project/pypyjs-release/pypyjs-release/lib/modules/ /opt/project/pypyjs_modules/redbaron/redbaron/
+python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py add /opt/project/pypyjs-release/pypyjs-release/lib/modules/ /opt/project/pypyjs_modules/rply/rply/
+
 python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py preload /opt/project/pypyjs-release/pypyjs-release/lib/modules/ bs4
 python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py preload /opt/project/pypyjs-release/pypyjs-release/lib/modules/ cavorite
 python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py preload /opt/project/pypyjs-release/pypyjs-release/lib/modules/ binarycrate
 python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py preload /opt/project/pypyjs-release/pypyjs-release/lib/modules/ historygraph
 python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py preload /opt/project/pypyjs-release/pypyjs-release/lib/modules/ munch
 python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py preload /opt/project/pypyjs-release/pypyjs-release/lib/modules/ six
+python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py preload /opt/project/pypyjs-release/pypyjs-release/lib/modules/ appdirs
+python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py preload /opt/project/pypyjs-release/pypyjs-release/lib/modules/ baron
+python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py preload /opt/project/pypyjs-release/pypyjs-release/lib/modules/ redbaron
+python /opt/project/pypyjs-release/pypyjs-release/tools/module_bundler.py preload /opt/project/pypyjs-release/pypyjs-release/lib/modules/ rply
+
 python /opt/project/binarycrate/manage.py $*

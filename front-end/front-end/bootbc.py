@@ -20,4 +20,14 @@ from __future__ import absolute_import, print_function, unicode_literals
 import binarycrate
 
 print('Build number = ', binarycrate.BUILD_NUMBER)
+
+print('Attempting redbaron import')
+import timeit
+start = timeit.default_timer()
+from redbaron import RedBaron
+stop = timeit.default_timer()
+
+print('Rebaron import complete')
+print('Time: ', stop - start)
+
 binarycrate.start()
