@@ -29,7 +29,7 @@ import uuid
 from .navigation import BCChrome, navitem
 import cavorite.bootstrap.modals as modals
 from cavorite.bootstrap.modals import ModalTrigger, Modal
-from cavorite.ajaxget import ajaxget, ajaxput, ajaxdelete
+from cavorite.ajaxget import ajaxget, ajaxput, ajaxdelete, ajaxpost
 import json
 from operator import itemgetter
 from collections import defaultdict
@@ -120,6 +120,7 @@ class BCPFolder(li):
         self.editor_view.folder_state[self.de['id']] = not self.editor_view.folder_state[self.de['id']]
         self.editor_view.selected_de = self.de
         self.editor_view.selected_file_de = None
+        self.editor_view.selected_file_method_cache = {}
         self.editor_view.selected_item = ''
         self.editor_view.mount_redraw()
         self.editor_view.update_html_preview()
@@ -178,7 +179,9 @@ class BCPFile(li):
     def on_click(self, e):
         self.editor_view.selected_de = self.de
         self.editor_view.selected_file_de = self.de
+        self.editor_view.selected_file_method_cache = {}
         self.editor_view.selected_item = ''
+        self.editor_view.query_file_functions()
         self.editor_view.mount_redraw()
         self.editor_view.update_html_preview()
         Router.router.ResetHashChange()
@@ -536,6 +539,7 @@ class EditorView(BCChrome):
             if project  != new_project:
                 self.selected_de = None
                 self.selected_file_de = None
+                self.selected_file_method_cache = {}
                 project = new_project
                 project['deleted_directory_entries'] = list()
                 for de in project['directory_entry']:
@@ -560,6 +564,7 @@ class EditorView(BCChrome):
         self.context_menu = None
         self.selected_de = None
         self.selected_file_de = None
+        self.selected_file_method_cache = {}
         super(EditorView, self).mount(element)
 
     def get_project(self):
@@ -582,6 +587,19 @@ class EditorView(BCChrome):
                     ajaxget('/api/projects/' + self.get_root().url_kwargs['project_id'] + '/', self.projects_api_ajax_result_handler)
 
             ajaxget('/api/projects/image-list/' + self.get_root().url_kwargs['project_id'] + '/', images_api_ajax_result_handler2)
+
+    def ajaxpost_file_functions_handler(self, xmlhttp, response):
+        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+            result = json.loads(str(xmlhttp.responseText))
+            print('ajaxpost_file_functions_handler result=', result)
+        else:
+            print('ajaxpost_file_functions_handler returned error status=', xmlhttp.status)
+
+    def query_file_functions(self):
+        # This function will trigger asyncronosly querying the structure of the given file
+        print('Getting structure for file ', self.selected_file_de['name'])
+        form_data = {'content': self.get_selected_de_content()}
+        ajaxpost('/api/parser/get-functions/', form_data, self.ajaxpost_file_functions_handler)
 
     def was_mounted(self):
         #print('was_mounted called')
@@ -625,14 +643,15 @@ class EditorView(BCChrome):
         return [
                  select({'id': 'selControl'}, [
                    option({'value': 'general'}, 'General'),
-                   option({'value': 'form'}, 'Form'),
-                 ]),
+                 ] + ([] if 'form_class_name' not in self.selected_file_method_cache else
+                   [option({'value': 'form'}, self.selected_file_method_cache['form_class_name'])]
+                 )
+                 ),
                  select({'id': 'selFunction'}, [
                    option({'value': 'general'}, '__init__'),
                    option({'value': 'form', 'style': 'font-weight: bold'}, "onclick"),
                  ])
                 ]
-]
 
     def get_central_content(self):
         """
@@ -1591,6 +1610,7 @@ class """ + class_name + """(Form):
         project['directory_entry'].append(new_de)
         self.selected_de = new_de
         self.selected_file_de = new_de
+        self.selected_file_method_cache = {}
         self.mount_redraw()
         Router.router.ResetHashChange()
 
@@ -1935,6 +1955,7 @@ class """ + class_name + """(Form):
         # print('EditorView __init__')
         self.selected_de = None
         self.selected_file_de = None
+        self.selected_file_method_cache = {}
         self.folder_state = defaultdict(bool)
         self.context_menu = None
         self.selected_item = ''
