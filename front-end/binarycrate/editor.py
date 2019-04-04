@@ -619,6 +619,21 @@ class EditorView(BCChrome):
                 ]),
             ]
 
+    def get_function_select_controls(self):
+        # This function returns the contents of the select controls where we can choose the
+        # class and method
+        return [
+                 select({'id': 'selControl'}, [
+                   option({'value': 'general'}, 'General'),
+                   option({'value': 'form'}, 'Form'),
+                 ]),
+                 select({'id': 'selFunction'}, [
+                   option({'value': 'general'}, '__init__'),
+                   option({'value': 'form', 'style': 'font-weight: bold'}, "onclick"),
+                 ])
+                ]
+]
+
     def get_central_content(self):
         """
         return    c("div", {'class': "container-fluid code-area", 'style': 'padding-left: 1px; padding-top:1px height:100%;'}, [
@@ -661,7 +676,7 @@ class EditorView(BCChrome):
                          ]),
                          article({'class': 'col-md-12 row', 'id': 'editor'}, [
                              div({'class': lambda :'col-md-5' if self.designer_visible else 'col-md-10', 'style':'padding:0px'}, [
-                               div([
+                               div(self.get_function_select_controls() + [
                                  html_button({'type':"button",
                                               'class':"btn btn-sm btn-default",
                                               'style': 'float:right',
