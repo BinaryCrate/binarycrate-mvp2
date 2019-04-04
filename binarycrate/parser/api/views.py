@@ -41,6 +41,13 @@ def process_prog(prog_text):
     #    cls.append(fn_to_insert)
     return red
 
+def get_class_name(red):
+    # Return the name of the only class in the program test passed in which
+    # is subclass of form
+    classes = red.find_all("ClassNode")
+    cls = classes[0]
+    return cls.name
+
 def find_functions(red):
     classes = red.find_all("ClassNode")
     assert len(classes) == 1, str(classes)
@@ -74,7 +81,8 @@ class MemberFunctionsView(APIView):
         if serializer.is_valid():
             red = process_prog(serializer.data['content'])
             fns = find_functions(red)
-            return Response(fns, status=status.HTTP_200_OK)
+            return Response({"classname": get_class_name(red),
+                             "functions": fns}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -89,6 +97,7 @@ class AddMemberFunctionView(APIView):
             result = add_function(red, serializer.data['function_name'],
                                   serializer.data['newfunction'])
             fns = find_functions(red)
-            return Response({'content': result, 'new_functions': fns},
+            return Response({'content': result, 'new_functions': fns,
+                            "classname": get_class_name(red)},
                             status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

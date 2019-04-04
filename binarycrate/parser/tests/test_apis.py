@@ -36,8 +36,8 @@ class ParserTestCase(APITestCase):
 """ }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0], ["__init__", 2])
+        self.assertEqual(response.data, {"classname": "MyForm",
+                                            "functions": [["__init__", 2]]})
 
 
     def test_parse_class_with_two_functions(self):
@@ -52,9 +52,9 @@ class ParserTestCase(APITestCase):
 """ }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
-        self.assertEqual(response.data[0], ["__init__", 2])
-        self.assertEqual(response.data[1], ["button1_onclick", 6])
+        self.assertEqual(response.data, {"classname": "MyForm",
+                                            "functions": [["__init__", 2],
+                                                ["button1_onclick", 6]]})
 
 
 class AddFunctionToClassTestCase(APITestCase):
@@ -75,7 +75,6 @@ class AddFunctionToClassTestCase(APITestCase):
 """}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
         self.assertEqual(response.data['content'], """class MyForm(Form):
     def __init__(self, *args, **kwargs):
         super(MyForm, self).__init__(*args, **kwargs)
@@ -85,3 +84,4 @@ class AddFunctionToClassTestCase(APITestCase):
 """)
         self.assertEqual(response.data['new_functions'], [["__init__", 2],
                          ["button1_onclick", 5]])
+        self.assertEqual(response.data['classname'], "MyForm")
