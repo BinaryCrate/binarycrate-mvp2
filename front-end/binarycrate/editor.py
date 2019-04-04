@@ -591,7 +591,10 @@ class EditorView(BCChrome):
     def ajaxpost_file_functions_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             result = json.loads(str(xmlhttp.responseText))
-            print('ajaxpost_file_functions_handler result=', result)
+            self.selected_file_method_cache['form_class_name'] = result['classname']
+            #print('ajaxpost_file_functions_handler result=', result)
+            self.mount_redraw()
+            Router.router.ResetHashChange()
         else:
             print('ajaxpost_file_functions_handler returned error status=', xmlhttp.status)
 
