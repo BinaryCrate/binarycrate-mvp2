@@ -53,6 +53,19 @@ class ParserTestCase(APITestCase):
                                             "functions": [["__init__", 2]]})
 
 
+    def test_multiple_inheritance_parse_example_reverse_order(self):
+        url = reverse('api:parser-get-member-functions')
+        data = {'content': """class MyForm(Jinx, Form):
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.name = ""
+""" }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {"classname": "MyForm",
+                                            "functions": [["__init__", 2]]})
+
+
     def test_parse_class_with_two_functions(self):
         url = reverse('api:parser-get-member-functions')
         data = {'content': """class MyForm(Form):
