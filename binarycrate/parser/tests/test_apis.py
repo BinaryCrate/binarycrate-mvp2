@@ -163,6 +163,34 @@ class BillyBob(object):
         self.assertEqual(response.data, {"classname": "MyForm",
                                             "functions": [["__init__", 2]]})
 
+    def test_file_form_class_not_in_global_scope_parse_example(self):
+        url = reverse('api:parser-get-member-functions')
+        data = {'content': """class BillyBob(object):
+    class MyForm(Form):
+        def __init__(self, *args, **kwargs):
+            super(MyForm, self).__init__(*args, **kwargs)
+            self.name = ""
+""" }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {"error_message": "Not a Form file"})
+
+    def test_file_form_class_not_in_global_scope_parse_example_multiple_classes(self):
+        url = reverse('api:parser-get-member-functions')
+        data = {'content': """class BillyBob(object):
+    class MyForm(Form):
+        def __init__(self, *args, **kwargs):
+            super(MyForm, self).__init__(*args, **kwargs)
+            self.name = ""
+    class OtherForm(Form):
+        def __init__(self, *args, **kwargs):
+            super(MyForm, self).__init__(*args, **kwargs)
+            self.name = ""
+""" }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {"error_message": "Not a Form file"})
+
 
 class AddFunctionToClassTestCase(APITestCase):
     def setUp(self):

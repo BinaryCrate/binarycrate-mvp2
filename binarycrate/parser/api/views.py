@@ -44,13 +44,13 @@ def process_prog(prog_text):
     #    cls.append(fn_to_insert)
     return red
 
-def is_form_class(cls):
+def is_form_class(red, cls):
     try:
         for superclas in cls.inherit_from.node_list[0]:
             #print('Iterating superclas=', superclas)
             #print('type(superclas)=', type(superclas))
             #print('superclas.value=', superclas.value)
-            if superclas.value == 'Form':
+            if cls.parent == red and superclas.value == 'Form':
                 return True
     except TypeError:
         #print("Appears to not be iterable therefore there is only one superclass")
@@ -58,7 +58,7 @@ def is_form_class(cls):
         #print('superclas=', superclas)
         #print('type(superclas)=', type(superclas))
         #print('superclas.value=', superclas.value)
-        return superclas.value == 'Form'
+        return cls.parent == red and superclas.value == 'Form'
     return False
 
 def get_class_name(red):
@@ -69,7 +69,7 @@ def get_class_name(red):
     #assert len(classes) == 1
     form_class = None
     for cls in classes:
-        if is_form_class(cls):
+        if is_form_class(red, cls):
             if form_class is not None:
                 # More than one form class was found
                 return None
@@ -92,7 +92,7 @@ def find_functions(red):
         return [[fn.name, fn.absolute_bounding_box.top_left.line] for fn in fns]
     classes = red.find_all("ClassNode")
     for cls in classes:
-        if is_form_class(cls):
+        if is_form_class(red, cls):
             return find_functions_in_class(cls)
     assert False, "No form class was found"
     #assert len(classes) == 1, str(classes)
