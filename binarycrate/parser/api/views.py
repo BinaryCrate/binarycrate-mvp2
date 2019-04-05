@@ -67,10 +67,14 @@ def get_class_name(red):
     classes = red.find_all("ClassNode")
     print("len(classes)=", len(classes))
     #assert len(classes) == 1
+    form_class = None
     for cls in classes:
         if is_form_class(cls):
-            return cls.name
-    return None
+            if form_class is not None:
+                # More than one form class was found
+                return None
+            form_class = cls.name
+    return form_class
     #print('get_class_name cls=', cls)
     #print('get_class_name dir(cls)=', dir(cls))
     #red.help()
