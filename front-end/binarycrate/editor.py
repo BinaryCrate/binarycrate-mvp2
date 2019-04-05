@@ -18,6 +18,7 @@ from __future__ import unicode_literals, absolute_import, print_function
 import cavorite
 from cavorite import c, t, Router, callbacks, timeouts, get_current_hash, get_uuid
 from cavorite.HTML import *
+import datetime
 
 try:
     import js
@@ -1570,11 +1571,25 @@ class EditorView(BCChrome):
             print("update_html_preview called")
 
     def code_mirror_change(self, content):
+        def handle_delay_file_method_cahce_update():
+            self.last_file_method_cache_update_timeout = None
+            self.last_file_method_cache_update = datetime.datetime.now()
+            print('handle_delay_file_method_cahce_update called')
+
         global project
         # print('code_mirror_change called')
         if self.selected_file_de is not None:
             if self.selected_file_de['content'] != str(content):
                 self.selected_file_de['content'] = str(content)
+                if (datetime.datetime.now() - self.last_file_method_cache_update).total_seconds() < 5:
+                    print("Last update was 5 seconds ago defering for 5 seconds")
+                    self.last_file_method_cache_update_timeout = \
+                        timeouts.set_timeout(handle_delay_file_method_cahce_update, 5000)
+                else:
+                    print("No query in the last 5 seconds running now")
+                    if (self.last_file_method_cache_update_timeout is not None):
+                        timeouts.clear_timeout(self.last_file_method_cache_update_timeout)
+                    self.last_file_method_cache_update = datetime.datetime.now()
                 # self.mount_redraw()
                 # Router.router.ResetHashChange()
 
@@ -1959,6 +1974,8 @@ class """ + class_name + """(Form):
         self.selected_de = None
         self.selected_file_de = None
         self.selected_file_method_cache = {}
+        self.last_file_method_cache_update = datetime.datetime(2019,1,1,0,0,0)
+        self.last_file_method_cache_update_timeout = None
         self.folder_state = defaultdict(bool)
         self.context_menu = None
         self.selected_item = ''
