@@ -46,6 +46,31 @@ def get_class_name(red):
     # is subclass of form
     classes = red.find_all("ClassNode")
     cls = classes[0]
+    #print('get_class_name cls=', cls)
+    #print('get_class_name dir(cls)=', dir(cls))
+    #red.help()
+    #print('----------------------------------------')
+    #cls.inherit_from.help()
+    #print('cls.inherit_from[0]', cls.inherit_from[0])
+    #print('type(cls.inherit_from)', type(cls.inherit_from))
+    #print('dir(cls.inherit_from)', dir(cls.inherit_from))
+    #print('cls.inherit_from.node_list=', cls.inherit_from.node_list)
+    #print('cls.inherit_from.node_list[0]=', cls.inherit_from.node_list[0])
+    is_form_class = False
+    try:
+        for superclas in cls.inherit_from.node_list[0]:
+            #print('Iterating superclas=', superclas)
+            #print('type(superclas)=', type(superclas))
+            #print('superclas.value=', superclas.value)
+            is_form_class = is_form_class or superclas.value == 'Form'
+    except TypeError:
+        #print("Appears to not be iterable therefore there is only one superclass")
+        superclas = cls.inherit_from.node_list[0]
+        #print('superclas=', superclas)
+        #print('type(superclas)=', type(superclas))
+        #print('superclas.value=', superclas.value)
+        is_form_class = is_form_class or superclas.value == 'Form'
+    assert is_form_class
     return cls.name
 
 def find_functions(red):
