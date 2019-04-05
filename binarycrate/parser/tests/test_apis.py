@@ -192,6 +192,25 @@ class BillyBob(object):
         self.assertEqual(response.data, {"error_message": "Not a Form file"})
 
 
+    def test_file_form_class_one_of_multiple_in_global_scope_parse(self):
+        url = reverse('api:parser-get-member-functions')
+        data = {'content': """class BillyBob(object):
+    class MyForm(Form):
+        def __init__(self, *args, **kwargs):
+            super(MyForm, self).__init__(*args, **kwargs)
+            self.name = ""
+
+class OtherForm(Form):
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.name = ""
+""" }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {"classname": "OtherForm",
+                                            "functions": [["__init__", 8]]})
+
+
 class AddFunctionToClassTestCase(APITestCase):
     def setUp(self):
         u = UserFactory()
