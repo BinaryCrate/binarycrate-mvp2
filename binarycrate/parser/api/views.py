@@ -61,9 +61,40 @@ def is_form_class(red, cls):
         return cls.parent == red and superclas.value == 'Form'
     return False
 
+def get_form_class(red):
+    # Return the valid form class, None if there is no valid form class
+    classes = red.find_all("ClassNode")
+    #print("len(classes)=", len(classes))
+    #assert len(classes) == 1
+    form_class = None
+    for cls in classes:
+        if is_form_class(red, cls):
+            if form_class is not None:
+                # More than one form class was found
+                return None
+            form_class = cls
+    return form_class
+    #print('get_class_name cls=', cls)
+    #print('get_class_name dir(cls)=', dir(cls))
+    #red.help()
+    #print('----------------------------------------')
+    #cls.inherit_from.help()
+    #print('cls.inherit_from[0]', cls.inherit_from[0])
+    #print('type(cls.inherit_from)', type(cls.inherit_from))
+    #print('dir(cls.inherit_from)', dir(cls.inherit_from))
+    #print('cls.inherit_from.node_list=', cls.inherit_from.node_list)
+    #print('cls.inherit_from.node_list[0]=', cls.inherit_from.node_list[0])
+
 def get_class_name(red):
     # Return the name of the only class in the program test passed in which
     # is subclass of form
+    form_class = get_form_class(red)
+    if form_class is None:
+        return None
+    else:
+        return form_class.name
+
+    """
     classes = red.find_all("ClassNode")
     print("len(classes)=", len(classes))
     #assert len(classes) == 1
@@ -85,6 +116,7 @@ def get_class_name(red):
     #print('dir(cls.inherit_from)', dir(cls.inherit_from))
     #print('cls.inherit_from.node_list=', cls.inherit_from.node_list)
     #print('cls.inherit_from.node_list[0]=', cls.inherit_from.node_list[0])
+    """
 
 def find_functions(red):
     def find_functions_in_class(cls):
@@ -106,10 +138,11 @@ def find_functions(red):
     #return fn.absolute_bounding_box.top_left.line
 
 def add_function(red, fn_name, fn_text):
-    classes = red.find_all("ClassNode")
-    assert len(classes) == 1, str(classes)
-    assert classes[0].parent == red, 'Class not in the global scope'
-    cls = classes[0]
+    #classes = red.find_all("ClassNode")
+    #assert len(classes) == 1, str(classes)
+    #assert classes[0].parent == red, 'Class not in the global scope'
+    #cls = classes[0]
+    cls = get_form_class(red)
     fns = cls.find_all("DefNode")
     if not any([fn.name == fn_name for fn in fns]):
         cls.append(fn_text)
@@ -146,6 +179,10 @@ class AddMemberFunctionView(APIView):
         serializer = AddMemberFunctionSerializer(data=request.data)
         if serializer.is_valid():
             red = process_prog(serializer.data['content'])
+            if red is None:
+                # Not valid Python code
+                return Response({'error_message': 'Not a Form file'},
+                                status=status.HTTP_400_BAD_REQUEST)
             result = add_function(red, serializer.data['function_name'],
                                   serializer.data['newfunction'])
             fns = find_functions(red)

@@ -239,3 +239,141 @@ class AddFunctionToClassTestCase(APITestCase):
         self.assertEqual(response.data['new_functions'], [["__init__", 2],
                          ["button1_onclick", 5]])
         self.assertEqual(response.data['classname'], "MyForm")
+
+    def test_simple_add_member_function_invalid_syntax(self):
+        url = reverse('api:parser-add-member-function')
+        data = {'content': """class MyForm(Form)
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.name = ""
+""",
+        'function_name': 'button1_onclick',
+        'newfunction': """def button1_onclick(self, e):
+    pass
+"""}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {"error_message": "Not a Form file"})
+
+    def test_simple_add_member_function_multiple_inheritances(self):
+        url = reverse('api:parser-add-member-function')
+        data = {'content': """class MyForm(Form, Jinx):
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.name = ""
+""",
+        'function_name': 'button1_onclick',
+        'newfunction': """def button1_onclick(self, e):
+    pass
+"""}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['content'], """class MyForm(Form, Jinx):
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.name = ""
+    def button1_onclick(self, e):
+        pass
+""")
+        self.assertEqual(response.data['new_functions'], [["__init__", 2],
+                         ["button1_onclick", 5]])
+        self.assertEqual(response.data['classname'], "MyForm")
+
+    def test_simple_add_member_function_class_must_be_in_global_scope(self):
+        url = reverse('api:parser-add-member-function')
+        data = {'content': """class Jinx(object):
+    class MyForm(Form)
+        def __init__(self, *args, **kwargs):
+            super(MyForm, self).__init__(*args, **kwargs)
+            self.name = ""
+""",
+        'function_name': 'button1_onclick',
+        'newfunction': """def button1_onclick(self, e):
+    pass
+"""}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {"error_message": "Not a Form file"})
+
+    def test_simple_add_member_function_class_exactly_one_form_class_must_be_present(self):
+        url = reverse('api:parser-add-member-function')
+        data = {'content': """class MyForm(Form)
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.name = ""
+
+class OtherForm(Form)
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.name = ""
+""",
+        'function_name': 'button1_onclick',
+        'newfunction': """def button1_onclick(self, e):
+    pass
+"""}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {"error_message": "Not a Form file"})
+
+    def test_simple_add_member_function_exact_one_form_class_is_ok(self):
+        url = reverse('api:parser-add-member-function')
+        data = {'content': """class BillyBob(object):
+    pass
+
+class MyForm(Form):
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.name = ""
+""",
+        'function_name': 'button1_onclick',
+        'newfunction': """def button1_onclick(self, e):
+    pass
+"""}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['content'], """class BillyBob(object):
+    pass
+
+class MyForm(Form):
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.name = ""
+    def button1_onclick(self, e):
+        pass
+""")
+        self.assertEqual(response.data['new_functions'], [["__init__", 5],
+                         ["button1_onclick", 8]])
+        self.assertEqual(response.data['classname'], "MyForm")
+
+    def test_simple_add_member_function_exact_one_form_class_is_ok_subclasses_correctly_ignored(self):
+        url = reverse('api:parser-add-member-function')
+        data = {'content': """class BillyBob(object):
+    class OtherForm(Form):
+        pass
+
+class MyForm(Form):
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.name = ""
+""",
+        'function_name': 'button1_onclick',
+        'newfunction': """def button1_onclick(self, e):
+    pass
+"""}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        print('response.data[content=',response.data['content'])
+        self.assertEqual(response.data['content'], """class BillyBob(object):
+    class OtherForm(Form):
+        pass
+
+class MyForm(Form):
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.name = ""
+    def button1_onclick(self, e):
+        pass
+""")
+        self.assertEqual(response.data['new_functions'], [["__init__", 6],
+                         ["button1_onclick", 9]])
+        self.assertEqual(response.data['classname'], "MyForm")
