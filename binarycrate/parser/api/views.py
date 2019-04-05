@@ -23,7 +23,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from redbaron import RedBaron
 from .serializers import MemberFunctionsSerializer, AddMemberFunctionSerializer
-
+from baron.parser import ParsingError
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
     #TODO: This class appears in multiple places remove or put in library
@@ -31,7 +31,10 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
         return  # To not perform the csrf check previously happening
 
 def process_prog(prog_text):
-    red = RedBaron(prog_text)
+    try:
+        red = RedBaron(prog_text)
+    except ParsingError as ex:
+        return None
     #classes = red.find_all("ClassNode")
     #assert len(classes) == 1, str(classes)
     #assert classes[0].parent == red, 'Class not in the global scope'
@@ -41,11 +44,33 @@ def process_prog(prog_text):
     #    cls.append(fn_to_insert)
     return red
 
+def is_form_class(cls):
+    try:
+        for superclas in cls.inherit_from.node_list[0]:
+            #print('Iterating superclas=', superclas)
+            #print('type(superclas)=', type(superclas))
+            #print('superclas.value=', superclas.value)
+            if superclas.value == 'Form':
+                return True
+    except TypeError:
+        #print("Appears to not be iterable therefore there is only one superclass")
+        superclas = cls.inherit_from.node_list[0]
+        #print('superclas=', superclas)
+        #print('type(superclas)=', type(superclas))
+        #print('superclas.value=', superclas.value)
+        return superclas.value == 'Form'
+    return False
+
 def get_class_name(red):
     # Return the name of the only class in the program test passed in which
     # is subclass of form
     classes = red.find_all("ClassNode")
-    cls = classes[0]
+    print("len(classes)=", len(classes))
+    #assert len(classes) == 1
+    for cls in classes:
+        if is_form_class(cls):
+            return cls.name
+    return None
     #print('get_class_name cls=', cls)
     #print('get_class_name dir(cls)=', dir(cls))
     #red.help()
@@ -56,30 +81,19 @@ def get_class_name(red):
     #print('dir(cls.inherit_from)', dir(cls.inherit_from))
     #print('cls.inherit_from.node_list=', cls.inherit_from.node_list)
     #print('cls.inherit_from.node_list[0]=', cls.inherit_from.node_list[0])
-    is_form_class = False
-    try:
-        for superclas in cls.inherit_from.node_list[0]:
-            #print('Iterating superclas=', superclas)
-            #print('type(superclas)=', type(superclas))
-            #print('superclas.value=', superclas.value)
-            is_form_class = is_form_class or superclas.value == 'Form'
-    except TypeError:
-        #print("Appears to not be iterable therefore there is only one superclass")
-        superclas = cls.inherit_from.node_list[0]
-        #print('superclas=', superclas)
-        #print('type(superclas)=', type(superclas))
-        #print('superclas.value=', superclas.value)
-        is_form_class = is_form_class or superclas.value == 'Form'
-    assert is_form_class
-    return cls.name
 
 def find_functions(red):
+    def find_functions_in_class(cls):
+        fns = cls.find_all("DefNode")
+        return [[fn.name, fn.absolute_bounding_box.top_left.line] for fn in fns]
     classes = red.find_all("ClassNode")
-    assert len(classes) == 1, str(classes)
-    assert classes[0].parent == red, 'Class not in the global scope'
-    cls = classes[0]
-    fns = cls.find_all("DefNode")
-    return [[fn.name, fn.absolute_bounding_box.top_left.line] for fn in fns]
+    for cls in classes:
+        if is_form_class(cls):
+            return find_functions_in_class(cls)
+    assert False, "No form class was found"
+    #assert len(classes) == 1, str(classes)
+    #assert classes[0].parent == red, 'Class not in the global scope'
+    #cls = classes[0]
     #fns = [fn for fn in fns if fn.name == fn_name]
     #assert len(fns) == 1, str(fns)
     #fn = fns[0]
@@ -105,8 +119,17 @@ class MemberFunctionsView(APIView):
         serializer = MemberFunctionsSerializer(data=request.data)
         if serializer.is_valid():
             red = process_prog(serializer.data['content'])
+            if red is None:
+                # Not valid Python code
+                return Response({'error_message': 'Not a Form file'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            classname = get_class_name(red)
+            if classname is None:
+                # Not a form
+                return Response({'error_message': 'Not a Form file'},
+                                status=status.HTTP_400_BAD_REQUEST)
             fns = find_functions(red)
-            return Response({"classname": get_class_name(red),
+            return Response({"classname": classname,
                              "functions": fns}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

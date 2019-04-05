@@ -83,6 +83,65 @@ class ParserTestCase(APITestCase):
                                                 ["button1_onclick", 6]]})
 
 
+    def test_parse_class_invalid_syntax(self):
+        url = reverse('api:parser-get-member-functions')
+        data = {'content': """class MyForm(Form)
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.name = ""
+
+    def button1_onclick(self, e):
+        pass
+""" }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {"error_message": "Not a Form file"})
+
+    def test_parse_class_not_a_form(self):
+        url = reverse('api:parser-get-member-functions')
+        data = {'content': """class MyForm(object):
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.name = ""
+
+    def button1_onclick(self, e):
+        pass
+""" }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {"error_message": "Not a Form file"})
+
+    def test_file_has_non_form_classes_parse_example(self):
+        url = reverse('api:parser-get-member-functions')
+        data = {'content': """class BillyBob(object):
+    pass
+
+class MyForm(Form):
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.name = ""
+""" }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {"classname": "MyForm",
+                                            "functions": [["__init__", 5]]})
+
+    def test_file_has_non_form_classes_parse_example_reverse_order(self):
+        url = reverse('api:parser-get-member-functions')
+        data = {'content': """class MyForm(Form):
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.name = ""
+
+class BillyBob(object):
+    pass
+""" }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {"classname": "MyForm",
+                                            "functions": [["__init__", 2]]})
+
+
 class AddFunctionToClassTestCase(APITestCase):
     def setUp(self):
         u = UserFactory()
