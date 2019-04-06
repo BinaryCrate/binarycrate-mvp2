@@ -593,8 +593,14 @@ class EditorView(BCChrome):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             #print('ajaxpost_file_functions_handler self.last_cursor=', self.last_cursor)
             result = json.loads(str(xmlhttp.responseText))
-            new_file_method_cache = {'form_class_name': result['classname'],
-                                     'functions': result['functions']}
+
+            form_events = {'on_body_click', 'on_body_mousemove', 'on_body_keyup',
+                           'on_body_keydown', 'on_body_keypress'}
+            functions = [[f for f in result['functions'] if f['name'] not in form_events],
+                         [f for f in result['functions'] if f['name'] in form_events]]
+
+            new_file_method_cache = {'control_drop_down_list': ['General', result['classname'] + ' (Form Events)'],
+                                     'functions': functions}
             if new_file_method_cache != self.selected_file_method_cache:
                 self.selected_file_method_cache = new_file_method_cache
                 #print('ajaxpost_file_functions_handler result=', result)
@@ -651,25 +657,45 @@ class EditorView(BCChrome):
                 ]),
             ]
 
+    def onchange_function_control_select(self, e):
+        #print('onchange_function_control_select called value=', e.target.value)
+        self.control_drop_down_list_selection = int(e.target.value)
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
     def get_function_select_controls(self):
         # This function returns the contents of the select controls where we can choose the
         # class and method
+        control_drop_down_list = self.selected_file_method_cache.get(
+            'control_drop_down_list', ['General'])
         return [
-                 select({'id': 'selControl'}, [
-                   option({'value': 'general'}, 'General'),
-                 ] + ([] if 'form_class_name' not in self.selected_file_method_cache else
-                   [option({'value': 'form'}, self.selected_file_method_cache['form_class_name'])]
-                 )
-                 ),
+                 #select({'id': 'selControl', 'onchange': self.onchange_function_control_select}, [
+                 #  option({'value': 'general'}, 'General'),
+                 #] + ([] if 'form_class_name' not in self.selected_file_method_cache else
+                 #  [option({'value': 'form'}, self.selected_file_method_cache['form_class_name'])]
+                 #)
+                 #),
+                 select({'id': 'selControl', 'onchange': self.onchange_function_control_select}, [
+                   option(merge_dicts({'value': i},
+                        {'selected':'selected'} if i == self.control_drop_down_list_selection else {}), 
+                        control_drop_down_list[i])
+                   for i in range(len(control_drop_down_list))
+                 ])
+               ] + ([
                  #select({'id': 'selFunction'}, [
                  #  option({'value': 'general'}, '__init__'),
                  #  option({'value': 'form', 'style': 'font-weight: bold'}, "onclick"),
                  #])
                  select({'id': 'selFunction'}, [
-                   option({'value': i}, self.selected_file_method_cache['functions'][i][0])
-                   for i in range(len(self.selected_file_method_cache.get('functions', [])))
+                   option({'value': i}, self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][i]['name'])
+                   for i in range(len(self.selected_file_method_cache['functions'][self.control_drop_down_list_selection]))
                  ] )
-                ]
+                ] if 'functions' in self.selected_file_method_cache else
+                [
+                  select({'id': 'selFunction'}, [
+                    option({'value': 0}, '(None)')
+                  ] )
+                ])
 
     def get_central_content(self):
         """
@@ -2027,6 +2053,7 @@ class """ + class_name + """(Form):
         self.historygraph_download_timeout = None # A timeout to keep polling the historygraph database
         self.scroll_positions = defaultdict(int)
         self.designer_visible = True
+        self.control_drop_down_list_selection = 0
 
         super(EditorView, self).__init__(
             None,
