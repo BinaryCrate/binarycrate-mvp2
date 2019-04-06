@@ -37,7 +37,8 @@ class ParserTestCase(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"classname": "MyForm",
-                                            "functions": [["__init__", 2]]})
+                                            "functions": [{'name': "__init__",
+                                                           "start_line": 2}]})
 
 
     def test_multiple_inheritance_parse_example(self):
@@ -50,7 +51,8 @@ class ParserTestCase(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"classname": "MyForm",
-                                            "functions": [["__init__", 2]]})
+                                            "functions": [{'name': "__init__",
+                                                           'start_line': 2}]})
 
 
     def test_multiple_inheritance_parse_example_reverse_order(self):
@@ -63,7 +65,8 @@ class ParserTestCase(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"classname": "MyForm",
-                                            "functions": [["__init__", 2]]})
+                                            "functions": [{'name': "__init__",
+                                                           'start_line': 2}]})
 
 
     def test_parse_class_with_two_functions(self):
@@ -79,8 +82,10 @@ class ParserTestCase(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"classname": "MyForm",
-                                            "functions": [["__init__", 2],
-                                                ["button1_onclick", 6]]})
+                                            "functions": [{'name': "__init__",
+                                                'start_line': 2},
+                                                {"name": "button1_onclick",
+                                                "start_line": 6}]})
 
 
     def test_parse_class_invalid_syntax(self):
@@ -146,7 +151,8 @@ class MyForm(Form):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"classname": "MyForm",
-                                            "functions": [["__init__", 5]]})
+                                            "functions": [{'name': "__init__",
+                                                           'start_line': 5}]})
 
     def test_file_has_non_form_classes_parse_example_reverse_order(self):
         url = reverse('api:parser-get-member-functions')
@@ -161,7 +167,8 @@ class BillyBob(object):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"classname": "MyForm",
-                                            "functions": [["__init__", 2]]})
+                                            "functions": [{'name': "__init__",
+                                                           'start_line': 2}]})
 
     def test_file_form_class_not_in_global_scope_parse_example(self):
         url = reverse('api:parser-get-member-functions')
@@ -208,7 +215,8 @@ class OtherForm(Form):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"classname": "OtherForm",
-                                            "functions": [["__init__", 8]]})
+                                            "functions": [{'name': "__init__",
+                                                           'start_line': 8}]})
 
 
 class AddFunctionToClassTestCase(APITestCase):

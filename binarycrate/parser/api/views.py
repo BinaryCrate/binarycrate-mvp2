@@ -121,7 +121,7 @@ def get_class_name(red):
 def find_functions(red):
     def find_functions_in_class(cls):
         fns = cls.find_all("DefNode")
-        return [[fn.name, fn.absolute_bounding_box.top_left.line] for fn in fns]
+        return [{'name': fn.name, 'start_line': fn.absolute_bounding_box.top_left.line} for fn in fns]
     classes = red.find_all("ClassNode")
     for cls in classes:
         if is_form_class(red, cls):
