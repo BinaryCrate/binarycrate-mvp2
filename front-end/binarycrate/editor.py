@@ -597,9 +597,10 @@ class EditorView(BCChrome):
 
             #functions = [[f for f in result['functions'] if f['name'] not in self.form_events],
             #             [f for f in result['functions'] if f['name'] in self.form_events]]
-            current_function_names = {f['name'] for f in result['functions']}
+            current_functions = {f['name']: f for f in result['functions']}
             functions = [[merge_dicts(f, {'is_present': False}) for f in result['functions'] if f['name'] not in self.form_events],
-                         [{'name': name, 'is_present': name in current_function_names} for name in self.form_events]]
+                         [merge_dicts({'name': name, 'is_present': name in current_functions},
+                                      {'start_line': current_functions[name]['start_line'] - 1} if  name in current_functions else {}) for name in self.form_events]]
 
             new_file_method_cache = {'control_drop_down_list': ['General', result['classname'] + ' (Form Events)'],
                                      'functions': functions}
@@ -669,8 +670,15 @@ class EditorView(BCChrome):
     def onchange_function_select(self, e):
         #print('onchange_function_select called value=', e.target.value)
         self.function_drop_down_list_selection = int(e.target.value)
+        #print('onchange_function_select is_present=', self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]['is_present'])
+        selected_function = self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]
         self.mount_redraw()
         Router.router.ResetHashChange()
+        if selected_function['is_present']:
+            #print('onchange_function_select selected_function=', selected_function)
+            # If the function is present move the cursor to it
+            self.code_mirror.editor.setCursor(selected_function['start_line'])
+            self.code_mirror.editor.focus()
 
     def get_function_select_controls(self):
         # This function returns the contents of the select controls where we can choose the
