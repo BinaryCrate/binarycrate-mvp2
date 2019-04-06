@@ -598,11 +598,11 @@ class EditorView(BCChrome):
             #functions = [[f for f in result['functions'] if f['name'] not in self.form_events],
             #             [f for f in result['functions'] if f['name'] in self.form_events]]
             current_functions = {f['name']: f for f in result['functions']}
-            functions = [[merge_dicts(f, {'is_present': False}) for f in result['functions'] if f['name'] not in self.form_events],
+            functions = [[merge_dicts(f, {'is_present': True}) for f in result['functions'] if f['name'] not in self.form_events],
                          [{'name': '(None)', 'is_present': False}] +
                          [merge_dicts({'name': name, 'is_present': name in current_functions},
-                                      {'start_line': current_functions[name]['start_line'] - 1,
-                                       'end_line': current_functions[name]['end_line'] - 1} if  name in current_functions else {}) for name in self.form_events]]
+                                      {'start_line': current_functions[name]['start_line'],
+                                       'end_line': current_functions[name]['end_line']} if  name in current_functions else {}) for name in self.form_events]]
 
             new_file_method_cache = {'control_drop_down_list': ['General', result['classname'] + ' (Form Events)'],
                                      'functions': functions}
@@ -679,11 +679,11 @@ class EditorView(BCChrome):
         if selected_function['is_present']:
             #print('onchange_function_select selected_function=', selected_function)
             # If the function is present move the cursor to it
-            bottom_line = min(selected_function['end_line'],
-                              selected_function['start_line'] + 5)
+            bottom_line = min(selected_function['end_line'] - 1,
+                              selected_function['start_line'] - 1 + 5)
             self.code_mirror.editor.scrollIntoView({'line': bottom_line})
-            self.code_mirror.editor.scrollIntoView({'line': selected_function['start_line']})
-            self.code_mirror.editor.setCursor(selected_function['start_line'])
+            self.code_mirror.editor.scrollIntoView({'line': selected_function['start_line'] - 1})
+            self.code_mirror.editor.setCursor(selected_function['start_line'] - 1)
             self.code_mirror.editor.focus()
 
     def get_function_select_controls(self):
