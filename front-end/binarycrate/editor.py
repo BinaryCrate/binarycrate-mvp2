@@ -597,15 +597,22 @@ class EditorView(BCChrome):
 
             #functions = [[f for f in result['functions'] if f['name'] not in self.form_events],
             #             [f for f in result['functions'] if f['name'] in self.form_events]]
+            button_names = [fi['name'] for fi in self.selected_de['form_items'] if fi['type'] == 'button']
             current_functions = {f['name']: f for f in result['functions']}
             functions = [[{'name': '(None)', 'is_present': False}] +
                          [merge_dicts(f, {'is_present': True}) for f in result['functions'] if f['name'] not in self.form_events],
                          [{'name': '(None)', 'is_present': False}] +
                          [merge_dicts({'name': name, 'is_present': name in current_functions},
                                       {'start_line': current_functions[name]['start_line'],
-                                       'end_line': current_functions[name]['end_line']} if  name in current_functions else {}) for name in self.form_events]]
+                                       'end_line': current_functions[name]['end_line']} if  name in current_functions else {}) for name in self.form_events]] + \
+                         [[{'name': '(None)', 'is_present': False}] +
+                          [merge_dicts({'name': name + '_onclick', 'is_present': name + '_onclick' in current_functions},
+                             {'start_line': current_functions[name + '_onclick']['start_line'],
+                             'end_line': current_functions[name + '_onclick']['end_line']} if name + '_onclick' in current_functions else {})]
+                          for name in button_names]
 
-            new_file_method_cache = {'control_drop_down_list': ['General', result['classname'] + ' (Form Events)'],
+            new_file_method_cache = {'control_drop_down_list':
+                                     ['General', result['classname'] + ' (Form Events)'] + [name for name in button_names],
                                      'functions': functions}
             if new_file_method_cache != self.selected_file_method_cache:
                 self.selected_file_method_cache = new_file_method_cache
