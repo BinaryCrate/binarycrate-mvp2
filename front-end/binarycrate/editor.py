@@ -599,6 +599,7 @@ class EditorView(BCChrome):
             #             [f for f in result['functions'] if f['name'] in self.form_events]]
             current_functions = {f['name']: f for f in result['functions']}
             functions = [[merge_dicts(f, {'is_present': False}) for f in result['functions'] if f['name'] not in self.form_events],
+                         [{'name': '(None)', 'is_present': False}] +
                          [merge_dicts({'name': name, 'is_present': name in current_functions},
                                       {'start_line': current_functions[name]['start_line'] - 1} if  name in current_functions else {}) for name in self.form_events]]
 
