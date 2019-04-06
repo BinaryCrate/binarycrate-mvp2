@@ -598,8 +598,8 @@ class EditorView(BCChrome):
             #functions = [[f for f in result['functions'] if f['name'] not in self.form_events],
             #             [f for f in result['functions'] if f['name'] in self.form_events]]
             current_function_names = {f['name'] for f in result['functions']}
-            functions = [[merge_dicts(f, {'bold': False}) for f in result['functions'] if f['name'] not in self.form_events],
-                         [{'name': name, 'bold': name in current_function_names} for name in self.form_events]]
+            functions = [[merge_dicts(f, {'is_present': False}) for f in result['functions'] if f['name'] not in self.form_events],
+                         [{'name': name, 'is_present': name in current_function_names} for name in self.form_events]]
 
             new_file_method_cache = {'control_drop_down_list': ['General', result['classname'] + ' (Form Events)'],
                                      'functions': functions}
@@ -700,8 +700,8 @@ class EditorView(BCChrome):
                  #])
                  select(merge_dicts({'id': 'selFunction',
                          'onchange': self.onchange_function_select},
-                         {'style': 'font-weight:bold'} if self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]['bold'] else {}), [
-                   option(merge_dicts({'value': i}, {'style': 'font-weight:bold'} if self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][i]['bold'] else {},
+                         {'style': 'font-weight:bold'} if self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]['is_present'] else {}), [
+                   option(merge_dicts({'value': i}, {'style': 'font-weight:bold'} if self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][i]['is_present'] else {},
                                       {'selected': 'selected'} if i == self.function_drop_down_list_selection else {}),
                           self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][i]['name'])
                    for i in range(len(self.selected_file_method_cache['functions'][self.control_drop_down_list_selection]))
