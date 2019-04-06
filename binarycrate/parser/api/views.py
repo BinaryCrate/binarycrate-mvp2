@@ -24,6 +24,7 @@ from rest_framework import status
 from redbaron import RedBaron
 from .serializers import MemberFunctionsSerializer, AddMemberFunctionSerializer
 from baron.parser import ParsingError
+from redbaron.nodes import ClassNode
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
     #TODO: This class appears in multiple places remove or put in library
@@ -120,11 +121,26 @@ def get_class_name(red):
 
 def find_functions(red):
     def find_functions_in_class(cls):
+        def get_function_owning_class(fn):
+            if fn.parent is None:
+                return None
+            if type(fn.parent) == ClassNode:
+                return fn.parent
+            else:
+                return get_function_owning_class(fn.parent)
+
         fns = cls.find_all("DefNode")
+        #print("find_functions_in_class fns=", fns.help())
+        #print("+++++++++++++++++++++++++++++++++++++++++++++++++++")
+        #cls.help()
+        #print("+++++++++++++++++++++++++++++++++++++++++++++++++++")
+        #for fn in fns:
+        #    print("name=", fn.name, " parent=", fn.parent, " get_function_owning_class(fn)=", get_function_owning_class(fn))
+        #    #fn.help()
         return [{'name': fn.name,
                  'start_line': fn.absolute_bounding_box.top_left.line,
                  'end_line': fn.absolute_bounding_box.bottom_right.line
-                 } for fn in fns]
+                 } for fn in fns if get_function_owning_class(fn) == cls]
     classes = red.find_all("ClassNode")
     for cls in classes:
         if is_form_class(red, cls):

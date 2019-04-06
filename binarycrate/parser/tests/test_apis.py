@@ -225,6 +225,24 @@ class OtherForm(Form):
                                             "functions": [{'name': "__init__",
                                                            'start_line': 8,
                                                            "end_line": 11}]})
+    def test_inner_class_functions_of_the_form_dont_appear(self):
+        url = reverse('api:parser-get-member-functions')
+        data = {'content': """class MyForm(Form):
+    class BillyBob(object):
+        def __init__(self):
+            self.initialised = True
+
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.name = ""
+""" }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        print("response.data=", response.data)
+        self.assertEqual(response.data, {"classname": "MyForm",
+                                         "functions": [{'name': "__init__",
+                                                        "start_line": 6,
+                                                        "end_line": 9}]})
 
 
 class AddFunctionToClassTestCase(APITestCase):
@@ -232,7 +250,7 @@ class AddFunctionToClassTestCase(APITestCase):
         u = UserFactory()
         self.client.force_authenticate(user=u)
 
-    def test_simple_add_member_function(self):
+    def test_simple_add_member_function_basic(self):
         url = reverse('api:parser-add-member-function')
         data = {'content': """class MyForm(Form):
     def __init__(self, *args, **kwargs):
