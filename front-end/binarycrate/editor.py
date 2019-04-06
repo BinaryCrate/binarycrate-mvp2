@@ -74,9 +74,10 @@ original_modules = set()
 project_files = [] #All the project files we have written to the virtual file system
 
 
-def merge_dicts(d1, d2):
-    ret = copy.copy(d1)
-    ret.update(d2)
+def merge_dicts(*args):
+    ret = copy.copy(args[0])
+    for d in args[1:]:
+        ret.update(d)
     return ret
 
 
@@ -697,10 +698,10 @@ class EditorView(BCChrome):
                  #  option({'value': 'general'}, '__init__'),
                  #  option({'value': 'form', 'style': 'font-weight: bold'}, "onclick"),
                  #])
-                 select(merge_dicts({'id': 'selFunction', 
+                 select(merge_dicts({'id': 'selFunction',
                          'onchange': self.onchange_function_select},
                          {'style': 'font-weight:bold'} if self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]['bold'] else {}), [
-                   option(merge_dicts(merge_dicts({'value': i}, {'style': 'font-weight:bold'} if self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][i]['bold'] else {}),
+                   option(merge_dicts({'value': i}, {'style': 'font-weight:bold'} if self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][i]['bold'] else {},
                                       {'selected': 'selected'} if i == self.function_drop_down_list_selection else {}),
                           self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][i]['name'])
                    for i in range(len(self.selected_file_method_cache['functions'][self.control_drop_down_list_selection]))
