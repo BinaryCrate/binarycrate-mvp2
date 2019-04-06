@@ -594,10 +594,11 @@ class EditorView(BCChrome):
             #print('ajaxpost_file_functions_handler self.last_cursor=', self.last_cursor)
             result = json.loads(str(xmlhttp.responseText))
 
-            form_events = {'on_body_click', 'on_body_mousemove', 'on_body_keyup',
-                           'on_body_keydown', 'on_body_keypress'}
-            functions = [[f for f in result['functions'] if f['name'] not in form_events],
-                         [f for f in result['functions'] if f['name'] in form_events]]
+            #functions = [[f for f in result['functions'] if f['name'] not in self.form_events],
+            #             [f for f in result['functions'] if f['name'] in self.form_events]]
+            current_function_names = {f['name'] for f in result['functions']}
+            functions = [[merge_dicts(f, {'bold': False}) for f in result['functions'] if f['name'] not in self.form_events],
+                         [{'name': name, 'bold': name in current_function_names} for name in self.form_events]]
 
             new_file_method_cache = {'control_drop_down_list': ['General', result['classname'] + ' (Form Events)'],
                                      'functions': functions}
@@ -657,15 +658,23 @@ class EditorView(BCChrome):
                 ]),
             ]
 
-    def onchange_function_control_select(self, e):
+    def onchange_control_select(self, e):
         #print('onchange_function_control_select called value=', e.target.value)
         self.control_drop_down_list_selection = int(e.target.value)
+        self.function_drop_down_list_selection = 0
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
+    def onchange_function_select(self, e):
+        #print('onchange_function_select called value=', e.target.value)
+        self.function_drop_down_list_selection = int(e.target.value)
         self.mount_redraw()
         Router.router.ResetHashChange()
 
     def get_function_select_controls(self):
         # This function returns the contents of the select controls where we can choose the
         # class and method
+        #print('get_function_select_controls self.function_drop_down_list_selectio=', self.function_drop_down_list_selection)
         if self.program_is_running:
             return []
         control_drop_down_list = self.selected_file_method_cache.get(
@@ -677,7 +686,7 @@ class EditorView(BCChrome):
                  #  [option({'value': 'form'}, self.selected_file_method_cache['form_class_name'])]
                  #)
                  #),
-                 select({'id': 'selControl', 'onchange': self.onchange_function_control_select}, [
+                 select({'id': 'selControl', 'onchange': self.onchange_control_select}, [
                    option(merge_dicts({'value': i},
                         {'selected':'selected'} if i == self.control_drop_down_list_selection else {}),
                         control_drop_down_list[i])
@@ -688,8 +697,12 @@ class EditorView(BCChrome):
                  #  option({'value': 'general'}, '__init__'),
                  #  option({'value': 'form', 'style': 'font-weight: bold'}, "onclick"),
                  #])
-                 select({'id': 'selFunction'}, [
-                   option({'value': i}, self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][i]['name'])
+                 select(merge_dicts({'id': 'selFunction', 
+                         'onchange': self.onchange_function_select},
+                         {'style': 'font-weight:bold'} if self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]['bold'] else {}), [
+                   option(merge_dicts(merge_dicts({'value': i}, {'style': 'font-weight:bold'} if self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][i]['bold'] else {}),
+                                      {'selected': 'selected'} if i == self.function_drop_down_list_selection else {}),
+                          self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][i]['name'])
                    for i in range(len(self.selected_file_method_cache['functions'][self.control_drop_down_list_selection]))
                  ] )
                 ] if 'functions' in self.selected_file_method_cache else
@@ -2056,6 +2069,9 @@ class """ + class_name + """(Form):
         self.scroll_positions = defaultdict(int)
         self.designer_visible = True
         self.control_drop_down_list_selection = 0
+        self.function_drop_down_list_selection = 0
+        self.form_events = ['on_body_click', 'on_body_mousemove', 'on_body_keyup',
+                           'on_body_keydown', 'on_body_keypress']
 
         super(EditorView, self).__init__(
             None,
