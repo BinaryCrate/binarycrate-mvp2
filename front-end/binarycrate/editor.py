@@ -593,7 +593,8 @@ class EditorView(BCChrome):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             #print('ajaxpost_file_functions_handler self.last_cursor=', self.last_cursor)
             result = json.loads(str(xmlhttp.responseText))
-            new_file_method_cache = {'form_class_name': result['classname']}
+            new_file_method_cache = {'form_class_name': result['classname'],
+                                     'functions': result['functions']}
             if new_file_method_cache != self.selected_file_method_cache:
                 self.selected_file_method_cache = new_file_method_cache
                 #print('ajaxpost_file_functions_handler result=', result)
@@ -660,10 +661,14 @@ class EditorView(BCChrome):
                    [option({'value': 'form'}, self.selected_file_method_cache['form_class_name'])]
                  )
                  ),
+                 #select({'id': 'selFunction'}, [
+                 #  option({'value': 'general'}, '__init__'),
+                 #  option({'value': 'form', 'style': 'font-weight: bold'}, "onclick"),
+                 #])
                  select({'id': 'selFunction'}, [
-                   option({'value': 'general'}, '__init__'),
-                   option({'value': 'form', 'style': 'font-weight: bold'}, "onclick"),
-                 ])
+                   option({'value': i}, self.selected_file_method_cache['functions'][i][0])
+                   for i in range(len(self.selected_file_method_cache.get('functions', [])))
+                 ] )
                 ]
 
     def get_central_content(self):
