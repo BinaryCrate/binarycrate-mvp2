@@ -37,8 +37,9 @@ class ParserTestCase(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"classname": "MyForm",
-                                            "functions": [{'name': "__init__",
-                                                           "start_line": 2}]})
+                                         "functions": [{'name': "__init__",
+                                                        "start_line": 2,
+                                                        "end_line": 5}]})
 
 
     def test_multiple_inheritance_parse_example(self):
@@ -52,7 +53,8 @@ class ParserTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"classname": "MyForm",
                                             "functions": [{'name': "__init__",
-                                                           'start_line': 2}]})
+                                                           'start_line': 2,
+                                                           "end_line": 5}]})
 
 
     def test_multiple_inheritance_parse_example_reverse_order(self):
@@ -66,7 +68,8 @@ class ParserTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"classname": "MyForm",
                                             "functions": [{'name': "__init__",
-                                                           'start_line': 2}]})
+                                                           'start_line': 2,
+                                                           "end_line": 5}]})
 
 
     def test_parse_class_with_two_functions(self):
@@ -83,9 +86,11 @@ class ParserTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"classname": "MyForm",
                                             "functions": [{'name': "__init__",
-                                                'start_line': 2},
+                                                'start_line': 2,
+                                                "end_line": 6},
                                                 {"name": "button1_onclick",
-                                                "start_line": 6}]})
+                                                "start_line": 6,
+                                                "end_line": 8}]})
 
 
     def test_parse_class_invalid_syntax(self):
@@ -152,7 +157,8 @@ class MyForm(Form):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"classname": "MyForm",
                                             "functions": [{'name': "__init__",
-                                                           'start_line': 5}]})
+                                                           'start_line': 5,
+                                                           "end_line": 8}]})
 
     def test_file_has_non_form_classes_parse_example_reverse_order(self):
         url = reverse('api:parser-get-member-functions')
@@ -168,7 +174,8 @@ class BillyBob(object):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"classname": "MyForm",
                                             "functions": [{'name': "__init__",
-                                                           'start_line': 2}]})
+                                                           'start_line': 2,
+                                                           "end_line": 6}]})
 
     def test_file_form_class_not_in_global_scope_parse_example(self):
         url = reverse('api:parser-get-member-functions')
@@ -216,7 +223,8 @@ class OtherForm(Form):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"classname": "OtherForm",
                                             "functions": [{'name': "__init__",
-                                                           'start_line': 8}]})
+                                                           'start_line': 8,
+                                                           "end_line": 11}]})
 
 
 class AddFunctionToClassTestCase(APITestCase):
@@ -245,8 +253,8 @@ class AddFunctionToClassTestCase(APITestCase):
         pass
 """)
         self.assertEqual(response.data['new_functions'], [
-            {"name": "__init__", "start_line": 2},
-            {"name": "button1_onclick", "start_line": 5}])
+            {"name": "__init__", "start_line": 2, "end_line": 5},
+            {"name": "button1_onclick", "start_line": 5, "end_line": 7}])
         self.assertEqual(response.data['classname'], "MyForm")
 
     def test_simple_add_member_function_invalid_syntax(self):
@@ -285,8 +293,8 @@ class AddFunctionToClassTestCase(APITestCase):
         pass
 """)
         self.assertEqual(response.data['new_functions'], [
-            {"name": "__init__", "start_line": 2},
-            {"name": "button1_onclick", "start_line": 5}])
+            {"name": "__init__", "start_line": 2, "end_line": 5},
+            {"name": "button1_onclick", "start_line": 5, "end_line": 7}])
         self.assertEqual(response.data['classname'], "MyForm")
 
     def test_simple_add_member_function_class_must_be_in_global_scope(self):
@@ -352,8 +360,8 @@ class MyForm(Form):
         pass
 """)
         self.assertEqual(response.data['new_functions'], [
-            {"name": "__init__", "start_line": 5},
-            {"name": "button1_onclick", "start_line": 8}])
+            {"name": "__init__", "start_line": 5, "end_line": 8},
+            {"name": "button1_onclick", "start_line": 8, "end_line": 10}])
         self.assertEqual(response.data['classname'], "MyForm")
 
     def test_simple_add_member_function_exact_one_form_class_is_ok_subclasses_correctly_ignored(self):
@@ -386,6 +394,6 @@ class MyForm(Form):
         pass
 """)
         self.assertEqual(response.data['new_functions'], [
-            {"name": "__init__", "start_line": 6},
-            {"name": "button1_onclick", "start_line" :9}])
+            {"name": "__init__", "start_line": 6, "end_line": 9},
+            {"name": "button1_onclick", "start_line" :9, "end_line": 11}])
         self.assertEqual(response.data['classname'], "MyForm")
