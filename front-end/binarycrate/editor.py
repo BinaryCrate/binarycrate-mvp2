@@ -666,6 +666,8 @@ class EditorView(BCChrome):
     def get_function_select_controls(self):
         # This function returns the contents of the select controls where we can choose the
         # class and method
+        if self.program_is_running:
+            return []
         control_drop_down_list = self.selected_file_method_cache.get(
             'control_drop_down_list', ['General'])
         return [
@@ -677,7 +679,7 @@ class EditorView(BCChrome):
                  #),
                  select({'id': 'selControl', 'onchange': self.onchange_function_control_select}, [
                    option(merge_dicts({'value': i},
-                        {'selected':'selected'} if i == self.control_drop_down_list_selection else {}), 
+                        {'selected':'selected'} if i == self.control_drop_down_list_selection else {}),
                         control_drop_down_list[i])
                    for i in range(len(control_drop_down_list))
                  ])
