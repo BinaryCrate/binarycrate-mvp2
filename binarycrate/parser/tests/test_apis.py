@@ -270,7 +270,7 @@ class AddFunctionToClassTestCase(APITestCase):
     def button1_onclick(self, e):
         pass
 """)
-        self.assertEqual(response.data['new_functions'], [
+        self.assertEqual(response.data['functions'], [
             {"name": "__init__", "start_line": 2, "end_line": 5},
             {"name": "button1_onclick", "start_line": 5, "end_line": 7}])
         self.assertEqual(response.data['classname'], "MyForm")
@@ -310,7 +310,7 @@ class AddFunctionToClassTestCase(APITestCase):
     def button1_onclick(self, e):
         pass
 """)
-        self.assertEqual(response.data['new_functions'], [
+        self.assertEqual(response.data['functions'], [
             {"name": "__init__", "start_line": 2, "end_line": 5},
             {"name": "button1_onclick", "start_line": 5, "end_line": 7}])
         self.assertEqual(response.data['classname'], "MyForm")
@@ -377,7 +377,7 @@ class MyForm(Form):
     def button1_onclick(self, e):
         pass
 """)
-        self.assertEqual(response.data['new_functions'], [
+        self.assertEqual(response.data['functions'], [
             {"name": "__init__", "start_line": 5, "end_line": 8},
             {"name": "button1_onclick", "start_line": 8, "end_line": 10}])
         self.assertEqual(response.data['classname'], "MyForm")
@@ -411,7 +411,7 @@ class MyForm(Form):
     def button1_onclick(self, e):
         pass
 """)
-        self.assertEqual(response.data['new_functions'], [
+        self.assertEqual(response.data['functions'], [
             {"name": "__init__", "start_line": 6, "end_line": 9},
             {"name": "button1_onclick", "start_line" :9, "end_line": 11}])
         self.assertEqual(response.data['classname'], "MyForm")

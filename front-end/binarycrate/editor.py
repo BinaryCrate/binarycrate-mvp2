@@ -610,6 +610,7 @@ class EditorView(BCChrome):
                                      ['General', result['classname'] + ' (Form Events)'] + [name for name in button_names],
                                      'functions': functions}
             if new_file_method_cache != self.selected_file_method_cache:
+                print("The new file method cache differs redrawing")
                 self.selected_file_method_cache = new_file_method_cache
                 self.mount_redraw()
                 Router.router.ResetHashChange()
@@ -675,6 +676,23 @@ class EditorView(BCChrome):
         self.mount_redraw()
         Router.router.ResetHashChange()
 
+    def ajaxpost_add_function_handler(self, xmlhttp, response):
+        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+            result = json.loads(str(xmlhttp.responseText))
+            print('ajaxpost_add_function_handler result=', result)
+
+            self.selected_file_de['content'] = result['content']
+
+            self.update_file_method_cache(result)
+            selected_function = self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]
+            self.code_mirror.editor.setCursor(selected_function['start_line'] - 1)
+            self.code_mirror.editor.focus()
+            #self.mount_redraw()
+            #Router.router.ResetHashChange()
+        else:
+            pass
+            #print('ajaxpost_file_functions_handler returned error status=', xmlhttp.status)
+
     def onchange_function_select(self, e):
         #print('onchange_function_select called value=', e.target.value)
         self.function_drop_down_list_selection = int(e.target.value)
@@ -691,6 +709,14 @@ class EditorView(BCChrome):
             self.code_mirror.editor.scrollIntoView({'line': selected_function['start_line'] - 1})
             self.code_mirror.editor.setCursor(selected_function['start_line'] - 1)
             self.code_mirror.editor.focus()
+        else:
+            form_data = {'content': self.get_selected_de_content(),
+                         'function_name': selected_function['name'],
+                         'newfunction': """def {}(self, e):
+    pass
+""".format(selected_function['name'])}
+            ajaxpost('/api/parser/add-function/', form_data, self.ajaxpost_add_function_handler)
+
 
     def get_function_select_controls(self):
         # This function returns the contents of the select controls where we can choose the

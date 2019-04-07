@@ -205,7 +205,7 @@ class AddMemberFunctionView(APIView):
             result = add_function(red, serializer.data['function_name'],
                                   serializer.data['newfunction'])
             fns = find_functions(red)
-            return Response({'content': result, 'new_functions': fns,
+            return Response({'content': result, 'functions': fns,
                             "classname": get_class_name(red)},
                             status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
