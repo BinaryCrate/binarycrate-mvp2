@@ -592,9 +592,10 @@ class EditorView(BCChrome):
 
     def update_file_method_cache(self, result):
             button_names = [fi['name'] for fi in self.selected_de['form_items'] if fi['type'] == 'button']
+            button_function_names = {n + '_onclick' for n in button_names}
             current_functions = {f['name']: f for f in result['functions']}
             functions = [[{'name': '(None)', 'is_present': False}] +
-                         [merge_dicts(f, {'is_present': True}) for f in result['functions'] if f['name'] not in self.form_events],
+                         [merge_dicts(f, {'is_present': True}) for f in result['functions'] if f['name'] not in self.form_events and f['name'] not in button_function_names],
                          [{'name': '(None)', 'is_present': False}] +
                          [merge_dicts({'name': name, 'is_present': name in current_functions},
                                       {'start_line': current_functions[name]['start_line'],
