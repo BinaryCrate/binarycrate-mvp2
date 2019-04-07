@@ -590,13 +590,7 @@ class EditorView(BCChrome):
 
             ajaxget('/api/projects/image-list/' + self.get_root().url_kwargs['project_id'] + '/', images_api_ajax_result_handler2)
 
-    def ajaxpost_file_functions_handler(self, xmlhttp, response):
-        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
-            #print('ajaxpost_file_functions_handler self.last_cursor=', self.last_cursor)
-            result = json.loads(str(xmlhttp.responseText))
-
-            #functions = [[f for f in result['functions'] if f['name'] not in self.form_events],
-            #             [f for f in result['functions'] if f['name'] in self.form_events]]
+    def update_file_method_cache(self, result):
             button_names = [fi['name'] for fi in self.selected_de['form_items'] if fi['type'] == 'button']
             current_functions = {f['name']: f for f in result['functions']}
             functions = [[{'name': '(None)', 'is_present': False}] +
@@ -616,14 +610,17 @@ class EditorView(BCChrome):
                                      'functions': functions}
             if new_file_method_cache != self.selected_file_method_cache:
                 self.selected_file_method_cache = new_file_method_cache
-                #print('ajaxpost_file_functions_handler result=', result)
                 self.mount_redraw()
                 Router.router.ResetHashChange()
                 if self.last_cursor is not None:
-                    #print('ajaxpost_file_functions_handler attempting to reset the selections')
                     self.code_mirror.editor.setCursor(self.last_cursor)
                     self.code_mirror.editor.focus()
-                    #self.code_mirror.editor.setCursor(0,0)
+
+    def ajaxpost_file_functions_handler(self, xmlhttp, response):
+        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+            result = json.loads(str(xmlhttp.responseText))
+
+            self.update_file_method_cache(result)
         else:
             pass
             #print('ajaxpost_file_functions_handler returned error status=', xmlhttp.status)
