@@ -610,7 +610,7 @@ class EditorView(BCChrome):
                                      ['General', result['classname'] + ' (Form Events)'] + [name for name in button_names],
                                      'functions': functions}
             if new_file_method_cache != self.selected_file_method_cache:
-                print("The new file method cache differs redrawing")
+                #print("The new file method cache differs redrawing")
                 self.selected_file_method_cache = new_file_method_cache
                 self.mount_redraw()
                 Router.router.ResetHashChange()
@@ -679,12 +679,13 @@ class EditorView(BCChrome):
     def ajaxpost_add_function_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             result = json.loads(str(xmlhttp.responseText))
-            print('ajaxpost_add_function_handler result=', result)
+            #print('ajaxpost_add_function_handler result=', result)
 
             self.selected_file_de['content'] = result['content']
 
             self.update_file_method_cache(result)
-            selected_function = self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]
+            #selected_function = self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]
+            selected_function = [fn for fn in result['functions'] if fn['name'] == result['new_function']][0]
             self.code_mirror.editor.setCursor(selected_function['start_line'] - 1)
             self.code_mirror.editor.focus()
             #self.mount_redraw()
@@ -693,13 +694,7 @@ class EditorView(BCChrome):
             pass
             #print('ajaxpost_file_functions_handler returned error status=', xmlhttp.status)
 
-    def onchange_function_select(self, e):
-        #print('onchange_function_select called value=', e.target.value)
-        self.function_drop_down_list_selection = int(e.target.value)
-        #print('onchange_function_select is_present=', self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]['is_present'])
-        selected_function = self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]
-        self.mount_redraw()
-        Router.router.ResetHashChange()
+    def process_selected_function(self, selected_function):
         if selected_function['is_present']:
             #print('onchange_function_select selected_function=', selected_function)
             # If the function is present move the cursor to it
@@ -717,6 +712,14 @@ class EditorView(BCChrome):
 """.format(selected_function['name'])}
             ajaxpost('/api/parser/add-function/', form_data, self.ajaxpost_add_function_handler)
 
+    def onchange_function_select(self, e):
+        #print('onchange_function_select called value=', e.target.value)
+        self.function_drop_down_list_selection = int(e.target.value)
+        #print('onchange_function_select is_present=', self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]['is_present'])
+        selected_function = self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+        self.process_selected_function(selected_function)
 
     def get_function_select_controls(self):
         # This function returns the contents of the select controls where we can choose the
@@ -963,6 +966,33 @@ class EditorView(BCChrome):
                    js.globals.document.documentElement.scrollTop
         return posx, posy
 
+    def add_body_event_handler(self, function_name):
+        selected_function = [fn for fn in self.selected_file_method_cache['functions'][1] if fn['name'] == function_name][0]
+        #self.mount_redraw()
+        #Router.router.ResetHashChange()
+        self.process_selected_function(selected_function)
+
+    def add_body_click_handler(self, e):
+        #print('add_body_click_handler clicked')
+        #print('onchange_function_select is_present=', self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]['is_present'])
+        self.add_body_event_handler('on_body_click')
+
+    def add_body_mouse_move(self, e):
+        #print('add_body_mouse_move clicked')
+        self.add_body_event_handler('on_body_mousemove')
+
+    def add_body_on_keyup(self, e):
+        #print('add_body_on_keyup clicked')
+        self.add_body_event_handler('on_body_keyup')
+
+    def add_body_on_keydown(self, e):
+        #print('add_body_on_keydown clicked')
+        self.add_body_event_handler('on_body_keydown')
+
+    def add_body_keypress(self, e):
+        #print('add_body_keypress clicked')
+        self.add_body_event_handler('on_body_keypress')
+
     def contextmenu_preview(self, e):
         self.contextmenu_x, self.contextmenu_y = self.xy_from_e(e)
         self.context_menu = ContextMenuFormItems(self.contextmenu_x,
@@ -980,6 +1010,11 @@ class EditorView(BCChrome):
                                         ('New Line', self.new_line),
                                         ('New Hexagon', self.new_hexagon),
                                         ('Form Properties', self.form_properties),
+                                        ('Add Body Click Handler', self.add_body_click_handler),
+                                        ('Add Body Mouse Move', self.add_body_mouse_move),
+                                        ('Add Body Key Up', self.add_body_on_keyup),
+                                        ('Add Body Key Down', self.add_body_on_keydown),
+                                        ('Add Body Key Press', self.add_body_keypress),
                                         ))
         self.mount_redraw()
         Router.router.ResetHashChange()
