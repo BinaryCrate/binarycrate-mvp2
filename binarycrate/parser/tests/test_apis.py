@@ -274,6 +274,7 @@ class AddFunctionToClassTestCase(APITestCase):
             {"name": "__init__", "start_line": 2, "end_line": 5},
             {"name": "button1_onclick", "start_line": 5, "end_line": 7}])
         self.assertEqual(response.data['classname'], "MyForm")
+        self.assertEqual(response.data['new_function'], "button1_onclick")
 
     def test_simple_add_member_function_invalid_syntax(self):
         url = reverse('api:parser-add-member-function')
@@ -314,6 +315,7 @@ class AddFunctionToClassTestCase(APITestCase):
             {"name": "__init__", "start_line": 2, "end_line": 5},
             {"name": "button1_onclick", "start_line": 5, "end_line": 7}])
         self.assertEqual(response.data['classname'], "MyForm")
+        self.assertEqual(response.data['new_function'], "button1_onclick")
 
     def test_simple_add_member_function_class_must_be_in_global_scope(self):
         url = reverse('api:parser-add-member-function')
@@ -381,6 +383,7 @@ class MyForm(Form):
             {"name": "__init__", "start_line": 5, "end_line": 8},
             {"name": "button1_onclick", "start_line": 8, "end_line": 10}])
         self.assertEqual(response.data['classname'], "MyForm")
+        self.assertEqual(response.data['new_function'], "button1_onclick")
 
     def test_simple_add_member_function_exact_one_form_class_is_ok_subclasses_correctly_ignored(self):
         url = reverse('api:parser-add-member-function')
@@ -415,3 +418,4 @@ class MyForm(Form):
             {"name": "__init__", "start_line": 6, "end_line": 9},
             {"name": "button1_onclick", "start_line" :9, "end_line": 11}])
         self.assertEqual(response.data['classname'], "MyForm")
+        self.assertEqual(response.data['new_function'], "button1_onclick")
