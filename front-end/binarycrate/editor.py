@@ -288,9 +288,10 @@ class ContextMenuItem(ContextMenuItemBase):
     def on_enter(self, e):
         editorview = self.parent_context_menu.editorview
         if editorview.context_menu == self.parent_context_menu:
-            editorview.second_context_menu = None
-            editorview.mount_redraw()
-            Router.router.ResetHashChange()
+            if editorview.second_context_menu is not None:
+                editorview.second_context_menu = None
+                editorview.mount_redraw()
+                Router.router.ResetHashChange()
 
 
 class ContextMenuSubMenu(ContextMenuItemBase):
@@ -331,10 +332,11 @@ class ContextMenuFormItems(nav):
             'style': 'left: {}px; top:{}px'.format(self.posx, self.posy)}
 
     def on_mouse_outside_context_menu(self):
-        print('on_mouse_outside_context_menu called')
-        self.editorview.second_context_menu = None
-        self.editorview.mount_redraw()
-        Router.router.ResetHashChange()
+        #print('on_mouse_outside_context_menu called')
+        if self.editorview.second_context_menu is not None:
+            self.editorview.second_context_menu = None
+            self.editorview.mount_redraw()
+            Router.router.ResetHashChange()
 
     def menu_item_mouse_enter(self, e):
         pass
