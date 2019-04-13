@@ -966,34 +966,49 @@ class EditorView(BCChrome):
                    js.globals.document.documentElement.scrollTop
         return posx, posy
 
-    def add_body_event_handler(self, function_name):
+    def add_body_event_handler(self, section_name, function_name):
         all_functions = [item for sublist in self.selected_file_method_cache['functions'] for item in sublist]
         #selected_function = [fn for fn in self.selected_file_method_cache['functions'][1] if fn['name'] == function_name][0]
         selected_function = [fn for fn in all_functions if fn['name'] == function_name][0]
         #self.mount_redraw()
         #Router.router.ResetHashChange()
         self.process_selected_function(selected_function)
+        select_control = None
+        if section_name == 'General':
+            select_control = 1
+        else:
+            for i in range(2, len(self.selected_file_method_cache['functions'])):
+                select_control = i
+        select_function = None
+        for i in range(len(self.selected_file_method_cache['functions'][select_control])):
+            if self.selected_file_method_cache['functions'][select_control][i]['name'] == function_name:
+                select_function = i
+        if select_control is not None and select_function is not None:
+            self.control_drop_down_list_selection = select_control
+            self.function_drop_down_list_selection = select_function
+            self.mount_redraw()
+            Router.router.ResetHashChange()
 
     def add_body_click_handler(self, e):
         #print('add_body_click_handler clicked')
         #print('onchange_function_select is_present=', self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]['is_present'])
-        self.add_body_event_handler('on_body_click')
+        self.add_body_event_handler('General', 'on_body_click')
 
     def add_body_mouse_move(self, e):
         #print('add_body_mouse_move clicked')
-        self.add_body_event_handler('on_body_mousemove')
+        self.add_body_event_handler('General', 'on_body_mousemove')
 
     def add_body_on_keyup(self, e):
         #print('add_body_on_keyup clicked')
-        self.add_body_event_handler('on_body_keyup')
+        self.add_body_event_handler('General', 'on_body_keyup')
 
     def add_body_on_keydown(self, e):
         #print('add_body_on_keydown clicked')
-        self.add_body_event_handler('on_body_keydown')
+        self.add_body_event_handler('General', 'on_body_keydown')
 
     def add_body_keypress(self, e):
         #print('add_body_keypress clicked')
-        self.add_body_event_handler('on_body_keypress')
+        self.add_body_event_handler('General', 'on_body_keypress')
 
     def contextmenu_preview(self, e):
         self.contextmenu_x, self.contextmenu_y = self.xy_from_e(e)
@@ -1112,7 +1127,7 @@ class EditorView(BCChrome):
     def add_form_item_onclick_handler(self, form_item_id, e):
         fi = [form_item for form_item in self.selected_de['form_items'] if
                                           form_item_id == form_item['id']][0]
-        self.add_body_event_handler(fi['name'] + '_onclick')
+        self.add_body_event_handler(fi['name'], fi['name'] + '_onclick')
         #print('add_form_item_onclick_handler called name=' + fi['name'])
 
     def display_new_file_modal(self, e):
