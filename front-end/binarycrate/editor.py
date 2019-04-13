@@ -696,10 +696,13 @@ class EditorView(BCChrome):
 
     def process_selected_function(self, selected_function):
         if selected_function['is_present']:
-            #print('onchange_function_select selected_function=', selected_function)
+            #print('process_selected_function is_present selected_function=', selected_function)
             # If the function is present move the cursor to it
             bottom_line = min(selected_function['end_line'] - 1,
                               selected_function['start_line'] - 1 + 5)
+            #self.last_cursor = selected_function['start_line'] - 1
+            #self.mount_redraw()
+            #Router.router.ResetHashChange()
             self.code_mirror.editor.scrollIntoView({'line': bottom_line})
             self.code_mirror.editor.scrollIntoView({'line': selected_function['start_line'] - 1})
             self.code_mirror.editor.setCursor(selected_function['start_line'] - 1)

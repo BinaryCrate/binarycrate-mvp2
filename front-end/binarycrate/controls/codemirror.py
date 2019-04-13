@@ -71,7 +71,7 @@ def initialise_codemirror_callbacks():
 
     @js.Function
     def cursor_activity_callback_handler(cm):
-        #print('cursor_activity_callback_handler called listselections=', cm.listSelections())
+        #print('cursor_activity_callback_handler called line=', int(cm.getCursor()['line']))
         global_editorview.last_cursor = cm.getCursor()
         #print('cursor_activity_callback_handler called last_cursor=', global_editorview.last_cursor)
         #print('cursor_activity_callback_handler called listselections[0].anchor=', cm.listSelections()[0].anchor)
@@ -135,6 +135,7 @@ class CodeMirrorHandlerVNode(textarea):
                 #print("Attemptin to setCursor global_editorview.last_cursor=", global_editorview.last_cursor)
                 if global_editorview.last_cursor is not None:
                     self.editor.setCursor(global_editorview.last_cursor)
+                    self.editor.focus()
                 #js.globals.window.editor = self.editor
                 #js.eval("window.editor.setCursor({line:1, ch:1})")
                 #js.eval("window.editor.focus()")
