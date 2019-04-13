@@ -705,7 +705,7 @@ class EditorView(BCChrome):
                                      ['General', result['classname'] + ' (Form Events)'] + [name for name in button_names],
                                      'functions': functions}
             if new_file_method_cache != self.selected_file_method_cache:
-                #print("The new file method cache differs redrawing")
+                #\print("The new file method cache differs redrawing")
                 self.selected_file_method_cache = new_file_method_cache
                 self.mount_redraw()
                 Router.router.ResetHashChange()
@@ -791,18 +791,19 @@ class EditorView(BCChrome):
 
     def process_selected_function(self, selected_function):
         if selected_function['is_present']:
-            #print('process_selected_function is_present selected_function=', selected_function)
+            #print('process_selected_function is_present=True selected_function=', selected_function)
             # If the function is present move the cursor to it
             bottom_line = min(selected_function['end_line'] - 1,
                               selected_function['start_line'] - 1 + 5)
-            #self.last_cursor = selected_function['start_line'] - 1
-            #self.mount_redraw()
-            #Router.router.ResetHashChange()
+            self.last_cursor = selected_function['start_line'] - 1
+            self.mount_redraw()
+            Router.router.ResetHashChange()
             self.code_mirror.editor.scrollIntoView({'line': bottom_line})
             self.code_mirror.editor.scrollIntoView({'line': selected_function['start_line'] - 1})
             self.code_mirror.editor.setCursor(selected_function['start_line'] - 1)
             self.code_mirror.editor.focus()
         else:
+            #print('process_selected_function is_present=False selected_function=', selected_function)
             form_data = {'content': self.get_selected_de_content(),
                          'function_name': selected_function['name'],
                          'newfunction': """def {}(self, e):
@@ -845,12 +846,13 @@ class EditorView(BCChrome):
                  #  option({'value': 'general'}, '__init__'),
                  #  option({'value': 'form', 'style': 'font-weight: bold'}, "onclick"),
                  #])
+
                  select(merge_dicts({'id': 'selFunction',
-                         'onchange': self.onchange_function_select},
-                         {'style': 'font-weight:bold'} if self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]['is_present'] else {}), [
+                        'onchange': self.onchange_function_select},
+                 {'style': 'font-weight:bold'} if self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]['is_present'] else {}), [
                    option(merge_dicts({'value': i}, {'style': 'font-weight:bold'} if self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][i]['is_present'] else {},
-                                      {'selected': 'selected'} if i == self.function_drop_down_list_selection else {}),
-                          self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][i]['name'])
+                            {'selected':'selected'} if i == self.function_drop_down_list_selection else {}),
+                            self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][i]['name'])
                    for i in range(len(self.selected_file_method_cache['functions'][self.control_drop_down_list_selection]))
                  ] )
                 ] if 'functions' in self.selected_file_method_cache else
@@ -1076,6 +1078,7 @@ class EditorView(BCChrome):
         return posx, posy
 
     def add_body_event_handler(self, section_name, function_name):
+        #print('add_body_event_handler called')
         all_functions = [item for sublist in self.selected_file_method_cache['functions'] for item in sublist]
         #selected_function = [fn for fn in self.selected_file_method_cache['functions'][1] if fn['name'] == function_name][0]
         selected_function = [fn for fn in all_functions if fn['name'] == function_name][0]
@@ -1097,6 +1100,10 @@ class EditorView(BCChrome):
             self.function_drop_down_list_selection = select_function
             self.mount_redraw()
             Router.router.ResetHashChange()
+        #print('add_body_event_handler self.last_cursor=', self.last_cursor)
+        if self.last_cursor is not None:
+            self.code_mirror.editor.setCursor(self.last_cursor)
+            self.code_mirror.editor.focus()
 
     def add_body_click_handler(self, e):
         #print('add_body_click_handler clicked')
@@ -1180,9 +1187,6 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
         e.stopPropagation()
         e.preventDefault()
-
-    def double_click_item(self, form_item_id, e):
-        print('double_click_item called')
 
     def select_new_item(self, form_item_id, e):
         #print('select_new_item mouse is down form_item_id=', form_item_id, ', self.last_double_click_item=', self.last_double_click_item)
@@ -1417,7 +1421,6 @@ class EditorView(BCChrome):
                 form_item_id = form_item['id']
                 attribs = {'style': style, 'onmouseup': self.on_mouse_up,
                            'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e),
-                           'ondblclick': lambda e, form_item_id=form_item_id: self.double_click_item(form_item_id, e),
                            'oncontextmenu': lambda e, form_item_id=form_item_id: self.contextmenu_control(form_item_id,
                                                                                                           e)
                            }

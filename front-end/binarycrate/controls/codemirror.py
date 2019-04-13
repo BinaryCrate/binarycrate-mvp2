@@ -134,8 +134,14 @@ class CodeMirrorHandlerVNode(textarea):
                     self.editor.scrollTo(js.null, global_editorview.scroll_positions[global_editorview.selected_de['id']])
                 #print("Attemptin to setCursor global_editorview.last_cursor=", global_editorview.last_cursor)
                 if global_editorview.last_cursor is not None:
+                    #print("Attemptin to setCursor")
                     self.editor.setCursor(global_editorview.last_cursor)
                     self.editor.focus()
+                    def attempt_to_set_cursor():
+                        #print("Attemptin to setCursor2")
+                        self.editor.setCursor(global_editorview.last_cursor)
+                        self.editor.focus()
+                    timeouts.set_timeout(attempt_to_set_cursor, 0)
                 #js.globals.window.editor = self.editor
                 #js.eval("window.editor.setCursor({line:1, ch:1})")
                 #js.eval("window.editor.focus()")
