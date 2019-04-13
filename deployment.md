@@ -170,7 +170,7 @@ sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ bs4
 ```
 
-We now update the django static. Note this is different to the above step in that we put all pypyjs files including standard modules and the pypyjs interpreter
+We now update the django static files. Note this is different to the above step in that we put all pypyjs files including standard modules and the pypyjs interpreter
 in the correct Django static area.
 ```
 cd /srv/binarycrate-mvp2
@@ -192,9 +192,9 @@ Turn the webserver back on
 sudo service nginx start
 ```
 
-We are now deployed, you can use the method above to check the build number.
+We are now deployed, you can use the method above to check the build number on the production server.
 
-We is useful to update the ubuntu requirements on the erver as frequently as possible. Whenever we are logged into it that is a good time.
+We is useful to update the ubuntu requirements on the server as frequently as possible. Whenever we are logged into it that is a good time.
 
 ```
 sudo apt-get update
