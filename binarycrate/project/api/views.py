@@ -39,6 +39,7 @@ from .permissions import IsReadOnlyOrAuthenticated
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
+    #TODO: This class appears in multiple places remove or put in library
 
     def enforce_csrf(self, request):
         return  # To not perform the csrf check previously happening
@@ -160,6 +161,7 @@ class DirectoryEntryDetail(APIView):
                 de = serializer.save()
                 de.content = request.data['content']  # TODO: Add some validation here
                 de.form_items = request.data['form_items']  # TODO: Add some validation here
+                de.form_properties = request.data['form_properties']  # TODO: Add some validation here
                 if request.data['parent_id'] is None:
                     de.parent = None
                 else:

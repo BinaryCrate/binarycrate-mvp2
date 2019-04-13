@@ -31,11 +31,13 @@ class DirectoryEntrySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DirectoryEntry
-        fields = ('id', 'name', 'is_file', 'parent_id', 'content', 'form_items', 'is_default')
+        fields = ('id', 'name', 'is_file', 'parent_id', 'content',
+                  'form_items', 'form_properties', 'is_default')
         extra_kwargs = {'is_default': {'required': True}}
 
 class ProjectGetSerializer(serializers.ModelSerializer):
-    directory_entry = DirectoryEntrySerializer(many=True, source='get_directory_entries')
+    directory_entry = DirectoryEntrySerializer(many=True,
+                                               source='get_directory_entries')
 
     class Meta:
         model = Project

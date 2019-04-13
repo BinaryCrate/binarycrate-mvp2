@@ -245,10 +245,13 @@ class DashboardView(BCChrome):
 
     def createNew_ok(self, e, form_values):
         self.projects_loaded = False
-        data = {'name': form_values['txtProjectName'],
-                'type': form_values['selectProjectType'],
-                'public': True}
-        ajaxpost('/api/projects/', data, self.projects_api_ajax_post_result_handler)
+        if form_values['txtProjectName'] == '':
+            js.globals.window.alert('A project name is required')
+        else:
+            data = {'name': form_values['txtProjectName'],
+                    'type': form_values['selectProjectType'],
+                    'public': True}
+            ajaxpost('/api/projects/', data, self.projects_api_ajax_post_result_handler)
 
     def renameProj_ok(self, e, form_values):
         self.projects_loaded = False

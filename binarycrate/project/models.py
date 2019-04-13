@@ -46,12 +46,21 @@ class DirectoryEntry(MPTTModel):
     def form_items(self, value):
         self._form_items = value
 
+    @property
+    def form_properties(self):
+        return self._form_properties
+
+    @form_properties.setter
+    def form_properties(self, value):
+        self._form_properties = value
+
     class MPTTMeta:
         order_insertion_by = ['name']
 
     def __init__(self, *args, **kwargs):
         self._content = ''
         self._form_items = '[]'
+        self._form_properties = '{}'
         super(DirectoryEntry, self).__init__(*args, **kwargs)
 
 class ProjectTypes(ChoiceEnum):

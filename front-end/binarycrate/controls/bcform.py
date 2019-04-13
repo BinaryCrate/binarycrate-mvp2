@@ -128,6 +128,26 @@ class Form(object):
             #print('get_form_items type returning=', type(de['form_items']))
             return de['form_items']
 
+    def get_form_properties(self, loc=None, parent_id=None):
+        from binarycrate.editor import project
+        # Return the form items for this form
+        if loc is None:
+            loc = self.get_file_location()
+        if parent_id is None:
+            de = [de for de in project['directory_entry'] if de['parent_id'] is None][0]
+            parent_id = de['id']
+        i = loc.find('/')
+        if i > 0:
+            # This is directory
+            dir_name = loc[:i]
+            rest = loc[i + 1:]
+            de = [de for de in project['directory_entry'] if de['parent_id'] == parent_id and de['name'] == dir_name][0]
+            return self.get_form_properties(rest, de['id'])
+        else:
+            de = [de for de in project['directory_entry'] if de['parent_id'] == parent_id and de['name'] == loc][0]
+            #print('get_form_items returning=', de['form_items'])
+            #print('get_form_items type returning=', type(de['form_items']))
+            return de['form_properties']
 
 
     def get_file_location(self):
@@ -151,9 +171,31 @@ class Form(object):
         for control in self._static_form_controls:
             setattr(self, control['name'], control)
 
+        #Initialise the form properties
+        form_properties = self.get_form_properties()
+        print('initialise_form_controls form_properties=', form_properties)
+        print('initialise_form_controls get_file_location=', self.get_file_location())
+        self.form_width = form_properties.get('width', 0)
+        self.form_height = form_properties.get('height', 0)
+        #print('initialise_form_controls self.form_width=', self.form_width, ' self.form_height=', self.form_height)
+
+
     def get_form_controls(self):
         #print('get_form_controls self._dynamic_form_controls=', self._dynamic_form_controls)
-        return self._static_form_controls + self._dynamic_form_controls
+        all_form_controls = self._static_form_controls + self._dynamic_form_controls
+        if self.form_width == 0 or self.form_height == 0:
+            return all_form_controls
+        ret = []
+        for fc in all_form_controls:
+            if fc['type'] == 'line':
+                if fc['x2'] < self.form_width and fc['y2'] < self.form_height \
+                   and fc['x1'] >= 0 and fc['y1'] >= 0:
+                    ret.append(fc)
+            else:
+                if (fc['x'] + fc['width']) < self.form_width and (fc['y'] + fc['height']) < self.form_height \
+                   and fc['x'] >= 0 and fc['y'] >= 0:
+                    ret.append(fc)
+        return ret
 
     def add_control(self, control):
         #print('add_control control=', control)
@@ -249,6 +291,15 @@ class Form(object):
                 html_controls[form_item['name']] = control
                 ret.append(control)
         svg_list = list()
+        if self.form_height > 0 and self.form_width > 0:
+            svg_list.append(svg('rect', {'x': 0,
+                         'y':0,
+                         'width': self.form_width,
+                         'height': self.form_height,
+                         'fill': 'None',
+                         'stroke-width':  1,
+                         'stroke': 'rgb(112, 128, 144)',
+                         }))
         for form_item in self.get_form_controls():
             if form_item['type'] == 'rect':
                 control = svg('rect', {'x': form_item['x'],
@@ -313,7 +364,15 @@ class Form(object):
                 svg_list.append(control)
                 html_controls[form_item['name']] = control
 
-        ret.append(svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%'}, svg_list))
+        if self.form_height == 0:
+            svg_height = '100%'
+        else:
+            svg_height = self.form_height
+        if self.form_width == 0:
+            svg_width = '100%'
+        else:
+            svg_width = self.form_width
+        ret.append(svg('svg', {'id': 'preview-svg', 'height': svg_height, 'width': svg_width}, svg_list))
         return ret
 
     def __init__(self, parent=None, *args, **kwargs):
@@ -394,3 +453,20 @@ class Form(object):
 
     def on_body_mousemove(self, x, y):
         pass
+
+    def on_body_keyup(self, e):
+        pass
+
+    def on_body_keydown(self, e):
+        pass
+
+    def on_body_keypress(self, e):
+        pass
+
+    def get_output_width(self):
+        # Return the width of the output area
+        return int(js.globals.document.getElementById("preview").offsetWidth)
+
+    def get_output_height(self):
+        # Return the width of the output area
+        return int(js.globals.document.getElementById("preview").offsetHeight)

@@ -32,7 +32,9 @@ from django.conf import settings
 # TODO: This (DirectoryEntryDict) appears to be balloonian code - it should be deleted
 # From https://gist.github.com/href/1319371
 from collections import namedtuple
-DirectoryEntryDict = namedtuple('DirectoryEntryDict', ['id', 'name', 'is_file', 'parent_id', 'content', 'form_items', 'is_default'])
+DirectoryEntryDict = namedtuple('DirectoryEntryDict', ['id', 'name',
+                                'is_file', 'parent_id', 'content',
+                                'form_items', 'form_properties', 'is_default'])
 def convert(dictionary):
     return DirectoryEntryDict(**dictionary)
 
@@ -250,6 +252,7 @@ class ProjectCannotAccessOtherUserTestCase(APITestCase):
                           'is_file': self.de_rootfolder.is_file,
                           'content': '',
                           'form_items': '[]',
+                          'form_properties': '{}',
                           'parent_id': None,
                           'is_default': False,
                          }),
@@ -258,6 +261,7 @@ class ProjectCannotAccessOtherUserTestCase(APITestCase):
                           'is_file': self.de_hello_world.is_file,
                           'content': self.de_hello_world.content,
                           'form_items': '[]',
+                          'form_properties': '{}',
                           'parent_id': str(self.de_rootfolder.id),
                           'is_default': True,
                          }),
@@ -266,6 +270,7 @@ class ProjectCannotAccessOtherUserTestCase(APITestCase):
                           'is_file': self.de_folder.is_file,
                           'content': '',
                           'form_items': '[]',
+                          'form_properties': '{}',
                           'parent_id': str(self.de_rootfolder.id),
                           'is_default': False,
                          }),
@@ -274,6 +279,7 @@ class ProjectCannotAccessOtherUserTestCase(APITestCase):
                           'is_file': self.de_hello_folder.is_file,
                           'content': self.de_hello_folder.content,
                           'form_items': '[]',
+                          'form_properties': '{}',
                           'parent_id': str(self.de_folder.id),
                           'is_default': False,
                          }),
@@ -336,6 +342,7 @@ class ProjectCanSaveTestCase(APITestCase):
                           'content': "print('Hello world2')",
                           'parent_id': str(self.de_rootfolder.id),
                           'form_items': "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]",
+                          'form_properties': "{'width': '200', 'height': '400'}",
                           'is_default': True,
                          }
         response = self.client.put(url, data, format='json')
@@ -344,6 +351,7 @@ class ProjectCanSaveTestCase(APITestCase):
         self.assertEqual(DirectoryEntry.objects.get(id=self.de_hello_world.id).content, "print('Hello world2')")
         self.assertEqual(DirectoryEntry.objects.get(id=self.de_hello_world.id).form_items, "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]")
         self.assertEqual(DirectoryEntry.objects.get(id=self.de_hello_world.id).is_default, True)
+        self.assertEqual(DirectoryEntry.objects.get(id=self.de_hello_world.id).form_properties, "{'width': '200', 'height': '400'}")
 
     def test_put_can_create_a_new_directory_entry(self):
         data = {'id': str(uuid.uuid4()),
@@ -352,6 +360,7 @@ class ProjectCanSaveTestCase(APITestCase):
                           'content': "print('Hello world4')",
                           'parent_id': str(self.de_rootfolder.id),
                           'form_items': "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]",
+                          'form_properties': "{'width': '200', 'height': '400'}",
                           'is_default': True,
                          }
         url = reverse('api:directoryentry-detail', kwargs={'pk':data['id']})
@@ -362,6 +371,7 @@ class ProjectCanSaveTestCase(APITestCase):
         self.assertEqual(DirectoryEntry.objects.get(id=data['id']).form_items, "[{'id': '37ce1ec8-84dc-4b5e-8a09-9411c5007a0'}]")
         self.assertEqual(str(DirectoryEntry.objects.get(id=data['id']).parent_id), data['parent_id'])
         self.assertEqual(DirectoryEntry.objects.get(id=data['id']).is_default, True)
+        self.assertEqual(DirectoryEntry.objects.get(id=data['id']).form_properties, "{'width': '200', 'height': '400'}")
 
     def test_delete_a_directory_entry(self):
         url = reverse('api:directoryentry-detail', kwargs={'pk':str(self.de_hello_world.id)})
@@ -428,7 +438,7 @@ class PublicAccessOtherUserTestCase(APITestCase):
         self.assertEqual(response.data['type'], 0)
         self.assertEqual(response.data['public'], True)
 
-    def test_project_detail_can_access_my_projects(self):
+    def test_project_detail_other_user_can_access_my_projects(self):
         """
         Ensure we can view individual projects
         """
@@ -448,6 +458,7 @@ class PublicAccessOtherUserTestCase(APITestCase):
                           'is_file': self.de_rootfolder.is_file,
                           'content': '',
                           'form_items': '[]',
+                          'form_properties': '{}',
                           'parent_id': None,
                           'is_default': False,
                          }),
@@ -456,6 +467,7 @@ class PublicAccessOtherUserTestCase(APITestCase):
                           'is_file': self.de_hello_world.is_file,
                           'content': self.de_hello_world.content,
                           'form_items': '[]',
+                          'form_properties': '{}',
                           'parent_id': str(self.de_rootfolder.id),
                           'is_default': True,
                          }),
@@ -464,6 +476,7 @@ class PublicAccessOtherUserTestCase(APITestCase):
                           'is_file': self.de_folder.is_file,
                           'content': '',
                           'form_items': '[]',
+                          'form_properties': '{}',
                           'parent_id': str(self.de_rootfolder.id),
                           'is_default': False,
                          }),
@@ -472,6 +485,7 @@ class PublicAccessOtherUserTestCase(APITestCase):
                           'is_file': self.de_hello_folder.is_file,
                           'content': self.de_hello_folder.content,
                           'form_items': '[]',
+                          'form_properties': '{}',
                           'parent_id': str(self.de_folder.id),
                           'is_default': False,
                          }),
@@ -549,6 +563,7 @@ class PublicAccessNotLoggedInUserTestCase(APITestCase):
                           'is_file': self.de_rootfolder.is_file,
                           'content': '',
                           'form_items': '[]',
+                          'form_properties': '{}',
                           'parent_id': None,
                           'is_default': False,
                          }),
@@ -557,6 +572,7 @@ class PublicAccessNotLoggedInUserTestCase(APITestCase):
                           'is_file': self.de_hello_world.is_file,
                           'content': self.de_hello_world.content,
                           'form_items': '[]',
+                          'form_properties': '{}',
                           'parent_id': str(self.de_rootfolder.id),
                           'is_default': True,
                          }),
@@ -565,6 +581,7 @@ class PublicAccessNotLoggedInUserTestCase(APITestCase):
                           'is_file': self.de_folder.is_file,
                           'content': '',
                           'form_items': '[]',
+                          'form_properties': '{}',
                           'parent_id': str(self.de_rootfolder.id),
                           'is_default': False,
                          }),
@@ -573,6 +590,7 @@ class PublicAccessNotLoggedInUserTestCase(APITestCase):
                           'is_file': self.de_hello_folder.is_file,
                           'content': self.de_hello_folder.content,
                           'form_items': '[]',
+                          'form_properties': '{}',
                           'parent_id': str(self.de_folder.id),
                           'is_default': False,
                          }),

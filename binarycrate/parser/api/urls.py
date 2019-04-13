@@ -15,16 +15,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import, print_function, unicode_literals
 
-from __future__ import absolute_import, unicode_literals, print_function
-from django.conf.urls import include, url
+from django.conf.urls import url
+from . import views
+from rest_framework.urlpatterns import format_suffix_patterns
 
-app_name = 'api'
-
-urls = [
-    url(r'^projects/', include('project.api.urls')),
-    url(r'^historygraph/', include('historygraphbackend.api.urls')),
-    url(r'^parser/', include('parser.api.urls')),
+urlpatterns = [
+    url(r'^get-functions/$', views.MemberFunctionsView.as_view(), name='parser-get-member-functions'),
+    url(r'^add-function/$', views.AddMemberFunctionView.as_view(), name='parser-add-member-function'),
 ]
 
-urlpatterns = [url(r'^', include(urls))]
+urlpatterns = format_suffix_patterns(urlpatterns)

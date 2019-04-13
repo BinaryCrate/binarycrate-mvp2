@@ -18,6 +18,7 @@ from __future__ import unicode_literals, absolute_import, print_function
 import cavorite
 from cavorite import c, t, Router, callbacks, timeouts, get_current_hash, get_uuid
 from cavorite.HTML import *
+import datetime
 
 try:
     import js
@@ -29,7 +30,7 @@ import uuid
 from .navigation import BCChrome, navitem
 import cavorite.bootstrap.modals as modals
 from cavorite.bootstrap.modals import ModalTrigger, Modal
-from cavorite.ajaxget import ajaxget, ajaxput, ajaxdelete
+from cavorite.ajaxget import ajaxget, ajaxput, ajaxdelete, ajaxpost
 import json
 from operator import itemgetter
 from collections import defaultdict
@@ -49,6 +50,8 @@ from types import ModuleType
 import sys
 from binarycrate.controls import ContextMenu
 from binarycrate.frontend_utils import get_controls_height, get_controls_width
+from .formpropertiesmodal import FormPropertiesModal
+from .formitempropertiesmodal import FormItemPropertiesModal
 
 
 HANDLE_NONE = 0
@@ -71,9 +74,10 @@ original_modules = set()
 project_files = [] #All the project files we have written to the virtual file system
 
 
-def merge_dicts(d1, d2):
-    ret = copy.copy(d1)
-    ret.update(d2)
+def merge_dicts(*args):
+    ret = copy.copy(args[0])
+    for d in args[1:]:
+        ret.update(d)
     return ret
 
 
@@ -118,6 +122,7 @@ class BCPFolder(li):
         self.editor_view.folder_state[self.de['id']] = not self.editor_view.folder_state[self.de['id']]
         self.editor_view.selected_de = self.de
         self.editor_view.selected_file_de = None
+        self.editor_view.reset_file_method_cache()
         self.editor_view.selected_item = ''
         self.editor_view.mount_redraw()
         self.editor_view.update_html_preview()
@@ -176,7 +181,9 @@ class BCPFile(li):
     def on_click(self, e):
         self.editor_view.selected_de = self.de
         self.editor_view.selected_file_de = self.de
+        self.editor_view.reset_file_method_cache()
         self.editor_view.selected_item = ''
+        self.editor_view.query_file_functions()
         self.editor_view.mount_redraw()
         self.editor_view.update_html_preview()
         Router.router.ResetHashChange()
@@ -266,17 +273,109 @@ def test_click_handler(e):
     e.stopPropagation()
     e.preventDefault()
 
+class ContextMenuItemBase(object):
+    def on_enter(self, e):
+        pass
+    def on_click(self, e):
+        pass
+
+class ContextMenuItem(ContextMenuItemBase):
+    def __init__(self, text, click_handler):
+        self.text = text
+        self.click_handler = click_handler
+    def on_click(self, e):
+        self.click_handler(e)
+    def on_enter(self, e):
+        editorview = self.parent_context_menu.editorview
+        if editorview.context_menu == self.parent_context_menu:
+            editorview.second_context_menu = None
+            editorview.mount_redraw()
+            Router.router.ResetHashChange()
+
+
+class ContextMenuSubMenu(ContextMenuItemBase):
+    def __init__(self, text, context_menu):
+        self.text = text
+        self.context_menu = context_menu
+        self.editorview = context_menu.editorview
+    def on_enter(self, e):
+        #print('ContextMenuSubMenu on_enter called')
+        if self.editorview.second_context_menu != self.context_menu:
+            #print('refreshing sub menu')
+            rect = e.target.getBoundingClientRect()
+            posx = int(rect.right) - 1
+            posy = int(rect.top)
+            self.context_menu.posx = posx
+            self.context_menu.posy = posy
+            self.editorview.second_context_menu = self.context_menu
+            self.editorview.mount_redraw()
+            Router.router.ResetHashChange()
+
+
 class ContextMenuFormItems(nav):
-    def __init__(self, posx, posy, menu_items, *args, **kwargs):
+    def __init__(self, editorview, posx, posy, menu_items, *args, **kwargs):
+        self.has_submenus = kwargs.get('has_submenus', True)
+        #print('ContextMenuFormItems __init__ called')
+        self.editorview = editorview
         self.menu_items = menu_items
-        super(ContextMenuFormItems, self).__init__({'class': "context-menu", 'style': 'left: {}px; top:{}px'.format(posx, posy)}, *args, **kwargs)
+        for mi in self.menu_items:
+            mi.parent_context_menu = self
+        self.posx = posx
+        self.posy = posy
+        super(ContextMenuFormItems, self).__init__({'class': "context-menu",
+            'style': 'left: {}px; top:{}px'.format(self.posx, self.posy)},
+            *args, **kwargs)
+
+    def get_attribs(self):
+        return {'class': "context-menu",
+            'style': 'left: {}px; top:{}px'.format(self.posx, self.posy)}
+
+    def on_mouse_outside_context_menu(self):
+        print('on_mouse_outside_context_menu called')
+        self.editorview.second_context_menu = None
+        self.editorview.mount_redraw()
+        Router.router.ResetHashChange()
+
+    def menu_item_mouse_enter(self, e):
+        pass
+        """
+        if self.editorview.second_context_menu is None:
+            print('menu_item_mouse_enter called')
+            rect = e.target.getBoundingClientRect()
+            posx = int(rect.right) - 1
+            posy = int(rect.top)
+            self.editorview.second_context_menu = ContextMenuFormItems(self.editorview, posx, posy, (
+                                            ContextMenuItem('Hello', lambda e: None),
+                                            ContextMenuItem('World', lambda e: None)
+                                            ))
+            self.editorview.mount_redraw()
+            Router.router.ResetHashChange()"""
+
+    def menu_item_mouse_leave(self, e):
+        #self.extra_rectangle = None
+        #print('menu_item_mouse_leave called')
+        #self.editorview.mount_redraw()
+        #Router.router.ResetHashChange()
+        #self.editorview.second_context_menu = None
+        pass
+
+    def menu_item_mouse_move(self, e):
+        e.stopPropagation()
+        e.preventDefault()
 
     def get_children(self):
+        #print('get_children self.extra_rectangle=', self.extra_rectangle)
         menu_items = [
-            li({'class': "context-menu__item"}, [
-                a({'href': get_current_hash(), 'class': "context-menu__link", 'onclick': mi[1]}, [
+            li({'class': "context-menu__item",
+                 'onmouseenter': mi.on_enter,
+                 'onmouseleave': self.menu_item_mouse_leave,
+                 'onmousemove': self.menu_item_mouse_move}, [
+                a({'href': get_current_hash(),
+                   'class': "context-menu__link",
+                   'onclick': mi.on_click,
+                   'onmousemove': self.menu_item_mouse_move}, [
                     # i({'class': 'fa fa-eye'}),
-                    t(mi[0]),
+                    t(mi.text),
                 ]),
             ]) for mi in self.menu_items]
 
@@ -284,6 +383,14 @@ class ContextMenuFormItems(nav):
             ul({'class': 'context-menu__items'}, menu_items),
         ]
 
+
+def smart_int(s):
+    # Attempt to parse the passed in string as an integer, returning 0 if
+    # we can't convert to
+    try:
+        return int(s)
+    except ValueError as ex:
+        return 0
 
 class EditorView(BCChrome):
     def save_project(self, e):
@@ -300,6 +407,7 @@ class EditorView(BCChrome):
                 de_copy = copy.copy(de)
                 #print('de_copy[form_items]=', de_copy['form_items'])
                 de_copy['form_items'] = json.dumps(de_copy['form_items'])
+                de_copy['form_properties'] = json.dumps(de_copy['form_properties'])
                 ajaxput('/api/projects/directoryentry/' + de['id'] + '/', de_copy, dummy_put_result_handler)
                 self.save_progress += 1
         for de_id in project['deleted_directory_entries']:
@@ -525,6 +633,7 @@ class EditorView(BCChrome):
             if project  != new_project:
                 self.selected_de = None
                 self.selected_file_de = None
+                self.reset_file_method_cache()
                 project = new_project
                 project['deleted_directory_entries'] = list()
                 for de in project['directory_entry']:
@@ -536,6 +645,10 @@ class EditorView(BCChrome):
                             # Some of the form controls in the demo content don't have visibility set
                             if 'visible' not in fi:
                                 fi['visible'] = True
+                    if de['form_properties'] == '':
+                        de['form_properties'] = {}
+                    else:
+                        de['form_properties'] = json.loads(de['form_properties'])
                 self.mount_redraw()
                 Router.router.ResetHashChange()
 
@@ -543,8 +656,10 @@ class EditorView(BCChrome):
         global project
         project = {}
         self.context_menu = None
+        self.second_context_menu = None
         self.selected_de = None
         self.selected_file_de = None
+        self.reset_file_method_cache()
         super(EditorView, self).mount(element)
 
     def get_project(self):
@@ -567,6 +682,49 @@ class EditorView(BCChrome):
                     ajaxget('/api/projects/' + self.get_root().url_kwargs['project_id'] + '/', self.projects_api_ajax_result_handler)
 
             ajaxget('/api/projects/image-list/' + self.get_root().url_kwargs['project_id'] + '/', images_api_ajax_result_handler2)
+
+    def update_file_method_cache(self, result):
+            button_names = [fi['name'] for fi in self.selected_de['form_items'] if fi['type'] == 'button']
+            button_function_names = {n + '_onclick' for n in button_names}
+            current_functions = {f['name']: f for f in result['functions']}
+            functions = [[{'name': '(None)', 'is_present': False}] +
+                         [merge_dicts(f, {'is_present': True}) for f in result['functions'] if f['name'] not in self.form_events and f['name'] not in button_function_names],
+                         [{'name': '(None)', 'is_present': False}] +
+                         [merge_dicts({'name': name, 'is_present': name in current_functions},
+                                      {'start_line': current_functions[name]['start_line'],
+                                       'end_line': current_functions[name]['end_line']} if  name in current_functions else {}) for name in self.form_events]] + \
+                         [[{'name': '(None)', 'is_present': False}] +
+                          [merge_dicts({'name': name + '_onclick', 'is_present': name + '_onclick' in current_functions},
+                             {'start_line': current_functions[name + '_onclick']['start_line'],
+                             'end_line': current_functions[name + '_onclick']['end_line']} if name + '_onclick' in current_functions else {})]
+                          for name in button_names]
+
+            new_file_method_cache = {'control_drop_down_list':
+                                     ['General', result['classname'] + ' (Form Events)'] + [name for name in button_names],
+                                     'functions': functions}
+            if new_file_method_cache != self.selected_file_method_cache:
+                #print("The new file method cache differs redrawing")
+                self.selected_file_method_cache = new_file_method_cache
+                self.mount_redraw()
+                Router.router.ResetHashChange()
+                if self.last_cursor is not None:
+                    self.code_mirror.editor.setCursor(self.last_cursor)
+                    self.code_mirror.editor.focus()
+
+    def ajaxpost_file_functions_handler(self, xmlhttp, response):
+        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+            result = json.loads(str(xmlhttp.responseText))
+
+            self.update_file_method_cache(result)
+        else:
+            pass
+            #print('ajaxpost_file_functions_handler returned error status=', xmlhttp.status)
+
+    def query_file_functions(self):
+        # This function will trigger asyncronosly querying the structure of the given file
+        #print('Getting structure for file ', self.selected_file_de['name'])
+        form_data = {'content': self.get_selected_de_content()}
+        ajaxpost('/api/parser/get-functions/', form_data, self.ajaxpost_file_functions_handler)
 
     def was_mounted(self):
         #print('was_mounted called')
@@ -603,6 +761,102 @@ class EditorView(BCChrome):
                     span({'class': 'fa fa-1x fa-folder-o', 'onclick': self.display_new_folder_modal}),
                 ]),
             ]
+
+    def onchange_control_select(self, e):
+        #print('onchange_function_control_select called value=', e.target.value)
+        self.control_drop_down_list_selection = int(e.target.value)
+        self.function_drop_down_list_selection = 0
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
+    def ajaxpost_add_function_handler(self, xmlhttp, response):
+        if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+            result = json.loads(str(xmlhttp.responseText))
+            #print('ajaxpost_add_function_handler result=', result)
+
+            self.selected_file_de['content'] = result['content']
+
+            self.update_file_method_cache(result)
+            #selected_function = self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]
+            selected_function = [fn for fn in result['functions'] if fn['name'] == result['new_function']][0]
+            self.code_mirror.editor.setCursor(selected_function['start_line'] - 1)
+            self.code_mirror.editor.focus()
+            #self.mount_redraw()
+            #Router.router.ResetHashChange()
+        else:
+            pass
+            #print('ajaxpost_file_functions_handler returned error status=', xmlhttp.status)
+
+    def process_selected_function(self, selected_function):
+        if selected_function['is_present']:
+            #print('process_selected_function is_present selected_function=', selected_function)
+            # If the function is present move the cursor to it
+            bottom_line = min(selected_function['end_line'] - 1,
+                              selected_function['start_line'] - 1 + 5)
+            #self.last_cursor = selected_function['start_line'] - 1
+            #self.mount_redraw()
+            #Router.router.ResetHashChange()
+            self.code_mirror.editor.scrollIntoView({'line': bottom_line})
+            self.code_mirror.editor.scrollIntoView({'line': selected_function['start_line'] - 1})
+            self.code_mirror.editor.setCursor(selected_function['start_line'] - 1)
+            self.code_mirror.editor.focus()
+        else:
+            form_data = {'content': self.get_selected_de_content(),
+                         'function_name': selected_function['name'],
+                         'newfunction': """def {}(self, e):
+    pass
+""".format(selected_function['name'])}
+            ajaxpost('/api/parser/add-function/', form_data, self.ajaxpost_add_function_handler)
+
+    def onchange_function_select(self, e):
+        #print('onchange_function_select called value=', e.target.value)
+        self.function_drop_down_list_selection = int(e.target.value)
+        #print('onchange_function_select is_present=', self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]['is_present'])
+        selected_function = self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+        self.process_selected_function(selected_function)
+
+    def get_function_select_controls(self):
+        # This function returns the contents of the select controls where we can choose the
+        # class and method
+        #print('get_function_select_controls self.function_drop_down_list_selectio=', self.function_drop_down_list_selection)
+        if self.program_is_running:
+            return []
+        control_drop_down_list = self.selected_file_method_cache.get(
+            'control_drop_down_list', ['General'])
+        return [
+                 #select({'id': 'selControl', 'onchange': self.onchange_function_control_select}, [
+                 #  option({'value': 'general'}, 'General'),
+                 #] + ([] if 'form_class_name' not in self.selected_file_method_cache else
+                 #  [option({'value': 'form'}, self.selected_file_method_cache['form_class_name'])]
+                 #)
+                 #),
+                 select({'id': 'selControl', 'onchange': self.onchange_control_select}, [
+                   option(merge_dicts({'value': i},
+                        {'selected':'selected'} if i == self.control_drop_down_list_selection else {}),
+                        control_drop_down_list[i])
+                   for i in range(len(control_drop_down_list))
+                 ])
+               ] + ([
+                 #select({'id': 'selFunction'}, [
+                 #  option({'value': 'general'}, '__init__'),
+                 #  option({'value': 'form', 'style': 'font-weight: bold'}, "onclick"),
+                 #])
+                 select(merge_dicts({'id': 'selFunction',
+                         'onchange': self.onchange_function_select},
+                         {'style': 'font-weight:bold'} if self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]['is_present'] else {}), [
+                   option(merge_dicts({'value': i}, {'style': 'font-weight:bold'} if self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][i]['is_present'] else {},
+                                      {'selected': 'selected'} if i == self.function_drop_down_list_selection else {}),
+                          self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][i]['name'])
+                   for i in range(len(self.selected_file_method_cache['functions'][self.control_drop_down_list_selection]))
+                 ] )
+                ] if 'functions' in self.selected_file_method_cache else
+                [
+                  select({'id': 'selFunction'}, [
+                    option({'value': 0}, '(None)')
+                  ] )
+                ])
 
     def get_central_content(self):
         """
@@ -645,7 +899,18 @@ class EditorView(BCChrome):
                              self.get_project_tree(),
                          ]),
                          article({'class': 'col-md-12 row', 'id': 'editor'}, [
-                             self.code_mirror,
+                             div({'class': lambda :'col-md-5' if self.designer_visible else 'col-md-10', 'style':'padding:0px'}, [
+                               div(self.get_function_select_controls() + [
+                                 html_button({'type':"button",
+                                              'class':"btn btn-sm btn-default",
+                                              'style': 'float:right',
+                                              'onclick': self.show_hide_designer},
+                                              lambda: [t('.')] if self.program_is_running else ([t(">>")] if
+                                                   self.designer_visible else
+                                                   [t("<<")])),
+                               ]),
+                               self.code_mirror,
+                             ]),
                          ] + (
                          [ ] if not self.designer_visible else
                          [
@@ -659,9 +924,13 @@ class EditorView(BCChrome):
                                      [
                                         # Generate preview for python projects
                                         div({'id': 'preview', 'class': 'col-12 code-output',
-                                        'oncontextmenu': self.contextmenu_preview, 'style': 'padding-left: 0px',
-                                        'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up},
-                                        self.get_selected_de_form_controls()),
+                                        'oncontextmenu': self.contextmenu_preview,
+                                        #'style': {'padding-left': '0px', 'overflow': 'hidden' if self.program_is_running else 'auto'},
+                                        'style': {'padding-left': '0px', 'overflow': 'auto'},
+                                        'onmousedown': self.handle_div_mouse_down, 'onmouseup': self.on_mouse_up},
+                                          self.get_selected_de_form_controls()
+
+                                        ),
                                      ]
                                  ) +
                                  [
@@ -687,10 +956,12 @@ class EditorView(BCChrome):
                 Router.router.ResetHashChange()
         if self.context_menu is not None:
             self.context_menu = None
+            self.second_context_menu = None
             self.mount_redraw()
             Router.router.ResetHashChange()
 
     def on_body_mousemove(self, e, change_x, change_y):
+        #print('EditorView on_body_mousemove called')
         change_x = int(change_x)
         change_y = int(change_y)
         if self.program_is_running:
@@ -704,6 +975,8 @@ class EditorView(BCChrome):
                 if self.form_stack[-1].on_body_mousemove(int(posx), int(posy)):
                     self.mount_redraw()
                     Router.router.ResetHashChange()
+        if self.context_menu:
+            self.context_menu.on_mouse_outside_context_menu()
         if self.mouse_is_down and self.selected_item != '':
             fi = [fi for fi in self.selected_de['form_items'] if
                   fi['id'] == self.selected_item][0]
@@ -760,8 +1033,33 @@ class EditorView(BCChrome):
             # print('Mouse is down mousemove e=', change_x, ',', change_y)
         # Router.router.ResetHashChange()
 
-    def get_context_menu(self):
-        return self.context_menu
+    def on_body_keyup(self, e):
+        if self.program_is_running:
+            if self.form_stack[-1].on_body_keyup(e):
+                self.mount_redraw()
+                Router.router.ResetHashChange()
+
+    def on_body_keydown(self, e):
+        if self.program_is_running:
+            if self.form_stack[-1].on_body_keydown(e):
+                self.mount_redraw()
+                Router.router.ResetHashChange()
+
+    def on_body_keypress(self, e):
+        if self.program_is_running:
+            if self.form_stack[-1].on_body_keypress(e):
+                self.mount_redraw()
+                Router.router.ResetHashChange()
+
+    def get_context_menu_list(self):
+        context_menu = self.context_menu
+        if context_menu is None:
+            ret = []
+        else:
+            ret = [context_menu] + ([self.second_context_menu] if
+                   self.second_context_menu is not None else [])
+        #print('get_context_menu_list ret=', ret)
+        return ret
 
     def xy_from_e(self, e):
         #TODO: Shared code put in a library
@@ -775,40 +1073,144 @@ class EditorView(BCChrome):
                    js.globals.document.documentElement.scrollTop
         return posx, posy
 
+    def add_body_event_handler(self, section_name, function_name):
+        all_functions = [item for sublist in self.selected_file_method_cache['functions'] for item in sublist]
+        #selected_function = [fn for fn in self.selected_file_method_cache['functions'][1] if fn['name'] == function_name][0]
+        selected_function = [fn for fn in all_functions if fn['name'] == function_name][0]
+        #self.mount_redraw()
+        #Router.router.ResetHashChange()
+        self.process_selected_function(selected_function)
+        select_control = None
+        if section_name == 'General':
+            select_control = 1
+        else:
+            for i in range(2, len(self.selected_file_method_cache['functions'])):
+                select_control = i
+        select_function = None
+        for i in range(len(self.selected_file_method_cache['functions'][select_control])):
+            if self.selected_file_method_cache['functions'][select_control][i]['name'] == function_name:
+                select_function = i
+        if select_control is not None and select_function is not None:
+            self.control_drop_down_list_selection = select_control
+            self.function_drop_down_list_selection = select_function
+            self.mount_redraw()
+            Router.router.ResetHashChange()
+
+    def add_body_click_handler(self, e):
+        #print('add_body_click_handler clicked')
+        #print('onchange_function_select is_present=', self.selected_file_method_cache['functions'][self.control_drop_down_list_selection][self.function_drop_down_list_selection]['is_present'])
+        self.add_body_event_handler('General', 'on_body_click')
+
+    def add_body_mouse_move(self, e):
+        #print('add_body_mouse_move clicked')
+        self.add_body_event_handler('General', 'on_body_mousemove')
+
+    def add_body_on_keyup(self, e):
+        #print('add_body_on_keyup clicked')
+        self.add_body_event_handler('General', 'on_body_keyup')
+
+    def add_body_on_keydown(self, e):
+        #print('add_body_on_keydown clicked')
+        self.add_body_event_handler('General', 'on_body_keydown')
+
+    def add_body_keypress(self, e):
+        #print('add_body_keypress clicked')
+        self.add_body_event_handler('General', 'on_body_keypress')
+
     def contextmenu_preview(self, e):
         self.contextmenu_x, self.contextmenu_y = self.xy_from_e(e)
-        self.context_menu = ContextMenuFormItems(self.contextmenu_x,
+        self.context_menu = ContextMenuFormItems(self,
+                                        self.contextmenu_x,
                                         self.contextmenu_y, (
-                                        ('New Button', self.new_button),
-                                        ('New Textbox', self.new_textbox),
-                                        ('New Image', self.new_image),
-                                        ('New Label', self.new_label),
-                                        ('New Frame', self.new_frame),
-                                        ('New Checkbox', self.new_checkbox),
+                                        ContextMenuSubMenu("New Control...",
+                                            ContextMenuFormItems(self,
+                                            self.contextmenu_x,
+                                            self.contextmenu_y,
+                                            (ContextMenuItem('New Button', self.new_button),
+                                            ContextMenuItem('New Textbox', self.new_textbox),
+                                            ContextMenuItem('New Image', self.new_image),
+                                            ContextMenuItem('New Label', self.new_label),
+                                            ContextMenuItem('New Frame', self.new_frame),
+                                            ContextMenuItem('New Checkbox', self.new_checkbox),
+                                            #('New Listbox', self.new_listbox),
+                                            ContextMenuItem('New Rectangle', self.new_rectangle),
+                                            ContextMenuItem('New Circle', self.new_circle),
+                                            ContextMenuItem('New Ellipse', self.new_ellipse),
+                                            ContextMenuItem('New Line', self.new_line),
+                                            ContextMenuItem('New Hexagon', self.new_hexagon),
+                                        ))),
+                                        ContextMenuItem('Form Properties', self.form_properties),
+                                        ContextMenuSubMenu("Add Body Event Handler...",
+                                            ContextMenuFormItems(self,
+                                            self.contextmenu_x,
+                                            self.contextmenu_y,
+                                            (ContextMenuItem('Add Body Click Handler', self.add_body_click_handler),
+                                            ContextMenuItem('Add Body Mouse Move Handler', self.add_body_mouse_move),
+                                            ContextMenuItem('Add Body Key Up Handler', self.add_body_on_keyup),
+                                            ContextMenuItem('Add Body Key Down Handler', self.add_body_on_keydown),
+                                            ContextMenuItem('Add Body Key Press Handler', self.add_body_keypress),
+                                            ))
+                                        )))
+        """self.context_menu = ContextMenuFormItems(self,
+                                        self.contextmenu_x,
+                                        self.contextmenu_y, (
+                                        ContextMenuItem('New Button', self.new_button),
+                                        ContextMenuItem('New Textbox', self.new_textbox),
+                                        ContextMenuItem('New Image', self.new_image),
+                                        ContextMenuItem('New Label', self.new_label),
+                                        ContextMenuItem('New Frame', self.new_frame),
+                                        ContextMenuItem('New Checkbox', self.new_checkbox),
                                         #('New Listbox', self.new_listbox),
-                                        ('New Rectangle', self.new_rectangle),
-                                        ('New Circle', self.new_circle),
-                                        ('New Ellipse', self.new_ellipse),
-                                        ('New Line', self.new_line),
-                                        ('New Hexagon', self.new_hexagon),
-                                        ))
+                                        ContextMenuItem('New Rectangle', self.new_rectangle),
+                                        ContextMenuItem('New Circle', self.new_circle),
+                                        ContextMenuItem('New Ellipse', self.new_ellipse),
+                                        ContextMenuItem('New Line', self.new_line),
+                                        ContextMenuItem('New Hexagon', self.new_hexagon),
+                                        ContextMenuItem('Form Properties', self.form_properties),
+                                        ContextMenuItem('Add Body Click Handler', self.add_body_click_handler),
+                                        ContextMenuItem('Add Body Mouse Move Handler', self.add_body_mouse_move),
+                                        ContextMenuItem('Add Body Key Up Handler', self.add_body_on_keyup),
+                                        ContextMenuItem('Add Body Key Down Handler', self.add_body_on_keydown),
+                                        ContextMenuItem('Add Body Key Press Handler', self.add_body_keypress),
+                                        ))"""
+        self.second_context_menu = None
         self.mount_redraw()
         Router.router.ResetHashChange()
         e.stopPropagation()
         e.preventDefault()
 
+    def double_click_item(self, form_item_id, e):
+        print('double_click_item called')
+
     def select_new_item(self, form_item_id, e):
-        #print('select_new_item mouse is down')
+        #print('select_new_item mouse is down form_item_id=', form_item_id, ', self.last_double_click_item=', self.last_double_click_item)
         self.selected_item = form_item_id
         if e.button == 0:
             self.mouse_is_down = True
             self.selected_handler = HANDLE_NONE
             # print('select_new_item mouse is down')
+            if self.last_double_click_item == form_item_id:
+                if self.double_click_count_down == 0:
+                    #print('select_new_item Was a double click ')
+                    self.add_form_item_onclick_handler(form_item_id, e)
+                else:
+                    self.double_click_count_down -= 1
             self.selected_item = form_item_id
+            if self.last_double_click_item is None:
+                self.double_click_count_down = 1
+            self.last_double_click_item = form_item_id
+            #def setup_double_click_item():
+            #    print('setup_double_click_item called')
+            #    self.last_double_click_item = form_item_id
+            def clear_double_click_item():
+                #print('clear_double_click_item called')
+                self.last_double_click_item = None
+            #val = timeouts.set_timeout(setup_double_click_item, 1)
+            val = timeouts.set_timeout(clear_double_click_item, 500)
             self.mount_redraw()
             Router.router.ResetHashChange()
-            e.stopPropagation()
-            e.preventDefault()
+            #e.stopPropagation()
+            #e.preventDefault()
 
     def on_mouse_up(self, e):
         # print('on_mouse_up mouse is up')
@@ -858,6 +1260,17 @@ class EditorView(BCChrome):
         self.mount_redraw()
         Router.router.ResetHashChange()
 
+    def popup_form_item_properties_modal(self, form_item_id, e):
+        self.form_properties_modal = FormItemPropertiesModal(self, form_item_id)
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
+    def add_form_item_onclick_handler(self, form_item_id, e):
+        fi = [form_item for form_item in self.selected_de['form_items'] if
+                                          form_item_id == form_item['id']][0]
+        self.add_body_event_handler(fi['name'], fi['name'] + '_onclick')
+        #print('add_form_item_onclick_handler called name=' + fi['name'])
+
     def display_new_file_modal(self, e):
         jquery = js.globals['$']
         jquery('#newFile').modal('show')
@@ -874,6 +1287,8 @@ class EditorView(BCChrome):
 
     def show_hide_designer(self, e):
         #print("show_hide_designer called")
+        if self.program_is_running:
+            return
         self.designer_visible = not self.designer_visible
         self.mount_redraw()
         Router.router.ResetHashChange()
@@ -917,6 +1332,7 @@ class EditorView(BCChrome):
         prop_type = get_form_item_property(form_item['type'])[prop_name]
         #print('display_property_change_modal prop_type=', prop_type)
         self.context_menu = None
+        self.second_context_menu = None
 
         def display_modal():
             jquery = js.globals['$']
@@ -953,15 +1369,21 @@ class EditorView(BCChrome):
 
     def contextmenu_control(self, form_item_id, e):
         posx, posy = self.xy_from_e(e)
-        form_item = [form_item for form_item in self.selected_de['form_items'] if form_item_id == form_item['id']][0]
-        change_items = tuple(sorted([('Change {}'.format(prop_name),
-                                      lambda e, prop_name=prop_name: self.display_property_change_modal(e, form_item,
-                                                                                                        prop_name)) for
-                                     prop_name in get_form_item_property(form_item['type'])],
-                                    key=itemgetter(0)))
-        self.context_menu = ContextMenuFormItems(posx, posy, change_items + (
-                                        ('Delete', lambda e: self.delete_selected_form_item(form_item_id, e)),
+        #form_item = [form_item for form_item in self.selected_de['form_items'] if form_item_id == form_item['id']][0]
+        #change_items = tuple(sorted([('Change {}'.format(prop_name),
+        #                              lambda e, prop_name=prop_name: self.display_property_change_modal(e, form_item,
+        #                                                                                                prop_name)) for
+        #                             prop_name in get_form_item_property(form_item['type'])],
+        #                            key=itemgetter(0)))
+        #self.context_menu = ContextMenuFormItems(posx, posy, change_items + (
+        #                                ('Delete', lambda e: self.delete_selected_form_item(form_item_id, e)),
+        #                                ))
+        self.context_menu = ContextMenuFormItems(self, posx, posy, (
+                                        ContextMenuItem('Add onclick Handler', lambda e: self.add_form_item_onclick_handler(form_item_id, e)),
+                                        ContextMenuItem('Properties', lambda e: self.popup_form_item_properties_modal(form_item_id, e)),
+                                        ContextMenuItem('Delete', lambda e: self.delete_selected_form_item(form_item_id, e)),
                                         ))
+        self.second_context_menu = None
         self.mount_redraw()
         Router.router.ResetHashChange()
         e.stopPropagation()
@@ -993,6 +1415,7 @@ class EditorView(BCChrome):
                 form_item_id = form_item['id']
                 attribs = {'style': style, 'onmouseup': self.on_mouse_up,
                            'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e),
+                           'ondblclick': lambda e, form_item_id=form_item_id: self.double_click_item(form_item_id, e),
                            'oncontextmenu': lambda e, form_item_id=form_item_id: self.contextmenu_control(form_item_id,
                                                                                                           e)
                            }
@@ -1036,6 +1459,19 @@ class EditorView(BCChrome):
                     control = control_class(attribs, form_item.get('caption', ''))
                     ret.append(control)
             svg_list = list()
+            form_height = smart_int(self.selected_de['form_properties'].get('height', '0'))
+            form_width = smart_int(self.selected_de['form_properties'].get('width', '0'))
+            svg_width = form_width
+            svg_height = form_height
+            if form_height > 0 and form_width > 0:
+                svg_list.append(svg('rect', {'x': 0,
+                             'y':0,
+                             'width': form_width,
+                             'height': form_height,
+                             'fill': 'None',
+                             'stroke-width':  1,
+                             'stroke': 'rgb(112, 128, 144)',
+                             }))
             for form_item in self.selected_de['form_items']:
                 if form_item['type'] == 'rect':
                     svg_list.append(svg('rect', {'x': form_item['x'],
@@ -1049,6 +1485,8 @@ class EditorView(BCChrome):
                                  'onmouseup': self.on_mouse_up,
                                  'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e),
                                  'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                    svg_width = max(svg_width,  form_item['x'] + form_item['width'])
+                    svg_height = max(svg_height,  form_item['y'] + form_item['height'])
                 if form_item['type'] == 'circle':
                     svg_list.append(svg('circle', {'cx': form_item['x'] + form_item['width'] / 2,
                                  'cy':form_item['y'] + form_item['height'] / 2,
@@ -1061,6 +1499,8 @@ class EditorView(BCChrome):
                                  'onmouseup': self.on_mouse_up,
                                  'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e),
                                  'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                    svg_width = max(svg_width,  form_item['x'] + form_item['width'])
+                    svg_height = max(svg_height,  form_item['y'] + form_item['height'])
                 if form_item['type'] == 'ellipse':
                     svg_list.append(svg('ellipse', {'cx': form_item['x'] + form_item['width'] / 2,
                                  'cy':form_item['y'] + form_item['height'] / 2,
@@ -1073,6 +1513,8 @@ class EditorView(BCChrome):
                                  'onmouseup': self.on_mouse_up,
                                  'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e),
                                  'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                    svg_width = max(svg_width,  form_item['x'] + form_item['width'])
+                    svg_height = max(svg_height,  form_item['y'] + form_item['height'])
                 if form_item['type'] == 'line':
                     svg_list.append(svg('line', {'x1': form_item['x1'],
                                  'y1':form_item['y1'],
@@ -1085,6 +1527,8 @@ class EditorView(BCChrome):
                                  'onmouseup': self.on_mouse_up,
                                  'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e),
                                  'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
+                    svg_width = max(svg_width,  form_item['x2'])
+                    svg_height = max(svg_height,  form_item['y2'])
                 if form_item['type'] == 'hexagon':
                     # Draw a hexagon
                     x1 = form_item['x'] + form_item['width'] / 2
@@ -1110,6 +1554,8 @@ class EditorView(BCChrome):
                                                         'id']: self.select_new_item(form_item_id, e),
                                                     'oncontextmenu': lambda e, form_item_id=form_item[
                                                         'id']: self.contextmenu_control(form_item_id, e)}))
+                    svg_width = max(svg_width,  form_item['x'] + form_item['width'])
+                    svg_height = max(svg_height,  form_item['y'] + form_item['height'])
             if self.selected_item != '':
                 #print('self.selected_item=', self.selected_item)
                 selected_form_item = \
@@ -1169,16 +1615,34 @@ class EditorView(BCChrome):
                                            #'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)
                                            }),
                             ])
-            ret.append(svg('svg', {'id': 'preview-svg', 'height': '100%', 'width': '100%', 'oncontextmenu': self.contextmenu_preview, 'z-index':-5, 'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up}, svg_list))
+                svg_width = max(svg_width,  selected_form_item_x + selected_form_item_width + 5)
+                svg_height = max(svg_height,  selected_form_item_y + selected_form_item_height + 5)
+            ret.append(svg('svg', {'id': 'preview-svg', 'height': svg_height, 'width': svg_width,
+                                    'oncontextmenu': self.contextmenu_preview,
+                                    'z-index':-5, 'onmousedown': self.handle_root_svg_mouse_down,
+                                    'onmouseup': self.on_mouse_up}, svg_list))
         if self.program_is_running and len(self.form_stack) > 0:
             #print('get_selected_de_form_controls getting form controls from from_stack')
             ret = self.form_stack[-1].get_form_control_elements()
             #print('get_selected_de_form_controls ret=', ret)
         return ret
 
+    def handle_div_mouse_down(self, e):
+        # Ignore click on the div which dont click the SVG they are clicking
+        # on the scroll bar
+        #pass
+        #print("handle_div_mouse_down called")
+        e.stopPropagation()
+        e.preventDefault()
+        #self.clear_selected_item(e)
+
+    def handle_root_svg_mouse_down(self, e):
+        #print("handle_root_svg_mouse_down called")
+        self.clear_selected_item(e)
+
     def clear_selected_item(self, e):
         # self.mouse_is_down = True
-        # print('clear_selected_item called')
+        #print('clear_selected_item called e=', e)
         if self.selected_item != '':
             self.selected_handler = HANDLE_NONE
             # print('clearing item')
@@ -1208,6 +1672,7 @@ class EditorView(BCChrome):
         self.selected_item = new_id
 
         self.context_menu = None
+        self.second_context_menu = None
         self.mount_redraw()
         Router.router.ResetHashChange()
         e.stopPropagation()
@@ -1353,6 +1818,7 @@ class EditorView(BCChrome):
         self.selected_item = new_id
 
         self.context_menu = None
+        self.second_context_menu = None
         self.mount_redraw()
         Router.router.ResetHashChange()
         e.stopPropagation()
@@ -1369,6 +1835,11 @@ class EditorView(BCChrome):
              'fill': 'none',
              'visible': True,
             })
+
+    def form_properties(self, e):
+        self.form_properties_modal = FormPropertiesModal(self)
+        self.mount_redraw()
+        Router.router.ResetHashChange()
 
     def get_selected_de_content(self):
         if self.selected_file_de is None:
@@ -1427,11 +1898,28 @@ class EditorView(BCChrome):
             print("update_html_preview called")
 
     def code_mirror_change(self, content):
+        def handle_delay_file_method_cache_update():
+            #print('handle_delay_file_method_cache_update called')
+            self.last_file_method_cache_update_timeout = None
+            self.last_file_method_cache_update = datetime.datetime.now()
+            self.query_file_functions()
+
         global project
         # print('code_mirror_change called')
         if self.selected_file_de is not None:
             if self.selected_file_de['content'] != str(content):
                 self.selected_file_de['content'] = str(content)
+                if (datetime.datetime.now() - self.last_file_method_cache_update).total_seconds() < 5:
+                    if self.last_file_method_cache_update_timeout is None:
+                        #print("Last update was 5 seconds ago defering for 5 seconds")
+                        self.last_file_method_cache_update_timeout = \
+                            timeouts.set_timeout(handle_delay_file_method_cache_update, 5000)
+                else:
+                    #print("No query in the last 5 seconds running now")
+                    if (self.last_file_method_cache_update_timeout is not None):
+                        timeouts.clear_timeout(self.last_file_method_cache_update_timeout)
+                    self.last_file_method_cache_update = datetime.datetime.now()
+                    self.query_file_functions()
                 # self.mount_redraw()
                 # Router.router.ResetHashChange()
 
@@ -1457,18 +1945,20 @@ class EditorView(BCChrome):
 class """ + class_name + """(Form):
     file_location = __file__
 """
-        first_file = len([de for de in project['directory_entry'] if de['is_file']]) == 0
+        first_non_document_file = len([de for de in project['directory_entry'] if de['is_file'] and de['name'] != 'documents.py']) == 0
         new_de = {'id': str(uuid.uuid4()),
                    'name': file_name,
                    'content': content,
                    'is_file': True,
                    'form_items': [],
+                   'form_properties': {},
                    'parent_id': parent_de['id'],
-                   'is_default': first_file,
+                   'is_default': first_non_document_file,
                   }
         project['directory_entry'].append(new_de)
         self.selected_de = new_de
         self.selected_file_de = new_de
+        self.reset_file_method_cache()
         self.mount_redraw()
         Router.router.ResetHashChange()
 
@@ -1548,6 +2038,11 @@ class """ + class_name + """(Form):
         self.mount_redraw()
         Router.router.ResetHashChange()
 
+    def close_form_properties_modal(self, e):
+        self.form_properties_modal = None
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
     def get_top_navbar_items(self):
         if self.program_is_running:
             return [
@@ -1562,6 +2057,12 @@ class """ + class_name + """(Form):
                         ]),
                       ]),
 
+                   ] + [
+                     span({'style':{'color': 'white', # TODO: This is a really hacky way to display this. Add better styling
+                                    'padding-top': '7px',
+                                    'margin-left': '5px'}}, [
+                       t(lambda: self.get_project().get('name', ''))
+                     ])
                    ]
         else:
             return [
@@ -1601,20 +2102,7 @@ class """ + class_name + """(Form):
                              "Share")
                         ]),
                       ])
-                    ] + (
-                    [] if (project.get('type', None) == 1) else
-                    [
-                      li({'class': 'nav-item li-create-new dropdown-menu-header', 'style': {'margin-left':'20px'}}, [
-                        form({'action': '#'}, [
-                          #ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
-                          a({'class': "btn btn-default navbar-btn crt-btn",
-                             'href': get_current_hash(),
-                             'onclick': self.show_hide_designer},
-                            "Hide Designer" if self.designer_visible else
-                            "Show Designer")
-                        ]),
-                      ])
-                    ]) + [
+                    ] + [
                       span({'style':{'color': 'white', # TODO: This is a really hacky way to display this. Add better styling
                                      'padding-top': '7px',
                                      'margin-left': '5px'}}, [
@@ -1798,7 +2286,9 @@ class """ + class_name + """(Form):
                         ]),
                       ], self.renameFile_ok),
                     ] + \
-                    (self.upload_modal.get_modal_vnodes() if self.upload_modal else [])  + (self.licence_modal.get_modal_vnodes() if self.licence_modal else [])
+                    (self.upload_modal.get_modal_vnodes() if self.upload_modal else []) + \
+                    (self.form_properties_modal.get_modal_vnodes() if self.form_properties_modal else []) + \
+                    (self.licence_modal.get_modal_vnodes() if self.licence_modal else [])
 
     def get_code_mirror_read_only(self):
         return self.selected_file_de is None
@@ -1809,12 +2299,21 @@ class """ + class_name + """(Form):
             self.mount_redraw()
             Router.router.ResetHashChange()
 
+    def reset_file_method_cache(self):
+        # Reset various value relating to the file mathod cache
+        self.selected_file_method_cache = {}
+        self.last_file_method_cache_update = datetime.datetime(2019,1,1,0,0,0)
+        self.last_file_method_cache_update_timeout = None
+        self.last_cursor = None
+
     def __init__(self, *args, **kwargs):
         # print('EditorView __init__')
         self.selected_de = None
         self.selected_file_de = None
+        self.reset_file_method_cache()
         self.folder_state = defaultdict(bool)
         self.context_menu = None
+        self.second_context_menu = None
         self.selected_item = ''
         self.mouse_is_down = False
         self.current_prop_name = ''
@@ -1823,14 +2322,16 @@ class """ + class_name + """(Form):
         self.form_stack = list()
         cavorite.force_redraw_all = True
         self.code_mirror = CodeMirrorHandlerVNode({'id': 'code', 'name': 'code',
-                                                   'class': lambda :'col-md-5 CodeMirror' if self.designer_visible else 'col-md-10 CodeMirror',
-                                                   'style': {'height':'100%'}},
+                                                   #'class': lambda :'col-md-5 CodeMirror' if self.designer_visible else 'col-md-10 CodeMirror',
+                                                   'class':'CodeMirror',
+                                                   'style': {'height':'calc(100% - 31px)', 'width': '100%'}},
                                                   [t(self.get_selected_de_content)],
                                                   change_handler=self.code_mirror_change,
                                                   read_only=self.get_code_mirror_read_only,
                                                   current_selection_fn=self.get_selected_file_de,
                                                   editorview=self)
         self.upload_modal = None
+        self.form_properties_modal = None
         self.images = []
         global original_modules
         if len(original_modules) == 0:
@@ -1841,6 +2342,12 @@ class """ + class_name + """(Form):
         self.historygraph_download_timeout = None # A timeout to keep polling the historygraph database
         self.scroll_positions = defaultdict(int)
         self.designer_visible = True
+        self.control_drop_down_list_selection = 0
+        self.function_drop_down_list_selection = 0
+        self.form_events = ['on_body_click', 'on_body_mousemove', 'on_body_keyup',
+                           'on_body_keydown', 'on_body_keypress']
+        self.last_double_click_item = None
+        self.double_click_count_down = 0
 
         super(EditorView, self).__init__(
             None,

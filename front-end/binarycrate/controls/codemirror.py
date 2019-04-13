@@ -31,6 +31,7 @@ global_change_callback_handler = None
 global_on_tab = None
 global_scroll_callback_handler = None
 global_editorview = None
+global_cursor_activity_callback_handler = None
 
 def initialise_codemirror_callbacks():
     @js.Function
@@ -68,6 +69,20 @@ def initialise_codemirror_callbacks():
     global global_scroll_callback_handler
     global_scroll_callback_handler = scroll_callback_handler
 
+    @js.Function
+    def cursor_activity_callback_handler(cm):
+        #print('cursor_activity_callback_handler called line=', int(cm.getCursor()['line']))
+        global_editorview.last_cursor = cm.getCursor()
+        #print('cursor_activity_callback_handler called last_cursor=', global_editorview.last_cursor)
+        #print('cursor_activity_callback_handler called listselections[0].anchor=', cm.listSelections()[0].anchor)
+        #print('cursor_activity_callback_handler called listselections[0].head=', cm.listSelections()[0].head)
+        #global_editorview.scroll_positions[global_editorview.selected_de['id']] \
+        #    = int(cm.getScrollInfo().top)
+        #callbacks.global_callbacks['onchange'][str(global_textarea.getAttribute('_cavorite_id'))](global_editor)
+
+    global global_cursor_activity_callback_handler
+    global_cursor_activity_callback_handler = cursor_activity_callback_handler
+
 
 last_selection = 'lastsel'
 
@@ -93,8 +108,10 @@ class CodeMirrorHandlerVNode(textarea):
         global global_textarea
 
         if force_redraw_all:
+            #print("CodeMirrorHandlerVNode force_redraw_all=true")
             elements = js.globals.document.getElementsByClassName('CodeMirror')
             should_init = js.globals.document.getElementsByClassName('CodeMirror').length < 2
+            #print("CodeMirrorHandlerVNode should_init=", should_init)
             if should_init:
                 #print('Run init')
                 textarea = js.globals.document.getElementById("code")
@@ -112,24 +129,33 @@ class CodeMirrorHandlerVNode(textarea):
                 assert global_change_callback_handler, 'CodeMirror global_change_callback_handler not set'
                 self.editor.on('change', global_change_callback_handler)
                 self.editor.on('scroll', global_scroll_callback_handler)
+                self.editor.on('cursorActivity', global_cursor_activity_callback_handler)
                 if global_editorview.selected_de:
                     self.editor.scrollTo(js.null, global_editorview.scroll_positions[global_editorview.selected_de['id']])
+                #print("Attemptin to setCursor global_editorview.last_cursor=", global_editorview.last_cursor)
+                if global_editorview.last_cursor is not None:
+                    self.editor.setCursor(global_editorview.last_cursor)
+                    self.editor.focus()
+                #js.globals.window.editor = self.editor
+                #js.eval("window.editor.setCursor({line:1, ch:1})")
+                #js.eval("window.editor.focus()")
                 #print('self.editor.getWrapperElement().offsetWidth=', self.editor.getWrapperElement().offsetWidth)
                 width = self.editor.getWrapperElement().offsetWidth
-                if global_editorview.designer_visible is False:
-                    width = width * 1.8
-                self.editor.setSize("{}px".format(width), "{}px".format(get_controls_height()))
+                width = width * 2
+                self.editor.setSize("{}px".format(width), "{}px".format(get_controls_height() - 31))
 
                 global_editor = self.editor
                 global_textarea = textarea
                 #self.onchange_codemirror(None)
         else:
+            #print("CodeMirrorHandlerVNode force_redraw_all=false")
             #should_init = True
             global last_selection
             should_init = last_selection != self.current_selection_fn()
             last_selection = self.current_selection_fn()
             #print("CodeMirrorHandlerVNode was_mounted  last_selection=", last_selection)
             #print("CodeMirrorHandlerVNode was_mounted  should_init=", should_init)
+            #print("CodeMirrorHandlerVNode should_init=", should_init)
             if should_init:
                 #should_init = js.globals.document.getElementsByClassName('CodeMirror').length < 2
                 code_mirrors = js.globals.document.getElementsByClassName('CodeMirror')
@@ -168,11 +194,16 @@ class CodeMirrorHandlerVNode(textarea):
                 assert global_change_callback_handler, 'CodeMirror global_change_callback_handler not set'
                 self.editor.on('change', global_change_callback_handler)
                 self.editor.on('scroll', global_scroll_callback_handler)
+                self.editor.on('cursorActivity', global_cursor_activity_callback_handler)
                 if global_editorview.selected_de:
                     self.editor.scrollTo(js.null, global_editorview.scroll_positions[global_editorview.selected_de['id']])
+                #print("Attemptin to setCursor")
+                if global_editorview.last_cursor is not None:
+                    self.editor.setCursor(global_editorview.last_cursor)
+                #self.editor.setCursor(1)
+                #js.window.editor = self.editor
                 width = self.editor.getWrapperElement().offsetWidth
-                if global_editorview.designer_visible is False:
-                    width = width * 1.8
+                width = width * 2
                 self.editor.setSize("{}px".format(width), "{}px".format(get_controls_height()))
 
                 global_editor = self.editor

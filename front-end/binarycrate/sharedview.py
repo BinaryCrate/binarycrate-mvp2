@@ -23,11 +23,18 @@ except ImportError:
     js = None
 from cavorite.ajaxget import ajaxget
 import json
-
+from cavorite.HTML import *
+from cavorite import t
 
 class SharedView(EditorView):
     def get_top_navbar_items(self):
-        return []
+        return [
+          span({'style':{'color': 'white', # TODO: This is a really hacky way to display this. Add better styling
+                         'padding-top': '7px',
+                         'margin-left': '5px'}}, [
+            t(lambda: self.get_project().get('name', ''))
+          ])
+        ]
 
     def get_sidebar_nav_items(self):
         return []
