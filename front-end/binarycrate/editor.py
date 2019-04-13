@@ -1757,10 +1757,10 @@ class EditorView(BCChrome):
 
     def code_mirror_change(self, content):
         def handle_delay_file_method_cache_update():
+            #print('handle_delay_file_method_cache_update called')
             self.last_file_method_cache_update_timeout = None
             self.last_file_method_cache_update = datetime.datetime.now()
             self.query_file_functions()
-            #print('handle_delay_file_method_cache_update called')
 
         global project
         # print('code_mirror_change called')
@@ -1768,9 +1768,10 @@ class EditorView(BCChrome):
             if self.selected_file_de['content'] != str(content):
                 self.selected_file_de['content'] = str(content)
                 if (datetime.datetime.now() - self.last_file_method_cache_update).total_seconds() < 5:
-                    #print("Last update was 5 seconds ago defering for 5 seconds")
-                    self.last_file_method_cache_update_timeout = \
-                        timeouts.set_timeout(handle_delay_file_method_cache_update, 5000)
+                    if self.last_file_method_cache_update_timeout is None:
+                        #print("Last update was 5 seconds ago defering for 5 seconds")
+                        self.last_file_method_cache_update_timeout = \
+                            timeouts.set_timeout(handle_delay_file_method_cache_update, 5000)
                 else:
                     #print("No query in the last 5 seconds running now")
                     if (self.last_file_method_cache_update_timeout is not None):
