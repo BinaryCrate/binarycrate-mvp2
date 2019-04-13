@@ -967,7 +967,9 @@ class EditorView(BCChrome):
         return posx, posy
 
     def add_body_event_handler(self, function_name):
-        selected_function = [fn for fn in self.selected_file_method_cache['functions'][1] if fn['name'] == function_name][0]
+        all_functions = [item for sublist in self.selected_file_method_cache['functions'] for item in sublist]
+        #selected_function = [fn for fn in self.selected_file_method_cache['functions'][1] if fn['name'] == function_name][0]
+        selected_function = [fn for fn in all_functions if fn['name'] == function_name][0]
         #self.mount_redraw()
         #Router.router.ResetHashChange()
         self.process_selected_function(selected_function)
@@ -1011,28 +1013,48 @@ class EditorView(BCChrome):
                                         ('New Hexagon', self.new_hexagon),
                                         ('Form Properties', self.form_properties),
                                         ('Add Body Click Handler', self.add_body_click_handler),
-                                        ('Add Body Mouse Move', self.add_body_mouse_move),
-                                        ('Add Body Key Up', self.add_body_on_keyup),
-                                        ('Add Body Key Down', self.add_body_on_keydown),
-                                        ('Add Body Key Press', self.add_body_keypress),
+                                        ('Add Body Mouse Move Handler', self.add_body_mouse_move),
+                                        ('Add Body Key Up Handler', self.add_body_on_keyup),
+                                        ('Add Body Key Down Handler', self.add_body_on_keydown),
+                                        ('Add Body Key Press Handler', self.add_body_keypress),
                                         ))
         self.mount_redraw()
         Router.router.ResetHashChange()
         e.stopPropagation()
         e.preventDefault()
 
+    def double_click_item(self, form_item_id, e):
+        print('double_click_item called')
+
     def select_new_item(self, form_item_id, e):
-        #print('select_new_item mouse is down')
+        #print('select_new_item mouse is down form_item_id=', form_item_id, ', self.last_double_click_item=', self.last_double_click_item)
         self.selected_item = form_item_id
         if e.button == 0:
             self.mouse_is_down = True
             self.selected_handler = HANDLE_NONE
             # print('select_new_item mouse is down')
+            if self.last_double_click_item == form_item_id:
+                if self.double_click_count_down == 0:
+                    #print('select_new_item Was a double click ')
+                    self.add_form_item_onclick_handler(form_item_id, e)
+                else:
+                    self.double_click_count_down -= 1
             self.selected_item = form_item_id
+            if self.last_double_click_item is None:
+                self.double_click_count_down = 1
+            self.last_double_click_item = form_item_id
+            #def setup_double_click_item():
+            #    print('setup_double_click_item called')
+            #    self.last_double_click_item = form_item_id
+            def clear_double_click_item():
+                #print('clear_double_click_item called')
+                self.last_double_click_item = None
+            #val = timeouts.set_timeout(setup_double_click_item, 1)
+            val = timeouts.set_timeout(clear_double_click_item, 500)
             self.mount_redraw()
             Router.router.ResetHashChange()
-            e.stopPropagation()
-            e.preventDefault()
+            #e.stopPropagation()
+            #e.preventDefault()
 
     def on_mouse_up(self, e):
         # print('on_mouse_up mouse is up')
@@ -1086,6 +1108,12 @@ class EditorView(BCChrome):
         self.form_properties_modal = FormItemPropertiesModal(self, form_item_id)
         self.mount_redraw()
         Router.router.ResetHashChange()
+
+    def add_form_item_onclick_handler(self, form_item_id, e):
+        fi = [form_item for form_item in self.selected_de['form_items'] if
+                                          form_item_id == form_item['id']][0]
+        self.add_body_event_handler(fi['name'] + '_onclick')
+        #print('add_form_item_onclick_handler called name=' + fi['name'])
 
     def display_new_file_modal(self, e):
         jquery = js.globals['$']
@@ -1194,6 +1222,7 @@ class EditorView(BCChrome):
         #                                ('Delete', lambda e: self.delete_selected_form_item(form_item_id, e)),
         #                                ))
         self.context_menu = ContextMenuFormItems(posx, posy, (
+                                        ('Add onclick Handler', lambda e: self.add_form_item_onclick_handler(form_item_id, e)),
                                         ('Properties', lambda e: self.popup_form_item_properties_modal(form_item_id, e)),
                                         ('Delete', lambda e: self.delete_selected_form_item(form_item_id, e)),
                                         ))
@@ -1228,6 +1257,7 @@ class EditorView(BCChrome):
                 form_item_id = form_item['id']
                 attribs = {'style': style, 'onmouseup': self.on_mouse_up,
                            'onmousedown': lambda e, form_item_id=form_item_id: self.select_new_item(form_item_id, e),
+                           'ondblclick': lambda e, form_item_id=form_item_id: self.double_click_item(form_item_id, e),
                            'oncontextmenu': lambda e, form_item_id=form_item_id: self.contextmenu_control(form_item_id,
                                                                                                           e)
                            }
@@ -2154,6 +2184,8 @@ class """ + class_name + """(Form):
         self.function_drop_down_list_selection = 0
         self.form_events = ['on_body_click', 'on_body_mousemove', 'on_body_keyup',
                            'on_body_keydown', 'on_body_keypress']
+        self.last_double_click_item = None
+        self.double_click_count_down = 0
 
         super(EditorView, self).__init__(
             None,
