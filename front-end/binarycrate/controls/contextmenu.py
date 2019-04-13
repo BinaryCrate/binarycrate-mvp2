@@ -44,6 +44,9 @@ class ContextMenu(div):
                                                      'padding': '40px',
                                                      'z-index':'10001'}}, *args, **kwargs)
 
+    def on_mouse_outside_context_menu(self):
+        pass
+
     def get_children(self):
         menu_items = [
                                 li({'class': "context-menu__item"}, [

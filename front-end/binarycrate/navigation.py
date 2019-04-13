@@ -85,17 +85,8 @@ class BCChrome(div):
     def get_modals(self):
         return self.modals + (self.licence_modal.get_modal_vnodes() if self.licence_modal else [])
 
-    def get_context_menu(self):
-        return None
-
     def get_context_menu_list(self):
-        context_menu = self.get_context_menu()
-        if context_menu is None:
-            ret = []
-        else:
-            ret = [context_menu]
-        #print('get_context_menu_list ret=', ret)
-        return ret
+        return []
 
     def get_sidebar_nav_items(self):
         return [

@@ -273,17 +273,109 @@ def test_click_handler(e):
     e.stopPropagation()
     e.preventDefault()
 
+class ContextMenuItemBase(object):
+    def on_enter(self, e):
+        pass
+    def on_click(self, e):
+        pass
+
+class ContextMenuItem(ContextMenuItemBase):
+    def __init__(self, text, click_handler):
+        self.text = text
+        self.click_handler = click_handler
+    def on_click(self, e):
+        self.click_handler(e)
+    def on_enter(self, e):
+        editorview = self.parent_context_menu.editorview
+        if editorview.context_menu == self.parent_context_menu:
+            editorview.second_context_menu = None
+            editorview.mount_redraw()
+            Router.router.ResetHashChange()
+
+
+class ContextMenuSubMenu(ContextMenuItemBase):
+    def __init__(self, text, context_menu):
+        self.text = text
+        self.context_menu = context_menu
+        self.editorview = context_menu.editorview
+    def on_enter(self, e):
+        #print('ContextMenuSubMenu on_enter called')
+        if self.editorview.second_context_menu != self.context_menu:
+            #print('refreshing sub menu')
+            rect = e.target.getBoundingClientRect()
+            posx = int(rect.right) - 1
+            posy = int(rect.top)
+            self.context_menu.posx = posx
+            self.context_menu.posy = posy
+            self.editorview.second_context_menu = self.context_menu
+            self.editorview.mount_redraw()
+            Router.router.ResetHashChange()
+
+
 class ContextMenuFormItems(nav):
-    def __init__(self, posx, posy, menu_items, *args, **kwargs):
+    def __init__(self, editorview, posx, posy, menu_items, *args, **kwargs):
+        self.has_submenus = kwargs.get('has_submenus', True)
+        #print('ContextMenuFormItems __init__ called')
+        self.editorview = editorview
         self.menu_items = menu_items
-        super(ContextMenuFormItems, self).__init__({'class': "context-menu", 'style': 'left: {}px; top:{}px'.format(posx, posy)}, *args, **kwargs)
+        for mi in self.menu_items:
+            mi.parent_context_menu = self
+        self.posx = posx
+        self.posy = posy
+        super(ContextMenuFormItems, self).__init__({'class': "context-menu",
+            'style': 'left: {}px; top:{}px'.format(self.posx, self.posy)},
+            *args, **kwargs)
+
+    def get_attribs(self):
+        return {'class': "context-menu",
+            'style': 'left: {}px; top:{}px'.format(self.posx, self.posy)}
+
+    def on_mouse_outside_context_menu(self):
+        print('on_mouse_outside_context_menu called')
+        self.editorview.second_context_menu = None
+        self.editorview.mount_redraw()
+        Router.router.ResetHashChange()
+
+    def menu_item_mouse_enter(self, e):
+        pass
+        """
+        if self.editorview.second_context_menu is None:
+            print('menu_item_mouse_enter called')
+            rect = e.target.getBoundingClientRect()
+            posx = int(rect.right) - 1
+            posy = int(rect.top)
+            self.editorview.second_context_menu = ContextMenuFormItems(self.editorview, posx, posy, (
+                                            ContextMenuItem('Hello', lambda e: None),
+                                            ContextMenuItem('World', lambda e: None)
+                                            ))
+            self.editorview.mount_redraw()
+            Router.router.ResetHashChange()"""
+
+    def menu_item_mouse_leave(self, e):
+        #self.extra_rectangle = None
+        #print('menu_item_mouse_leave called')
+        #self.editorview.mount_redraw()
+        #Router.router.ResetHashChange()
+        #self.editorview.second_context_menu = None
+        pass
+
+    def menu_item_mouse_move(self, e):
+        e.stopPropagation()
+        e.preventDefault()
 
     def get_children(self):
+        #print('get_children self.extra_rectangle=', self.extra_rectangle)
         menu_items = [
-            li({'class': "context-menu__item"}, [
-                a({'href': get_current_hash(), 'class': "context-menu__link", 'onclick': mi[1]}, [
+            li({'class': "context-menu__item",
+                 'onmouseenter': mi.on_enter,
+                 'onmouseleave': self.menu_item_mouse_leave,
+                 'onmousemove': self.menu_item_mouse_move}, [
+                a({'href': get_current_hash(),
+                   'class': "context-menu__link",
+                   'onclick': mi.on_click,
+                   'onmousemove': self.menu_item_mouse_move}, [
                     # i({'class': 'fa fa-eye'}),
-                    t(mi[0]),
+                    t(mi.text),
                 ]),
             ]) for mi in self.menu_items]
 
@@ -564,6 +656,7 @@ class EditorView(BCChrome):
         global project
         project = {}
         self.context_menu = None
+        self.second_context_menu = None
         self.selected_de = None
         self.selected_file_de = None
         self.reset_file_method_cache()
@@ -863,10 +956,12 @@ class EditorView(BCChrome):
                 Router.router.ResetHashChange()
         if self.context_menu is not None:
             self.context_menu = None
+            self.second_context_menu = None
             self.mount_redraw()
             Router.router.ResetHashChange()
 
     def on_body_mousemove(self, e, change_x, change_y):
+        #print('EditorView on_body_mousemove called')
         change_x = int(change_x)
         change_y = int(change_y)
         if self.program_is_running:
@@ -880,6 +975,8 @@ class EditorView(BCChrome):
                 if self.form_stack[-1].on_body_mousemove(int(posx), int(posy)):
                     self.mount_redraw()
                     Router.router.ResetHashChange()
+        if self.context_menu:
+            self.context_menu.on_mouse_outside_context_menu()
         if self.mouse_is_down and self.selected_item != '':
             fi = [fi for fi in self.selected_de['form_items'] if
                   fi['id'] == self.selected_item][0]
@@ -954,8 +1051,15 @@ class EditorView(BCChrome):
                 self.mount_redraw()
                 Router.router.ResetHashChange()
 
-    def get_context_menu(self):
-        return self.context_menu
+    def get_context_menu_list(self):
+        context_menu = self.context_menu
+        if context_menu is None:
+            ret = []
+        else:
+            ret = [context_menu] + ([self.second_context_menu] if
+                   self.second_context_menu is not None else [])
+        #print('get_context_menu_list ret=', ret)
+        return ret
 
     def xy_from_e(self, e):
         #TODO: Shared code put in a library
@@ -1015,27 +1119,61 @@ class EditorView(BCChrome):
 
     def contextmenu_preview(self, e):
         self.contextmenu_x, self.contextmenu_y = self.xy_from_e(e)
-        self.context_menu = ContextMenuFormItems(self.contextmenu_x,
+        self.context_menu = ContextMenuFormItems(self,
+                                        self.contextmenu_x,
                                         self.contextmenu_y, (
-                                        ('New Button', self.new_button),
-                                        ('New Textbox', self.new_textbox),
-                                        ('New Image', self.new_image),
-                                        ('New Label', self.new_label),
-                                        ('New Frame', self.new_frame),
-                                        ('New Checkbox', self.new_checkbox),
+                                        ContextMenuSubMenu("New Control...",
+                                            ContextMenuFormItems(self,
+                                            self.contextmenu_x,
+                                            self.contextmenu_y,
+                                            (ContextMenuItem('New Button', self.new_button),
+                                            ContextMenuItem('New Textbox', self.new_textbox),
+                                            ContextMenuItem('New Image', self.new_image),
+                                            ContextMenuItem('New Label', self.new_label),
+                                            ContextMenuItem('New Frame', self.new_frame),
+                                            ContextMenuItem('New Checkbox', self.new_checkbox),
+                                            #('New Listbox', self.new_listbox),
+                                            ContextMenuItem('New Rectangle', self.new_rectangle),
+                                            ContextMenuItem('New Circle', self.new_circle),
+                                            ContextMenuItem('New Ellipse', self.new_ellipse),
+                                            ContextMenuItem('New Line', self.new_line),
+                                            ContextMenuItem('New Hexagon', self.new_hexagon),
+                                        ))),
+                                        ContextMenuItem('Form Properties', self.form_properties),
+                                        ContextMenuSubMenu("Add Body Event Handler...",
+                                            ContextMenuFormItems(self,
+                                            self.contextmenu_x,
+                                            self.contextmenu_y,
+                                            (ContextMenuItem('Add Body Click Handler', self.add_body_click_handler),
+                                            ContextMenuItem('Add Body Mouse Move Handler', self.add_body_mouse_move),
+                                            ContextMenuItem('Add Body Key Up Handler', self.add_body_on_keyup),
+                                            ContextMenuItem('Add Body Key Down Handler', self.add_body_on_keydown),
+                                            ContextMenuItem('Add Body Key Press Handler', self.add_body_keypress),
+                                            ))
+                                        )))
+        """self.context_menu = ContextMenuFormItems(self,
+                                        self.contextmenu_x,
+                                        self.contextmenu_y, (
+                                        ContextMenuItem('New Button', self.new_button),
+                                        ContextMenuItem('New Textbox', self.new_textbox),
+                                        ContextMenuItem('New Image', self.new_image),
+                                        ContextMenuItem('New Label', self.new_label),
+                                        ContextMenuItem('New Frame', self.new_frame),
+                                        ContextMenuItem('New Checkbox', self.new_checkbox),
                                         #('New Listbox', self.new_listbox),
-                                        ('New Rectangle', self.new_rectangle),
-                                        ('New Circle', self.new_circle),
-                                        ('New Ellipse', self.new_ellipse),
-                                        ('New Line', self.new_line),
-                                        ('New Hexagon', self.new_hexagon),
-                                        ('Form Properties', self.form_properties),
-                                        ('Add Body Click Handler', self.add_body_click_handler),
-                                        ('Add Body Mouse Move Handler', self.add_body_mouse_move),
-                                        ('Add Body Key Up Handler', self.add_body_on_keyup),
-                                        ('Add Body Key Down Handler', self.add_body_on_keydown),
-                                        ('Add Body Key Press Handler', self.add_body_keypress),
-                                        ))
+                                        ContextMenuItem('New Rectangle', self.new_rectangle),
+                                        ContextMenuItem('New Circle', self.new_circle),
+                                        ContextMenuItem('New Ellipse', self.new_ellipse),
+                                        ContextMenuItem('New Line', self.new_line),
+                                        ContextMenuItem('New Hexagon', self.new_hexagon),
+                                        ContextMenuItem('Form Properties', self.form_properties),
+                                        ContextMenuItem('Add Body Click Handler', self.add_body_click_handler),
+                                        ContextMenuItem('Add Body Mouse Move Handler', self.add_body_mouse_move),
+                                        ContextMenuItem('Add Body Key Up Handler', self.add_body_on_keyup),
+                                        ContextMenuItem('Add Body Key Down Handler', self.add_body_on_keydown),
+                                        ContextMenuItem('Add Body Key Press Handler', self.add_body_keypress),
+                                        ))"""
+        self.second_context_menu = None
         self.mount_redraw()
         Router.router.ResetHashChange()
         e.stopPropagation()
@@ -1194,6 +1332,7 @@ class EditorView(BCChrome):
         prop_type = get_form_item_property(form_item['type'])[prop_name]
         #print('display_property_change_modal prop_type=', prop_type)
         self.context_menu = None
+        self.second_context_menu = None
 
         def display_modal():
             jquery = js.globals['$']
@@ -1239,11 +1378,12 @@ class EditorView(BCChrome):
         #self.context_menu = ContextMenuFormItems(posx, posy, change_items + (
         #                                ('Delete', lambda e: self.delete_selected_form_item(form_item_id, e)),
         #                                ))
-        self.context_menu = ContextMenuFormItems(posx, posy, (
-                                        ('Add onclick Handler', lambda e: self.add_form_item_onclick_handler(form_item_id, e)),
-                                        ('Properties', lambda e: self.popup_form_item_properties_modal(form_item_id, e)),
-                                        ('Delete', lambda e: self.delete_selected_form_item(form_item_id, e)),
+        self.context_menu = ContextMenuFormItems(self, posx, posy, (
+                                        ContextMenuItem('Add onclick Handler', lambda e: self.add_form_item_onclick_handler(form_item_id, e)),
+                                        ContextMenuItem('Properties', lambda e: self.popup_form_item_properties_modal(form_item_id, e)),
+                                        ContextMenuItem('Delete', lambda e: self.delete_selected_form_item(form_item_id, e)),
                                         ))
+        self.second_context_menu = None
         self.mount_redraw()
         Router.router.ResetHashChange()
         e.stopPropagation()
@@ -1532,6 +1672,7 @@ class EditorView(BCChrome):
         self.selected_item = new_id
 
         self.context_menu = None
+        self.second_context_menu = None
         self.mount_redraw()
         Router.router.ResetHashChange()
         e.stopPropagation()
@@ -1677,6 +1818,7 @@ class EditorView(BCChrome):
         self.selected_item = new_id
 
         self.context_menu = None
+        self.second_context_menu = None
         self.mount_redraw()
         Router.router.ResetHashChange()
         e.stopPropagation()
@@ -2171,6 +2313,7 @@ class """ + class_name + """(Form):
         self.reset_file_method_cache()
         self.folder_state = defaultdict(bool)
         self.context_menu = None
+        self.second_context_menu = None
         self.selected_item = ''
         self.mouse_is_down = False
         self.current_prop_name = ''
