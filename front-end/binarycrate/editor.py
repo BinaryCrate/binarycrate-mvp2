@@ -804,11 +804,22 @@ class EditorView(BCChrome):
             self.code_mirror.editor.focus()
         else:
             #print('process_selected_function is_present=False selected_function=', selected_function)
+            if selected_function['name'] == 'on_body_mousemove':
+                function_code = """def {}(self, x, y):
+    pass
+""".format(selected_function['name'])
+            elif selected_function['name'] == 'on_body_click':
+                function_code = """def {}(self):
+    pass
+""".format(selected_function['name'])
+            else:
+                function_code = """def {}(self, e):
+    pass
+""".format(selected_function['name'])
+
             form_data = {'content': self.get_selected_de_content(),
                          'function_name': selected_function['name'],
-                         'newfunction': """def {}(self, e):
-    pass
-""".format(selected_function['name'])}
+                         'newfunction': function_code}
             ajaxpost('/api/parser/add-function/', form_data, self.ajaxpost_add_function_handler)
 
     def onchange_function_select(self, e):
