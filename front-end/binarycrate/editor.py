@@ -1094,7 +1094,11 @@ class EditorView(BCChrome):
         #print('add_body_event_handler called')
         all_functions = [item for sublist in self.selected_file_method_cache['functions'] for item in sublist]
         #selected_function = [fn for fn in self.selected_file_method_cache['functions'][1] if fn['name'] == function_name][0]
-        selected_function = [fn for fn in all_functions if fn['name'] == function_name][0]
+        matching_functions = [fn for fn in all_functions if fn['name'] == function_name]
+        if len(matching_functions) == 0:
+            # Exit probably because the thing select is not a button
+            return
+        selected_function = matching_functions[0]
         #self.mount_redraw()
         #Router.router.ResetHashChange()
         self.process_selected_function(selected_function)
