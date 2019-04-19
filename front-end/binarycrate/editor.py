@@ -16,7 +16,8 @@
 
 from __future__ import unicode_literals, absolute_import, print_function
 import cavorite
-from cavorite import c, t, Router, callbacks, timeouts, get_current_hash, get_uuid
+from cavorite import (c, t, Router, callbacks, timeouts, get_current_hash,
+                      get_uuid, js_list_to_py_list)
 from cavorite.HTML import *
 import datetime
 
@@ -525,7 +526,7 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
 
     def stop_project(self, e):
-        print('EditorView stop_project called')
+        #print('EditorView stop_project called')
         self.program_is_running = False
         for form in self.form_stack:
             form.clear_all_active_timeouts()
@@ -556,6 +557,7 @@ class EditorView(BCChrome):
 
     def run_project(self, e):
         self.designer_visible = True
+        js.globals.document.reset_program_output()
         self.mount_redraw()
         Router.router.ResetHashChange()
         print('EditorView run_project called')
@@ -577,9 +579,9 @@ class EditorView(BCChrome):
             #print('EditorView run_project 2')
             #print('EditorView run_project 3')
             form_classes = self.get_default_module_form_classes()
-            print('EditorView run_project form_classes=', form_classes)
+            #print('EditorView run_project form_classes=', form_classes)
             if len(form_classes) > 0:
-                print('EditorView run_project Found usable class name=' + form_classes[0].__name__)
+                #print('EditorView run_project Found usable class name=' + form_classes[0].__name__)
                 self.form_stack.append(form_classes[0](editorview=self))
                 self.mount_redraw()
                 Router.router.ResetHashChange()
@@ -670,6 +672,8 @@ class EditorView(BCChrome):
     def query_project(self):
         global project
         if len(project) == 0:
+            js.globals.document.reset_program_output()
+
             self.scroll_positions = defaultdict(int)
             # Only load the project if we don't alreayd have it
             def images_api_ajax_result_handler2(xmlhttp, response):
@@ -950,10 +954,8 @@ class EditorView(BCChrome):
                                  ) +
                                  [
                                      div({'id': 'console', 'class': 'console-editor col-12'}, [
-                                         pre({'id': 'secondary-output', 'class': 'logMessage'}, [
-                                             # span('//: '),
-                                             # t('request sent'),
-                                         ]),
+                                         pre({'id': 'secondary-output', 'class': 'logMessage'},
+                                            ''.join(js_list_to_py_list(js.globals.document.program_output))),
                                      ]),
                                  ])
                          ])),

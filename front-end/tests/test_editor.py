@@ -83,6 +83,7 @@ class TestEditor(object):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.globals.cavorite_ajaxGet = Mock()
 
@@ -348,6 +349,7 @@ class TestEditor(object):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.globals.cavorite_ajaxGet = Mock()
 
@@ -606,6 +608,7 @@ class TestEditor(object):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         result = defaultdict(int)
 
@@ -814,6 +817,7 @@ class TestEditor(object):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         result = defaultdict(int)
 
@@ -1012,6 +1016,7 @@ class TestEditor(object):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         result = defaultdict(int)
 
@@ -1133,6 +1138,7 @@ class TestEditor(object):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         result = defaultdict(int)
 
@@ -1253,6 +1259,7 @@ class TestContextMenuFormItems(object):
         timeouts.initialise_timeout_callbacks()
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -1565,6 +1572,7 @@ class TestContextMenuFormItems(object):
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -1737,6 +1745,7 @@ class TestContextMenuFormItems(object):
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -1904,6 +1913,7 @@ class TestContextMenuFormItems(object):
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -2102,6 +2112,7 @@ class TestContextMenuFormItems(object):
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -2378,6 +2389,7 @@ class TestRunningAProgram(object):
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -2479,6 +2491,7 @@ class TestRunningAProgram(object):
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -2582,9 +2595,14 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
+        def reset_program_output():
+            js.globals.document.program_output = js.MockJSArray()
+        js.globals.document.reset_program_output = reset_program_output
+        js.globals.document.program_output = js.MockJSArray()
         codemirror.global_change_callback_handler = Mock()
 
         body = js.globals.document.body
@@ -2680,6 +2698,11 @@ print('Hello folder i={}'.format(i))
                 result['run_found'] = True
             if hasattr(vnode, 'text') and vnode.text == 'Stop':
                 result['stop_found'] = True
+            if hasattr(vnode, 'get_attribs'):
+                if vnode.get_attribs().get('id') == 'secondary-output':
+                    if len(vnode.get_children()) > 0:
+                        vnode_child = vnode.get_children()[0]
+                        result['secondary_output'] = vnode_child.text
         view.mount_redraw = Mock()
 
         virtual_node = view._build_virtual_dom()
@@ -2696,7 +2719,14 @@ print('Hello folder i={}'.format(i))
 
         view.cleanup_project = Mock()
         view.save_project = Mock()
+
+        js.globals.document.program_output = js.MockJSArray(['Old output'])
+
         view.run_project(Mock())
+
+        # Assert that when starting the program the program output is cleared
+        # away
+        assert js.globals.document.program_output.length == 0
 
         # Assert we save the project when run is called
         view.save_project.assert_called_once()
@@ -2707,6 +2737,9 @@ print('Hello folder i={}'.format(i))
         result = defaultdict(bool)
         view.mount_redraw = Mock()
 
+        # Test that the program out is display correctly
+        js.globals.document.program_output = js.MockJSArray(['Bill\n', 'Bob\n'])
+
         virtual_node = view._build_virtual_dom()
         IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
 
@@ -2714,6 +2747,7 @@ print('Hello folder i={}'.format(i))
         assert result['debug_found'] == False
         assert result['run_found'] == False
         assert result['stop_found'] == True
+        assert result['secondary_output'] == 'Bill\nBob\n'
 
         assert len(view.form_stack) == 1
         assert isinstance(view.form_stack[-1].button1, bcform.Button)
@@ -2832,7 +2866,6 @@ print('Hello folder i={}'.format(i))
         assert result['stop_found'] == False
 
 
-
     def test_running_program_can_access_timeouts(self, monkeypatch):
         def dummy_uuid():
             return uuid.UUID('531cb169-91f4-4102-9a0a-2cd5e9659071')
@@ -2853,6 +2886,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -2990,6 +3024,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -3121,6 +3156,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -3255,6 +3291,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -3400,6 +3437,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -3542,6 +3580,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -3676,6 +3715,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -3788,6 +3828,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -3933,6 +3974,7 @@ historygraphfrontend.download_document_collection()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -4038,9 +4080,11 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
+        js.globals.document.program_output = js.MockJSArray()
         codemirror.global_change_callback_handler = Mock()
 
         body = js.globals.document.body
@@ -4146,6 +4190,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -4358,6 +4403,7 @@ class TestNewFileContentPythonProject(object):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         result = defaultdict(int)
 
@@ -4521,6 +4567,7 @@ class TestNewFileContentPythonProject(object):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         result = defaultdict(int)
 
@@ -4691,6 +4738,7 @@ class Travel(Form):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         result = defaultdict(int)
 
