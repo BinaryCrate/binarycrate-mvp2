@@ -2,6 +2,7 @@
 
 {% block bodyattributes %}{{ block.super }} data-project-id="{{ project_id }}"{% endblock %}
 
+{% block bodyextra %}{{ block.super }}
 <script>
   var href  = window.location.href;
   if (href[href.length - 1] != '#') {
@@ -9,3 +10,4 @@
     window.location.assign(href + '#');
   }
 </script>
+{% endblock %}
