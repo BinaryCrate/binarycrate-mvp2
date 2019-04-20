@@ -173,8 +173,8 @@ class Form(object):
 
         #Initialise the form properties
         form_properties = self.get_form_properties()
-        print('initialise_form_controls form_properties=', form_properties)
-        print('initialise_form_controls get_file_location=', self.get_file_location())
+        #print('initialise_form_controls form_properties=', form_properties)
+        #print('initialise_form_controls get_file_location=', self.get_file_location())
         self.form_width = form_properties.get('width', 0)
         self.form_height = form_properties.get('height', 0)
         #print('initialise_form_controls self.form_width=', self.form_width, ' self.form_height=', self.form_height)

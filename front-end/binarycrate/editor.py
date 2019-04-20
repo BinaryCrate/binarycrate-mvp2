@@ -16,7 +16,8 @@
 
 from __future__ import unicode_literals, absolute_import, print_function
 import cavorite
-from cavorite import c, t, Router, callbacks, timeouts, get_current_hash, get_uuid
+from cavorite import (c, t, Router, callbacks, timeouts, get_current_hash,
+                      get_uuid, js_list_to_py_list)
 from cavorite.HTML import *
 import datetime
 
@@ -525,7 +526,7 @@ class EditorView(BCChrome):
         Router.router.ResetHashChange()
 
     def stop_project(self, e):
-        print('EditorView stop_project called')
+        #print('EditorView stop_project called')
         self.program_is_running = False
         for form in self.form_stack:
             form.clear_all_active_timeouts()
@@ -556,6 +557,7 @@ class EditorView(BCChrome):
 
     def run_project(self, e):
         self.designer_visible = True
+        js.globals.document.reset_program_output()
         self.mount_redraw()
         Router.router.ResetHashChange()
         print('EditorView run_project called')
@@ -577,9 +579,9 @@ class EditorView(BCChrome):
             #print('EditorView run_project 2')
             #print('EditorView run_project 3')
             form_classes = self.get_default_module_form_classes()
-            print('EditorView run_project form_classes=', form_classes)
+            #print('EditorView run_project form_classes=', form_classes)
             if len(form_classes) > 0:
-                print('EditorView run_project Found usable class name=' + form_classes[0].__name__)
+                #print('EditorView run_project Found usable class name=' + form_classes[0].__name__)
                 self.form_stack.append(form_classes[0](editorview=self))
                 self.mount_redraw()
                 Router.router.ResetHashChange()
@@ -591,7 +593,7 @@ class EditorView(BCChrome):
                 self.cleanup_project()
             #aa.tr()
             #print('EditorView run_project called 4')
-        except Exception as e:
+        except Exception as ex:
             #TODO: There is no unit test for this please make one. This is to solve issue #M21-155 https://binarycrate.atlassian.net/browse/M21-155
             def finish_running():
                 js.globals.document.print_to_secondary_output = False
@@ -600,6 +602,10 @@ class EditorView(BCChrome):
             # Cleanup in the timeout because we need to be running when the exception is handled to print the output
             timeouts.set_timeout(finish_running, 1)
             raise
+        if e is not None:
+            e.stopPropagation()
+            e.preventDefault()
+
 
     def get_sidebar_nav_items(self):
         def dashboad_click_handler(e):
@@ -670,6 +676,9 @@ class EditorView(BCChrome):
     def query_project(self):
         global project
         if len(project) == 0:
+            js.globals.document.reset_program_output()
+            self.output_area_up = False
+
             self.scroll_positions = defaultdict(int)
             # Only load the project if we don't alreayd have it
             def images_api_ajax_result_handler2(xmlhttp, response):
@@ -686,6 +695,11 @@ class EditorView(BCChrome):
             ajaxget('/api/projects/image-list/' + self.get_root().url_kwargs['project_id'] + '/', images_api_ajax_result_handler2)
 
     def update_file_method_cache(self, result):
+            if self.selected_de is None:
+                # If there is no selected de we can't really do anything. Sometimes
+                # this function is called incorrectly on the shared screen because
+                # of slow internet performance
+                return
             button_names = [fi['name'] for fi in self.selected_de['form_items'] if fi['type'] == 'button']
             button_function_names = {n + '_onclick' for n in button_names}
             current_functions = {f['name']: f for f in result['functions']}
@@ -920,9 +934,11 @@ class EditorView(BCChrome):
                                               'class':"btn btn-sm btn-default",
                                               'style': 'float:right',
                                               'onclick': self.show_hide_designer},
-                                              lambda: [t('.')] if self.program_is_running else ([t(">>")] if
-                                                   self.designer_visible else
-                                                   [t("<<")])),
+                                              lambda: [t('.')]
+                                              if self.program_is_running else
+                                              ([i({'class': lambda : "fa fa-1x fa-caret-right",'aria-hidden':"true", 'onclick': self.show_hide_designer})]
+                                              if self.designer_visible else
+                                              [i({'class': lambda : "fa fa-1x fa-caret-left",'aria-hidden':"true", 'onclick': self.show_hide_designer})])),
                                ]),
                                self.code_mirror,
                              ]),
@@ -949,16 +965,34 @@ class EditorView(BCChrome):
                                      ]
                                  ) +
                                  [
-                                     div({'id': 'console', 'class': 'console-editor col-12'}, [
-                                         pre({'id': 'secondary-output', 'class': 'logMessage'}, [
-                                             # span('//: '),
-                                             # t('request sent'),
+                                     div(merge_dicts({'class': 'console-editor-container col-12'},
+                                       {'style': 'min-height:100%;max-height:100%;'} if self.output_area_up else {}), [
+                                       div({'style': 'height:23px'}, [
+                                         html_button({'style': 'width:30px; float:right;',
+                                                      'onclick': self.on_output_area_fullsize_click}, [
+                                           i({'class': lambda : "fa fa-1x " +
+                                              ("fa-caret-down" if self.output_area_up else "fa-caret-up"),
+                                              'aria-hidden':"true", 'onclick': self.on_output_area_fullsize_click}),
                                          ]),
+
+                                       ]),
+                                       div(merge_dicts({'id': 'console', 'class': 'console-editor'},
+                                       {'style': 'min-height:100%;max-height:100%;'} if self.output_area_up else {}), [
+                                           pre({'id': 'secondary-output', 'class': 'logMessage'},
+                                              ''.join(js_list_to_py_list(js.globals.document.program_output))),
+                                       ]),
                                      ]),
                                  ])
                          ])),
                      ]),
                  ])
+
+    def on_output_area_fullsize_click(self, e):
+        self.output_area_up = not self.output_area_up
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+        e.stopPropagation()
+        e.preventDefault()
 
     def on_body_click(self, e):
         #print("on_body_click called self.context_menu=", self.context_menu)
@@ -1092,7 +1126,11 @@ class EditorView(BCChrome):
         #print('add_body_event_handler called')
         all_functions = [item for sublist in self.selected_file_method_cache['functions'] for item in sublist]
         #selected_function = [fn for fn in self.selected_file_method_cache['functions'][1] if fn['name'] == function_name][0]
-        selected_function = [fn for fn in all_functions if fn['name'] == function_name][0]
+        matching_functions = [fn for fn in all_functions if fn['name'] == function_name]
+        if len(matching_functions) == 0:
+            # Exit probably because the thing select is not a button
+            return
+        selected_function = matching_functions[0]
         #self.mount_redraw()
         #Router.router.ResetHashChange()
         self.process_selected_function(selected_function)
@@ -2364,6 +2402,7 @@ class """ + class_name + """(Form):
                            'on_body_keydown', 'on_body_keypress']
         self.last_double_click_item = None
         self.double_click_count_down = 0
+        self.output_area_up = False
 
         super(EditorView, self).__init__(
             None,

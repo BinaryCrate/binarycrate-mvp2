@@ -86,6 +86,13 @@ document.print_to_secondary_output = false;
 $(function () {
     //out = $("#output");
 
+    // Add a function to reset the program output
+    document.reset_program_output = function() {
+      document.program_output = [];
+    }
+    // Set the default program output to empty
+    document.program_output = [];
+
     function python_output(data) {
         console.log(data);
         if (document.print_to_secondary_output) {
@@ -93,6 +100,7 @@ $(function () {
             secondary_out.append(data);
             console_editor = $('#console')
             console_editor.scrollTop(secondary_out.prop("scrollHeight")); // scoll down
+            document.program_output.push(data);
         };
     };
 
@@ -153,5 +161,6 @@ if (isChrome() == false) {
 }
 
 </script>
+{% block bodyextra %}{% endblock %}
 </body>
 </html>

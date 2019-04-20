@@ -38,30 +38,10 @@ from binarycrate import historygraphfrontend
 import sys
 import pytest
 import binarycrate.frontend_utils
+from .utils import get_tree_important_nodes, get_BCPFile_title
 
 
 class TestEditor(object):
-    def get_BCPFile_title(self, node):
-        assert type(node) == BCPFile
-        assert len(node.get_children()) == 1
-        first_child = node.get_children()[0]
-        assert first_child.get_tag_name().lower() == 'a'
-        assert len(first_child.get_children()) == 1
-        text_node = first_child.get_children()[0]
-        assert type(text_node) == t
-        return text_node.text
-
-    def get_tree_important_nodes(self, tree):
-        # This function exists because we want to get the versions of nodes after a mount_redraw
-        #root_folder = tree.get_children()[0]
-        #folder = root_folder.get_children()[0]
-        #return root_folder, root_folder.get_children()[1], folder, folder.get_children()[2].get_children()[0]
-        root_folder = tree.get_children()[0]
-        hello_world = root_folder.folder_children[1]
-        folder = root_folder.folder_children[0]
-        hello_folder = folder.folder_children[0]
-        return root_folder, hello_world, folder, hello_folder
-
     def test_editor_displays_folder_structure(self, monkeypatch):
         def dummy_uuid():
             return uuid.UUID('d7114859-3a2f-4701-967a-fb66fd60b963')
@@ -83,6 +63,7 @@ class TestEditor(object):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.globals.cavorite_ajaxGet = Mock()
 
@@ -176,7 +157,7 @@ class TestEditor(object):
 
         tree = node.get_project_tree()
 
-        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
 
         assert type(tree) == BCProjectTree
         #root_folder = tree.get_children()[0]
@@ -187,11 +168,11 @@ class TestEditor(object):
         assert root_folder.folder_children[0].de['name'] == 'folder'
         #hello_world = root_folder.folder_children[1]
         assert type(hello_world) == BCPFile
-        assert self.get_BCPFile_title(hello_world) == 'hello_world.py'
+        assert get_BCPFile_title(hello_world) == 'hello_world.py'
         #folder = root_folder.folder_children[0]
         #hello_folder = folder.folder_children[0]
         assert type(hello_folder) == BCPFile
-        assert self.get_BCPFile_title(hello_folder) == '* hello_folder.py'
+        assert get_BCPFile_title(hello_folder) == '* hello_folder.py'
 
         assert root_folder.get_display_title() == '/'
         assert folder.get_display_title() == 'folder'
@@ -229,7 +210,7 @@ class TestEditor(object):
 
         hello_world.on_click(None)
         # Click on hello_world and check that the UI updates correctly
-        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
         assert node.selected_de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'
         assert node.selected_file_de == node.selected_de
         assert 'file-active' in hello_world.get_attribs().get('class', '')
@@ -246,7 +227,7 @@ class TestEditor(object):
         folder.on_click(None)
         # Click on folder and check that the UI updates correctly
         tree = node.get_project_tree()
-        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
         assert node.selected_de['id'] == 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
         assert node.selected_file_de == None
         assert 'file-active' not in hello_world.get_attribs().get('class', '')
@@ -262,7 +243,7 @@ class TestEditor(object):
 
         hello_world.on_click(None)
         # Click on hello_world and check that the UI updates correctly That is the selected changes but not the fact that folder is checked (ie folded out)
-        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
         assert node.selected_de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'
         assert 'file-active' in hello_world.get_attribs().get('class', '')
         a_hello_world = hello_world.get_children()[0]
@@ -278,8 +259,8 @@ class TestEditor(object):
         js.return_get_element_by_id = {'preview': Mock(getBoundingClientRect=Mock(return_value=Mock(left=0, top=0)))}
 
         hello_world2_content = "print('Hello world2')"
-        mock_code_mirrow_get_value = Mock(side_effect=lambda: hello_world2_content)
-        node.code_mirror.editor = Mock(getValue=mock_code_mirrow_get_value)
+        mock_code_mirror_get_value = Mock(side_effect=lambda: hello_world2_content)
+        node.code_mirror.editor = Mock(getValue=mock_code_mirror_get_value)
 
         #editor.code_mirror_changed = Mock()
 
@@ -348,6 +329,7 @@ class TestEditor(object):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.globals.cavorite_ajaxGet = Mock()
 
@@ -440,7 +422,7 @@ class TestEditor(object):
 
         tree = node.get_project_tree()
 
-        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
 
         assert type(tree) == BCProjectTree
         #root_folder = tree.get_children()[0]
@@ -451,11 +433,11 @@ class TestEditor(object):
         assert root_folder.folder_children[0].de['name'] == 'folder'
         #hello_world = root_folder.folder_children[1]
         assert type(hello_world) == BCPFile
-        assert self.get_BCPFile_title(hello_world) == 'hello_world.py'
+        assert get_BCPFile_title(hello_world) == 'hello_world.py'
         #folder = root_folder.folder_children[0]
         #hello_folder = folder.folder_children[0]
         assert type(hello_folder) == BCPFile
-        assert self.get_BCPFile_title(hello_folder) == '* hello_folder.py'
+        assert get_BCPFile_title(hello_folder) == '* hello_folder.py'
 
         assert root_folder.get_display_title() == '/'
         assert folder.get_display_title() == 'folder'
@@ -493,7 +475,7 @@ class TestEditor(object):
 
         hello_world.on_click(None)
         # Click on hello_world and check that the UI updates correctly
-        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
         assert node.selected_de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'
         assert node.selected_file_de == node.selected_de
         assert 'file-active' in hello_world.get_attribs().get('class', '')
@@ -510,7 +492,7 @@ class TestEditor(object):
         folder.on_click(None)
         # Click on folder and check that the UI updates correctly
         tree = node.get_project_tree()
-        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
         assert node.selected_de['id'] == 'c1a4bc81-1ade-4c55-b457-81e59b785b01'
         assert node.selected_file_de == None
         assert 'file-active' not in hello_world.get_attribs().get('class', '')
@@ -526,7 +508,7 @@ class TestEditor(object):
 
         hello_world.on_click(None)
         # Click on hello_world and check that the UI updates correctly That is the selected changes but not the fact that folder is checked (ie folded out)
-        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
         assert node.selected_de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'
         assert 'file-active' in hello_world.get_attribs().get('class', '')
         a_hello_world = hello_world.get_children()[0]
@@ -606,6 +588,7 @@ class TestEditor(object):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         result = defaultdict(int)
 
@@ -675,7 +658,7 @@ class TestEditor(object):
 
         tree = node.get_project_tree()
 
-        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
         #root_folder = tree.get_children()[0]
         #folder = root_folder.get_children()[0]
         #return root_folder, root_folder.get_children()[1], folder, folder.get_children()[2].get_children()[0]
@@ -689,11 +672,11 @@ class TestEditor(object):
         assert root_folder.folder_children[0].de['name'] == 'folder'
         #hello_world = root_folder.folder_children[1]
         assert type(hello_world) == BCPFile
-        assert self.get_BCPFile_title(hello_world) == 'hello_world.py'
+        assert get_BCPFile_title(hello_world) == 'hello_world.py'
         #folder = root_folder.folder_children[0]
         #hello_folder = folder.folder_children[0]
         assert type(hello_folder) == BCPFile
-        assert self.get_BCPFile_title(hello_folder) == 'hello_folder.py'
+        assert get_BCPFile_title(hello_folder) == 'hello_folder.py'
 
         assert root_folder.get_display_title() == '/'
         assert folder.get_display_title() == 'folder'
@@ -814,6 +797,7 @@ class TestEditor(object):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         result = defaultdict(int)
 
@@ -883,7 +867,7 @@ class TestEditor(object):
 
         tree = node.get_project_tree()
 
-        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
         #root_folder = tree.get_children()[0]
         #folder = root_folder.get_children()[0]
         #return root_folder, root_folder.get_children()[1], folder, folder.get_children()[2].get_children()[0]
@@ -897,11 +881,11 @@ class TestEditor(object):
         assert root_folder.folder_children[0].de['name'] == 'folder'
         #hello_world = root_folder.folder_children[1]
         assert type(hello_world) == BCPFile
-        assert self.get_BCPFile_title(hello_world) == 'hello_world.py'
+        assert get_BCPFile_title(hello_world) == 'hello_world.py'
         #folder = root_folder.folder_children[0]
         #hello_folder = folder.folder_children[0]
         assert type(hello_folder) == BCPFile
-        assert self.get_BCPFile_title(hello_folder) == 'hello_folder.py'
+        assert get_BCPFile_title(hello_folder) == 'hello_folder.py'
 
         assert root_folder.get_display_title() == '/'
         assert folder.get_display_title() == 'folder'
@@ -1012,6 +996,7 @@ class TestEditor(object):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         result = defaultdict(int)
 
@@ -1081,7 +1066,7 @@ class TestEditor(object):
 
         tree = node.get_project_tree()
 
-        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
         #root_folder = tree.get_children()[0]
         #folder = root_folder.get_children()[0]
         #return root_folder, root_folder.get_children()[1], folder, folder.get_children()[2].get_children()[0]
@@ -1095,11 +1080,11 @@ class TestEditor(object):
         assert root_folder.folder_children[0].de['name'] == 'folder'
         #hello_world = root_folder.folder_children[1]
         assert type(hello_world) == BCPFile
-        assert self.get_BCPFile_title(hello_world) == 'hello_world.py'
+        assert get_BCPFile_title(hello_world) == 'hello_world.py'
         #folder = root_folder.folder_children[0]
         #hello_folder = folder.folder_children[0]
         assert type(hello_folder) == BCPFile
-        assert self.get_BCPFile_title(hello_folder) == 'hello_folder.py'
+        assert get_BCPFile_title(hello_folder) == 'hello_folder.py'
 
         hello_world.on_click(Mock())
 
@@ -1133,6 +1118,7 @@ class TestEditor(object):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         result = defaultdict(int)
 
@@ -1202,7 +1188,7 @@ class TestEditor(object):
 
         tree = node.get_project_tree()
 
-        root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
         #root_folder = tree.get_children()[0]
         #folder = root_folder.get_children()[0]
         #return root_folder, root_folder.get_children()[1], folder, folder.get_children()[2].get_children()[0]
@@ -1216,11 +1202,11 @@ class TestEditor(object):
         assert root_folder.folder_children[0].de['name'] == 'folder'
         #hello_world = root_folder.folder_children[1]
         assert type(hello_world) == BCPFile
-        assert self.get_BCPFile_title(hello_world) == 'hello_world.py'
+        assert get_BCPFile_title(hello_world) == 'hello_world.py'
         #folder = root_folder.folder_children[0]
         #hello_folder = folder.folder_children[0]
         assert type(hello_folder) == BCPFile
-        assert self.get_BCPFile_title(hello_folder) == 'hello_folder.py'
+        assert get_BCPFile_title(hello_folder) == 'hello_folder.py'
 
         folder.on_click(Mock())
 
@@ -1253,6 +1239,7 @@ class TestContextMenuFormItems(object):
         timeouts.initialise_timeout_callbacks()
         monkeypatch.setattr(codemirror, 'js', js)
         monkeypatch.setattr(binarycrate.frontend_utils, 'js', js)
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -1565,6 +1552,7 @@ class TestContextMenuFormItems(object):
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -1737,6 +1725,7 @@ class TestContextMenuFormItems(object):
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -1904,6 +1893,7 @@ class TestContextMenuFormItems(object):
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -2102,6 +2092,7 @@ class TestContextMenuFormItems(object):
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -2378,6 +2369,7 @@ class TestRunningAProgram(object):
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -2479,6 +2471,7 @@ class TestRunningAProgram(object):
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -2582,9 +2575,14 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
+        def reset_program_output():
+            js.globals.document.program_output = js.MockJSArray()
+        js.globals.document.reset_program_output = reset_program_output
+        js.globals.document.program_output = js.MockJSArray()
         codemirror.global_change_callback_handler = Mock()
 
         body = js.globals.document.body
@@ -2680,6 +2678,11 @@ print('Hello folder i={}'.format(i))
                 result['run_found'] = True
             if hasattr(vnode, 'text') and vnode.text == 'Stop':
                 result['stop_found'] = True
+            if hasattr(vnode, 'get_attribs'):
+                if vnode.get_attribs().get('id') == 'secondary-output':
+                    if len(vnode.get_children()) > 0:
+                        vnode_child = vnode.get_children()[0]
+                        result['secondary_output'] = vnode_child.text
         view.mount_redraw = Mock()
 
         virtual_node = view._build_virtual_dom()
@@ -2696,7 +2699,14 @@ print('Hello folder i={}'.format(i))
 
         view.cleanup_project = Mock()
         view.save_project = Mock()
+
+        js.globals.document.program_output = js.MockJSArray(['Old output'])
+
         view.run_project(Mock())
+
+        # Assert that when starting the program the program output is cleared
+        # away
+        assert js.globals.document.program_output.length == 0
 
         # Assert we save the project when run is called
         view.save_project.assert_called_once()
@@ -2707,6 +2717,9 @@ print('Hello folder i={}'.format(i))
         result = defaultdict(bool)
         view.mount_redraw = Mock()
 
+        # Test that the program out is display correctly
+        js.globals.document.program_output = js.MockJSArray(['Bill\n', 'Bob\n'])
+
         virtual_node = view._build_virtual_dom()
         IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
 
@@ -2714,6 +2727,7 @@ print('Hello folder i={}'.format(i))
         assert result['debug_found'] == False
         assert result['run_found'] == False
         assert result['stop_found'] == True
+        assert result['secondary_output'] == 'Bill\nBob\n'
 
         assert len(view.form_stack) == 1
         assert isinstance(view.form_stack[-1].button1, bcform.Button)
@@ -2832,7 +2846,6 @@ print('Hello folder i={}'.format(i))
         assert result['stop_found'] == False
 
 
-
     def test_running_program_can_access_timeouts(self, monkeypatch):
         def dummy_uuid():
             return uuid.UUID('531cb169-91f4-4102-9a0a-2cd5e9659071')
@@ -2853,6 +2866,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -2990,6 +3004,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -3121,6 +3136,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -3255,6 +3271,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -3400,6 +3417,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -3542,6 +3560,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -3676,6 +3695,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -3788,6 +3808,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -3933,6 +3954,7 @@ historygraphfrontend.download_document_collection()
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -4038,9 +4060,11 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
+        js.globals.document.program_output = js.MockJSArray()
         codemirror.global_change_callback_handler = Mock()
 
         body = js.globals.document.body
@@ -4146,6 +4170,7 @@ print('Hello folder i={}'.format(i))
         monkeypatch.setattr(cavorite.bootstrap.modals, 'js', js)
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         js.return_get_elements_by_class_name = {'CodeMirror': Mock(length=0)}
         js.return_get_element_by_id = {'code': Mock()}
@@ -4358,6 +4383,7 @@ class TestNewFileContentPythonProject(object):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         result = defaultdict(int)
 
@@ -4427,7 +4453,7 @@ class TestNewFileContentPythonProject(object):
 
         tree = node.get_project_tree()
 
-        #root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        #root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
         #root_folder = tree.get_children()[0]
         #folder = root_folder.get_children()[0]
         #return root_folder, root_folder.get_children()[1], folder, folder.get_children()[2].get_children()[0]
@@ -4442,11 +4468,11 @@ class TestNewFileContentPythonProject(object):
         assert root_folder.folder_children[0].de['name'] == 'folder'
         #hello_world = root_folder.folder_children[1]
         assert type(hello_world) == BCPFile
-        assert self.get_BCPFile_title(hello_world) == 'hello_world.py'
+        assert get_BCPFile_title(hello_world) == 'hello_world.py'
         #folder = root_folder.folder_children[0]
         #hello_folder = folder.folder_children[0]
         assert type(hello_folder) == BCPFile
-        assert self.get_BCPFile_title(hello_folder) == 'hello_folder.py'
+        assert get_BCPFile_title(hello_folder) == 'hello_folder.py'
 
         assert root_folder.get_display_title() == '/'
         assert folder.get_display_title() == 'folder'
@@ -4521,6 +4547,7 @@ class TestNewFileContentPythonProject(object):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         result = defaultdict(int)
 
@@ -4590,7 +4617,7 @@ class TestNewFileContentPythonProject(object):
 
         tree = node.get_project_tree()
 
-        #root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        #root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
         #root_folder = tree.get_children()[0]
         #folder = root_folder.get_children()[0]
         #return root_folder, root_folder.get_children()[1], folder, folder.get_children()[2].get_children()[0]
@@ -4605,11 +4632,11 @@ class TestNewFileContentPythonProject(object):
         assert root_folder.folder_children[0].de['name'] == 'folder'
         #hello_world = root_folder.folder_children[1]
         assert type(hello_world) == BCPFile
-        assert self.get_BCPFile_title(hello_world) == 'hello_world.py'
+        assert get_BCPFile_title(hello_world) == 'hello_world.py'
         #folder = root_folder.folder_children[0]
         #hello_folder = folder.folder_children[0]
         assert type(hello_folder) == BCPFile
-        assert self.get_BCPFile_title(hello_folder) == 'hello_folder.py'
+        assert get_BCPFile_title(hello_folder) == 'hello_folder.py'
 
         assert root_folder.get_display_title() == '/'
         assert folder.get_display_title() == 'folder'
@@ -4691,6 +4718,7 @@ class Travel(Form):
         callbacks.initialise_global_callbacks()
         ajaxget.initialise_ajaxget_callbacks()
         timeouts.initialise_timeout_callbacks()
+        js.globals.document.program_output = js.MockJSArray()
 
         result = defaultdict(int)
 
@@ -4760,7 +4788,7 @@ class Travel(Form):
 
         tree = node.get_project_tree()
 
-        #root_folder, hello_world, folder, hello_folder = self.get_tree_important_nodes(tree)
+        #root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
         #root_folder = tree.get_children()[0]
         #folder = root_folder.get_children()[0]
         #return root_folder, root_folder.get_children()[1], folder, folder.get_children()[2].get_children()[0]
@@ -4775,11 +4803,11 @@ class Travel(Form):
         assert root_folder.folder_children[0].de['name'] == 'folder'
         #hello_world = root_folder.folder_children[1]
         assert type(hello_world) == BCPFile
-        assert self.get_BCPFile_title(hello_world) == 'hello_world.py'
+        assert get_BCPFile_title(hello_world) == 'hello_world.py'
         #folder = root_folder.folder_children[0]
         #hello_folder = folder.folder_children[0]
         assert type(hello_folder) == BCPFile
-        assert self.get_BCPFile_title(hello_folder) == 'hello_folder.py'
+        assert get_BCPFile_title(hello_folder) == 'hello_folder.py'
 
         assert root_folder.get_display_title() == '/'
         assert folder.get_display_title() == 'folder'
