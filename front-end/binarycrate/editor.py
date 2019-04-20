@@ -936,7 +936,7 @@ class EditorView(BCChrome):
                                               'onclick': self.show_hide_designer},
                                               lambda: [t('.')]
                                               if self.program_is_running else
-                                              ([i({'class': lambda : "fa fa-1x fa-caret-right",'aria-hidden':"true", 'onclick': self.show_hide_designer})] 
+                                              ([i({'class': lambda : "fa fa-1x fa-caret-right",'aria-hidden':"true", 'onclick': self.show_hide_designer})]
                                               if self.designer_visible else
                                               [i({'class': lambda : "fa fa-1x fa-caret-left",'aria-hidden':"true", 'onclick': self.show_hide_designer})])),
                                ]),
