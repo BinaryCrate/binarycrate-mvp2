@@ -691,6 +691,11 @@ class EditorView(BCChrome):
             ajaxget('/api/projects/image-list/' + self.get_root().url_kwargs['project_id'] + '/', images_api_ajax_result_handler2)
 
     def update_file_method_cache(self, result):
+            if self.selected_de is None:
+                # If there is no selected de we can't really do anything. Sometimes
+                # this function is called incorrectly on the shared screen because
+                # of slow internet performance
+                return
             button_names = [fi['name'] for fi in self.selected_de['form_items'] if fi['type'] == 'button']
             button_function_names = {n + '_onclick' for n in button_names}
             current_functions = {f['name']: f for f in result['functions']}

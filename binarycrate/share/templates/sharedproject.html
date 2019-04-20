@@ -2,3 +2,10 @@
 
 {% block bodyattributes %}{{ block.super }} data-project-id="{{ project_id }}"{% endblock %}
 
+<script>
+  var href  = window.location.href;
+  if (href[href.length - 1] != '#') {
+    // We add the # to the path as soon as possible to stop superfluos reloads
+    window.location.assign(href + '#');
+  }
+</script>
