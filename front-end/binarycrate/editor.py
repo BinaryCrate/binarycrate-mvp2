@@ -934,9 +934,11 @@ class EditorView(BCChrome):
                                               'class':"btn btn-sm btn-default",
                                               'style': 'float:right',
                                               'onclick': self.show_hide_designer},
-                                              lambda: [t('.')] if self.program_is_running else ([t(">>")] if
-                                                   self.designer_visible else
-                                                   [t("<<")])),
+                                              lambda: [t('.')]
+                                              if self.program_is_running else
+                                              ([i({'class': lambda : "fa fa-1x fa-caret-right",'aria-hidden':"true", 'onclick': self.show_hide_designer})] 
+                                              if self.designer_visible else
+                                              [i({'class': lambda : "fa fa-1x fa-caret-left",'aria-hidden':"true", 'onclick': self.show_hide_designer})])),
                                ]),
                                self.code_mirror,
                              ]),
