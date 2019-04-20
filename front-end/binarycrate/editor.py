@@ -673,6 +673,7 @@ class EditorView(BCChrome):
         global project
         if len(project) == 0:
             js.globals.document.reset_program_output()
+            self.output_area_up = False
 
             self.scroll_positions = defaultdict(int)
             # Only load the project if we don't alreayd have it
@@ -953,14 +954,34 @@ class EditorView(BCChrome):
                                      ]
                                  ) +
                                  [
-                                     div({'id': 'console', 'class': 'console-editor col-12'}, [
-                                         pre({'id': 'secondary-output', 'class': 'logMessage'},
-                                            ''.join(js_list_to_py_list(js.globals.document.program_output))),
+                                     div(merge_dicts({'class': 'console-editor-container col-12'},
+                                       {'style': 'min-height:100%;max-height:100%;'} if self.output_area_up else {}), [
+                                       div({'style': 'height:23px'}, [
+                                         html_button({'style': 'width:30px; float:right;',
+                                                      'onclick': self.on_output_area_fullsize_click}, [
+                                           i({'class': lambda : "fa fa-1x " +
+                                              ("fa-caret-down" if self.output_area_up else "fa-caret-up"),
+                                              'aria-hidden':"true", 'onclick': self.on_output_area_fullsize_click}),
+                                         ]),
+
+                                       ]),
+                                       div(merge_dicts({'id': 'console', 'class': 'console-editor'},
+                                       {'style': 'min-height:100%;max-height:100%;'} if self.output_area_up else {}), [
+                                           pre({'id': 'secondary-output', 'class': 'logMessage'},
+                                              ''.join(js_list_to_py_list(js.globals.document.program_output))),
+                                       ]),
                                      ]),
                                  ])
                          ])),
                      ]),
                  ])
+
+    def on_output_area_fullsize_click(self, e):
+        self.output_area_up = not self.output_area_up
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+        e.stopPropagation()
+        e.preventDefault()
 
     def on_body_click(self, e):
         #print("on_body_click called self.context_menu=", self.context_menu)
@@ -2370,6 +2391,7 @@ class """ + class_name + """(Form):
                            'on_body_keydown', 'on_body_keypress']
         self.last_double_click_item = None
         self.double_click_count_down = 0
+        self.output_area_up = False
 
         super(EditorView, self).__init__(
             None,
