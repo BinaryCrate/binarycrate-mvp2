@@ -593,7 +593,7 @@ class EditorView(BCChrome):
                 self.cleanup_project()
             #aa.tr()
             #print('EditorView run_project called 4')
-        except Exception as e:
+        except Exception as ex:
             #TODO: There is no unit test for this please make one. This is to solve issue #M21-155 https://binarycrate.atlassian.net/browse/M21-155
             def finish_running():
                 js.globals.document.print_to_secondary_output = False
@@ -602,6 +602,10 @@ class EditorView(BCChrome):
             # Cleanup in the timeout because we need to be running when the exception is handled to print the output
             timeouts.set_timeout(finish_running, 1)
             raise
+        if e is not None:
+            e.stopPropagation()
+            e.preventDefault()
+
 
     def get_sidebar_nav_items(self):
         def dashboad_click_handler(e):
