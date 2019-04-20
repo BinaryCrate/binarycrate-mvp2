@@ -121,6 +121,21 @@ class ParserTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, {"error_message": "Not a Form file"})
 
+    def test_parse_class_invalid_syntax_untreated_error(self):
+        url = reverse('api:parser-get-member-functions')
+        data = {'content': """class MyForm(Form):
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        print('Hello world
+        self.name = ""
+
+    def button1_onclick(self, e):
+        pass
+""" }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {"error_message": "Not a Form file"})
+
     def test_parse_class_not_a_form(self):
         url = reverse('api:parser-get-member-functions')
         data = {'content': """class MyForm(object):
