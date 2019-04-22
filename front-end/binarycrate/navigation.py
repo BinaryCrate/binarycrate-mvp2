@@ -26,7 +26,6 @@ import copy
 from .controls import CodeMirrorHandlerVNode
 import uuid
 from cavorite.bootstrap.modals import ModalTrigger, Modal
-from .licencemodal import LicenceModal
 
 
 def navitem(title, icon_class, href, onclick=None):
@@ -116,12 +115,6 @@ class BCChrome(div):
     def logout_clicked(self, e, form_values):
         js.globals.window.location.href = '/accounts/logout'
 
-    def on_click_licence(self, e):
-        #print('on_click_licence called')
-        self.licence_modal = LicenceModal(self)
-        self.mount_redraw()
-        Router.router.ResetHashChange()
-
     def close_licence_modal(self, e):
         self.licence_modal = False
         self.mount_redraw()
@@ -147,16 +140,6 @@ class BCChrome(div):
                   ] + self.get_logout_link()),
                 ]),
                 div({'class': "content-wrapper", 'style': {'padding-top': '1px'}}, [self.get_central_content()]),
-                footer({'class': "sticky-footer"}, [
-                  div({'class':"container"}, [
-                    div({'class':"text-center"}, [
-                      small("Copyright (C) Binary Crate 2018 "),
-                      small([
-                        a({"href": "#", "onclick": self.on_click_licence}, "Licence")
-                      ])
-                    ]),
-                  ]),
-                ]),
                 Modal("logoutModal", "Logout", [
                   div("Select \"Logout\" below if you are ready to end your current session."),
                 ], self.logout_clicked),
