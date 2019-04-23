@@ -24,7 +24,9 @@ except ImportError:
 from cavorite.ajaxget import ajaxget
 import json
 from cavorite.HTML import *
-from cavorite import t
+from cavorite import t, get_current_hash, Router
+from .licencemodal import LicenceModal
+
 
 class SharedView(EditorView):
     def get_top_navbar_items(self):
@@ -33,8 +35,31 @@ class SharedView(EditorView):
                          'padding-top': '7px',
                          'margin-left': '5px'}}, [
             t(lambda: self.get_project().get('name', ''))
-          ])
+          ]),
+          li({'class': 'nav-item li-create-new',
+              'style': 'margin-left: 8px'}, [
+            form({'action': '#'}, [
+              a({'class': "btn btn-default navbar-btn crt-btn",
+                 'href': get_current_hash(),
+                 'onclick': self.on_about_click}, "About"),
+            ]),
+          ]),
+          li({'class': 'nav-item li-create-new',
+              'style': 'margin-left: 8px'}, [
+            form({'action': '#'}, [
+              a({'class': "btn btn-default navbar-btn crt-btn",
+                 'href': '/accounts/signup/', 'target':'_blank'}, "Sign Up"),
+            ]),
+          ]),
         ]
+
+    def on_about_click(self, e):
+        #print('on_about_click called')
+        self.licence_modal = LicenceModal(self)
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+        e.stopPropagation()
+        e.preventDefault()
 
     def get_sidebar_nav_items(self):
         return []
