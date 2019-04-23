@@ -34,6 +34,7 @@ from . import editor
 import traceback
 import sys
 from .urllib import urlencode
+from .licencemodal import LicenceModal
 
 
 projects = []
@@ -128,10 +129,35 @@ class Project(div):
         return ret
 
 class DashboardView(BCChrome):
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         self.selected_project = None
         self.projects_loaded = False
-        super(DashboardView, self).__init__(*args, **kwargs)
+        super(DashboardView, self).__init__([
+                          li({'class': 'nav-item li-create-new'}, [
+                            form({'action': '#'}, [
+                              ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Create New", "#createNew"),
+                            ]),
+                          ]),
+                          li({'class': 'nav-item li-create-new',
+                              'style': 'margin-left: 8px'}, [
+                            form({'action': '#'}, [
+                              a({'class': "btn btn-default navbar-btn crt-btn",
+                                 'href': get_current_hash(),
+                                 'onclick': self.on_about_click}, "About"),
+                            ]),
+                          ]),
+                        ],
+                        None,
+                        None)
+
+    def on_about_click(self, e):
+        #print('on_about_click called')
+        self.licence_modal = LicenceModal(self)
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+        e.stopPropagation()
+        e.preventDefault()
+
 
     def get_project_name(self):
         return self.selected_project['name'] if self.selected_project is not None else 'No project'
@@ -272,14 +298,6 @@ class DashboardView(BCChrome):
 
 
 def dashboard_view():
-    dv = DashboardView([
-                      li({'class': 'nav-item li-create-new'}, [
-                        form({'action': '#'}, [
-                          ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Create New", "#createNew"),
-                        ]),
-                      ]),
-                    ],
-                    None,
-                    None)
+    dv = DashboardView()
 
     return dv

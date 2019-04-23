@@ -5,7 +5,7 @@ except ImportError:
     js = None
 
 def get_controls_height():
-    return int(js.globals.window.innerHeight) - 50 - 56 - 8
+    return int(js.globals.window.innerHeight) - 50 - 32 - 8
 
 def get_controls_width():
     return int(js.globals.window.innerWidth) - 150 - 20

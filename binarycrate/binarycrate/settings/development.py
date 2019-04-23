@@ -39,4 +39,15 @@ DATABASES = {
 
 # Email
 
+# Uncomment to use the standard debugging email backend
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+#Uncomment to test email sending with sendgrid
+#EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
+
+#TODO: Make this a parameter we can pass on the command line to fab/docker
+#SENDGRID_API_KEY = "xxx"
+
+#SENDGRID_SANDBOX_MODE_IN_DEBUG = False
+
+#SENDGRID_ECHO_TO_STDOUT = True

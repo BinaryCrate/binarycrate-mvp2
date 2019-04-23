@@ -21,6 +21,12 @@ Check on changes in on the develop branch.
 git checkout master
 ```
 
+Ensure your local copy of master is up to date with the server
+
+```
+git pull
+```
+
 Now the are on the master branch. First we want to update from the develop branch.
 
 ```

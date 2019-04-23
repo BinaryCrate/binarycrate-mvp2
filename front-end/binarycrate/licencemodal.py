@@ -36,6 +36,7 @@ class LicenceModal(object):
                         div({'class': 'upload-files-modal-content'}, [
                           div({'style': {'width': '100%', 'height': 'calc(100% - 40px - 10px)',
                                          'padding': '20px', 'box-shadow': 'inset 0 0 10px darkgrey'}}, [
+                            p('Copyright (C) Binary Crate 2018-2019'),
                             p('Licenced under the Affero GNU Public Licence (AGPL)'),
                             a({'href':'https://github.com/BinaryCrate/binarycrate-mvp2', 'target':'_blank'}, 'Source code')
                           ]),
