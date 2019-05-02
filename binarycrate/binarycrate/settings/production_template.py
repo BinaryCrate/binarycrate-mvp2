@@ -44,7 +44,6 @@ DATABASES = {
 
 EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
 
-#TODO: Make this a parameter we can pass on the command line to fab/docker
 SENDGRID_API_KEY = "xxx"
 
 SENDGRID_SANDBOX_MODE_IN_DEBUG = False
