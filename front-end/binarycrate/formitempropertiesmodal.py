@@ -22,8 +22,10 @@ import six
 from cavorite.HTML import *
 from binarycrate.controls.bcform import get_form_item_property, FormItemPropType
 import re
-import js
-
+try:
+    import js
+except ImportError:
+    js = None
 
 class FormItemPropertiesModal(PropertiesModal):
     def __init__(self, ownerview, form_item_id):

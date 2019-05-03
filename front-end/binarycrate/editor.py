@@ -1124,6 +1124,7 @@ class EditorView(BCChrome):
 
     def add_body_event_handler(self, section_name, function_name):
         #print('add_body_event_handler called')
+        print('add_body_event_handler selected_file_method_cache[functions]=',self.selected_file_method_cache['functions'])
         all_functions = [item for sublist in self.selected_file_method_cache['functions'] for item in sublist]
         #selected_function = [fn for fn in self.selected_file_method_cache['functions'][1] if fn['name'] == function_name][0]
         matching_functions = [fn for fn in all_functions if fn['name'] == function_name]
