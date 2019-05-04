@@ -45,6 +45,17 @@ class FormItemPropertiesModal(PropertiesModal):
     def handle_ok(self, e):
         #print('handle_ok called')
         keys = sorted(self.properties.keys())
+
+        #Check the name is not already in use
+        name_control = js.globals.document.getElementById("propname")
+        if name_control != js.null:
+            new_name = str(name_control.value)
+            existing_names = {fi['name'] for fi in self.ownerview.selected_de['form_items'] if fi['id'] != self.form_item['id']}
+            #print('handle_ok new_name=',new_name)
+            #print('handle_ok existing_names=',existing_names)
+            if new_name in existing_names:
+                js.globals.window.alert("Sorry that name is already being used by another control")
+                return
         for k in keys:
             control = js.globals.document.getElementById("prop" + k)
             #print(k + "=" + str(control.value))
