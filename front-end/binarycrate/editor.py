@@ -242,6 +242,16 @@ def drop_down_menu(title, members):
         div({'class': "dropdown-menu", 'aria-labelledby': "dropdownMenuButton"}, members)
     ])
 
+def drop_down_toplevel_item(title, icon_class, click_handler):
+    return div({'class': "dropdown nav-item shapes__dropdown dropdown-menu-header"}, [
+        html_button({'class': "btn crt-btn", 'type': "button",
+                     'id': "dropdownMenuButton", 'data-toggle': "dropdown",
+                     'aria-haspopup': "true", 'aria-expanded': "false",
+                     'onclick': click_handler}, [
+                         i({'class': "fa fa-1x " + icon_class, 'aria-hidden':"true"}),
+                         t(' ' + title),
+                     ]),
+    ])
 
 def drop_down_item(title, icon_class, click_handler):
     attribs = {'class': "dropdown-item", 'href': get_current_hash()}
@@ -2152,6 +2162,7 @@ class """ + class_name + """(Form):
                         #drop_down_item('Square', 'fa-square', None),
                         #drop_down_item('Something else here', 'fa-btc', None),
                       ]),
+                      drop_down_toplevel_item('Run', 'fa-caret-right', self.run_project),
                       li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
                         form({'action': '#'}, [
                           #ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
