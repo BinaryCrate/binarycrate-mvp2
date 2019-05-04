@@ -53,7 +53,7 @@ from binarycrate.controls import ContextMenu
 from binarycrate.frontend_utils import get_controls_height, get_controls_width
 from .formpropertiesmodal import FormPropertiesModal
 from .formitempropertiesmodal import FormItemPropertiesModal
-
+from binarycrate.enums import Redraw
 
 HANDLE_NONE = 0
 HANDLE_TOPLEFT = 1
@@ -1021,7 +1021,7 @@ class EditorView(BCChrome):
             if posx >= rect.left and posy >= rect.top and posx <= rect.right and posy <= rect.bottom:
                 posx = posx - rect.left
                 posy = posy - rect.top
-                if self.form_stack[-1].on_body_mousemove(int(posx), int(posy)):
+                if self.form_stack[-1].on_body_mousemove(int(posx), int(posy)) != Redraw.dont_redraw:
                     self.mount_redraw()
                     Router.router.ResetHashChange()
         if self.context_menu:
