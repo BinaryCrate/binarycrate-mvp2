@@ -999,7 +999,7 @@ class EditorView(BCChrome):
         if self.program_is_running:
             #print('on_body_click called self.program_is_running')
             if len(self.form_stack) > 0  and \
-               self.form_stack[-1].on_body_click():
+               self.form_stack[-1].on_body_click() != Redraw.dont_redraw:
                 #print('on_body_click redrawing screen')
                 self.mount_redraw()
                 Router.router.ResetHashChange()
@@ -1084,19 +1084,19 @@ class EditorView(BCChrome):
 
     def on_body_keyup(self, e):
         if self.program_is_running:
-            if self.form_stack[-1].on_body_keyup(e):
+            if self.form_stack[-1].on_body_keyup(e) != Redraw.dont_redraw:
                 self.mount_redraw()
                 Router.router.ResetHashChange()
 
     def on_body_keydown(self, e):
         if self.program_is_running:
-            if self.form_stack[-1].on_body_keydown(e):
+            if self.form_stack[-1].on_body_keydown(e) != Redraw.dont_redraw:
                 self.mount_redraw()
                 Router.router.ResetHashChange()
 
     def on_body_keypress(self, e):
         if self.program_is_running:
-            if self.form_stack[-1].on_body_keypress(e):
+            if self.form_stack[-1].on_body_keypress(e) != Redraw.dont_redraw:
                 self.mount_redraw()
                 Router.router.ResetHashChange()
 
