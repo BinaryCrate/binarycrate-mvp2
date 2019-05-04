@@ -2223,6 +2223,16 @@ class """ + class_name + """(Form):
                       drop_down_item('Add Body Key Press Handler', '', self.add_body_keypress),
                     ])
                     ] if self.selected_file_de else []) +
+                    ([
+                    drop_down_menu('Form Item', [
+                      drop_down_item('Add onclick Handler', '',
+                        lambda e: self.add_form_item_onclick_handler(self.selected_item, e)),
+                      drop_down_item('Properties', '',
+                        lambda e: self.popup_form_item_properties_modal(self.selected_item, e)),
+                      drop_down_item('Delete', '', 
+                        lambda e: self.delete_selected_form_item(self.selected_item, e)),
+                    ])
+                    ] if self.selected_file_de and self.selected_item != "" else []) +
                     [
                       li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
                         form({'action': '#'}, [
