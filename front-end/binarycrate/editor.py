@@ -2229,7 +2229,7 @@ class """ + class_name + """(Form):
                         lambda e: self.add_form_item_onclick_handler(self.selected_item, e)),
                       drop_down_item('Properties', '',
                         lambda e: self.popup_form_item_properties_modal(self.selected_item, e)),
-                      drop_down_item('Delete', '', 
+                      drop_down_item('Delete', '',
                         lambda e: self.delete_selected_form_item(self.selected_item, e)),
                     ])
                     ] if self.selected_file_de and self.selected_item != "" else []) +
@@ -2250,6 +2250,19 @@ class """ + class_name + """(Form):
                         t(lambda: self.get_project().get('name', ''))
                       ])
                     ])
+
+    def share_copy(self, e):
+      # Get the text field
+      copyText = js.globals.document.getElementById("formGroupExampleInput");
+
+      # Select the text field
+      copyText.select();
+
+      # Copy the text inside the text field
+      js.globals.document.execCommand("copy");
+
+      # Alert the copied text
+      js.globals.window.alert("Copied the url: " + str(copyText.value))
 
     def get_modals(self):
         # print('EditorView get_modals called')
@@ -2331,6 +2344,10 @@ class """ + class_name + """(Form):
                             html_input({'type': "text", 'class':"form-control", 'id':"formGroupExampleInput",
                                          'value':share_url,
                                          'readonly':'readonly'}),
+                            html_button({'type': "button",
+                                         'class':"btn btn-secondary",
+                                         'style':'margin-top:10px',
+                                         'onclick': self.share_copy}, 'Copy'),
                           ]),
                           div({'class': 'form-group'}, [
                             #label({'for':"exampleFormControlTextarea1"}, 'Share On:'),
