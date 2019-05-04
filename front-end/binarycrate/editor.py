@@ -2143,6 +2143,8 @@ class """ + class_name + """(Form):
                         drop_down_item('Set Default', '', self.set_current_file_as_default),
                         drop_down_item('Upload images...', '', self.upload_images),
                         drop_down_item('Delete document collection...', '', self.delete_document_collection),
+                        drop_down_item('Add File', '', self.display_new_file_modal),
+                        drop_down_item('Add Folder', '', self.display_new_folder_modal),
 
                         #drop_down_item('Triangle', 'fa-caret-up', test_click_handler),
                         #drop_down_item('Square', 'fa-square', None),
