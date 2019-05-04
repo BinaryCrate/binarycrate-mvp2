@@ -116,6 +116,7 @@ class CodeMirrorHandlerVNode(textarea):
                 #print('Run init')
                 textarea = js.globals.document.getElementById("code")
                 read_only = lazy_eval(self.read_only)
+                #print('Run init read_only=', read_only)
                 self.editor = js.globals.CodeMirror.fromTextArea(textarea, {
                     'lineNumbers': True,
                     #'mode': 'text/html',
@@ -215,6 +216,9 @@ class CodeMirrorHandlerVNode(textarea):
                 global_editor = self.editor
                 global_textarea = textarea
                 #self.onchange_codemirror(None)
+            else:
+                pass
+                #print("Was_mounted not force_redraw_all not initing a new codemirror")
 
     """
     def codemirror_init(self):

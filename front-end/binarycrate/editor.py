@@ -2350,7 +2350,7 @@ class """ + class_name + """(Form):
                     (self.licence_modal.get_modal_vnodes() if self.licence_modal else [])
 
     def get_code_mirror_read_only(self):
-        return self.selected_file_de is None
+        return self.selected_file_de is None or self.program_is_running
 
     def images_api_ajax_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
