@@ -537,8 +537,11 @@ class TestEditor(object):
         #editor.selected_de = [de for de in editor.project['directory_entry'] if de['id'] == 'ae935c72-cf56-48ed-ab35-575cb9a983ea'][0]
         node.set_current_file_as_default(Mock())
 
+        node.contextmenu_x = 100
+        node.contextmenu_y = 100
+
         # Test we send the correct stuff when we add a new button
-        node.new_line(Mock(clientX=100, clientY=100))
+        node.new_line(Mock())
 
         js.globals.cavorite_ajaxPut.reset_mock()
 

@@ -1159,7 +1159,7 @@ class EditorView(BCChrome):
 
     def add_body_event_handler(self, section_name, function_name):
         #print('add_body_event_handler called')
-        print('add_body_event_handler selected_file_method_cache[functions]=',self.selected_file_method_cache['functions'])
+        #print('add_body_event_handler selected_file_method_cache[functions]=',self.selected_file_method_cache['functions'])
         all_functions = [item for sublist in self.selected_file_method_cache['functions'] for item in sublist]
         #selected_function = [fn for fn in self.selected_file_method_cache['functions'][1] if fn['name'] == function_name][0]
         matching_functions = [fn for fn in all_functions if fn['name'] == function_name]
@@ -1745,11 +1745,11 @@ class EditorView(BCChrome):
     def new_control(self, e, control_dict):
         if not self.selected_de:
             return
-        posx = self.contextmenu_x
-        posy = self.contextmenu_y
+        posx = int(self.contextmenu_x)
+        posy = int(self.contextmenu_y)
         rect = js.globals.document.getElementById('preview').getBoundingClientRect()
-        posx = posx - rect.left
-        posy = posy - rect.top
+        posx = posx - int(rect.left)
+        posy = posy - int(rect.top)
         new_id = str(get_uuid())
 
         control_dict = copy.copy(control_dict)
@@ -1886,11 +1886,11 @@ class EditorView(BCChrome):
     def new_line(self, e):
         if not self.selected_de:
             return
-        posx = e.clientX
-        posy = e.clientY
+        posx = int(self.contextmenu_x)
+        posy = int(self.contextmenu_y)
         rect = js.globals.document.getElementById('preview').getBoundingClientRect()
-        posx = posx - rect.left
-        posy = posy - rect.top
+        posx = posx - int(rect.left)
+        posy = posy - int(rect.top)
         new_id = str(get_uuid())
 
         control_dict = {'type': 'line',
@@ -2137,6 +2137,14 @@ class """ + class_name + """(Form):
         self.mount_redraw()
         Router.router.ResetHashChange()
 
+    def new_control_from_nav(self, e, new_control_fn):
+        self.context_menu = None
+        rect = js.globals.document.getElementById('preview').getBoundingClientRect()
+        self.contextmenu_x = 100 + int(rect.left)
+        self.contextmenu_y = 100 + int(rect.top)
+        new_control_fn(e)
+
+
     def get_top_navbar_items(self):
         if self.program_is_running:
             return [
@@ -2159,7 +2167,7 @@ class """ + class_name + """(Form):
                      ])
                    ]
         else:
-            return [
+            return ([
                       drop_down_menu('File', [
                         #drop_down_item('Run', 'fa-caret-right', self.run_project),
                         drop_down_item('Save Project', '', self.save_project),
@@ -2189,7 +2197,33 @@ class """ + class_name + """(Form):
                         #drop_down_item('Square', 'fa-square', None),
                         #drop_down_item('Something else here', 'fa-btc', None),
                       ]),
-                      drop_down_toplevel_item('Run', 'fa-caret-right', self.run_project),
+                      drop_down_toplevel_item('Run', 'fa-caret-right',
+                                              self.run_project),
+                    ] +
+                    ([
+                    drop_down_menu('Form', [
+                      drop_down_item('New Button', '', lambda e : self.new_control_from_nav(e, self.new_button)),
+                      drop_down_item('New Textbox', '', lambda e : self.new_control_from_nav(e, self.new_textbox)),
+                      drop_down_item('New Image', '', lambda e : self.new_control_from_nav(e, self.new_image)),
+                      drop_down_item('New Label', '', lambda e : self.new_control_from_nav(e, self.new_label)),
+                      drop_down_item('New Frame', '', lambda e : self.new_control_from_nav(e, self.new_frame)),
+                      drop_down_item('New Checkbox', '', lambda e : self.new_control_from_nav(e, self.new_checkbox)),
+                      drop_down_item('New Rectangle', '', lambda e : self.new_control_from_nav(e, self.new_rectangle)),
+                      drop_down_item('New Circle', '', lambda e : self.new_control_from_nav(e, self.new_circle)),
+                      drop_down_item('New Ellipse', '', lambda e : self.new_control_from_nav(e, self.new_ellipse)),
+                      drop_down_item('New Line', '', lambda e : self.new_control_from_nav(e, self.new_line)),
+                      drop_down_item('New Hexagon', '', lambda e : self.new_control_from_nav(e, self.new_hexagon)),
+
+                      drop_down_item('Form Properties', '', self.form_properties),
+
+                      drop_down_item('Add Body Click Handler', '', self.add_body_click_handler),
+                      drop_down_item('Add Body Mouse Move Handler', '', self.add_body_mouse_move),
+                      drop_down_item('Add Body Key Up Handler', '', self.add_body_on_keyup),
+                      drop_down_item('Add Body Key Down Handler', '', self.add_body_on_keydown),
+                      drop_down_item('Add Body Key Press Handler', '', self.add_body_keypress),
+                    ])
+                    ] if self.selected_file_de else []) +
+                    [
                       li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
                         form({'action': '#'}, [
                           #ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
@@ -2205,7 +2239,7 @@ class """ + class_name + """(Form):
                                      'margin-left': '5px'}}, [
                         t(lambda: self.get_project().get('name', ''))
                       ])
-                    ]
+                    ])
 
     def get_modals(self):
         # print('EditorView get_modals called')
