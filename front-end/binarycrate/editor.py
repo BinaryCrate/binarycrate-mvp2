@@ -673,26 +673,30 @@ class EditorView(BCChrome):
     def get_project(self):
         return project
 
+    def query_images(self):
+        def images_api_ajax_result_handler2(xmlhttp, response):
+            # Get the images first then the projects
+            #TODO: Do this all in one query. Otherwise it get brittle
+            #print('images_api_ajax_result_handler2')
+            #self.images_api_ajax_result_handler(xmlhttp, response)
+            if xmlhttp.status >= 200 and xmlhttp.status <= 299:
+                self.images = json.loads(str(xmlhttp.responseText))
+                #self.mount_redraw()
+                #Router.router.ResetHashChange()
+                ajaxget('/api/projects/' + self.get_root().url_kwargs['project_id'] + '/', self.projects_api_ajax_result_handler)
+
+        ajaxget('/api/projects/image-list/' + self.get_root().url_kwargs['project_id'] + '/', images_api_ajax_result_handler2)
+
     def query_project(self):
         global project
         if len(project) == 0:
+            # Only load the project if we don't alreayd have it
             js.globals.document.reset_program_output()
             self.output_area_up = False
 
             self.scroll_positions = defaultdict(int)
-            # Only load the project if we don't alreayd have it
-            def images_api_ajax_result_handler2(xmlhttp, response):
-                # Get the images first then the projects
-                #TODO: Do this all in one query. Otherwise it get brittle
-                #print('images_api_ajax_result_handler2')
-                #self.images_api_ajax_result_handler(xmlhttp, response)
-                if xmlhttp.status >= 200 and xmlhttp.status <= 299:
-                    self.images = json.loads(str(xmlhttp.responseText))
-                    #self.mount_redraw()
-                    #Router.router.ResetHashChange()
-                    ajaxget('/api/projects/' + self.get_root().url_kwargs['project_id'] + '/', self.projects_api_ajax_result_handler)
 
-            ajaxget('/api/projects/image-list/' + self.get_root().url_kwargs['project_id'] + '/', images_api_ajax_result_handler2)
+            self.query_images()
 
     def update_file_method_cache(self, result):
             if self.selected_de is None:
