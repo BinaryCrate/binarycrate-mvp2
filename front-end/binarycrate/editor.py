@@ -2158,6 +2158,15 @@ class """ + class_name + """(Form):
                           ]),
                         ]),
                       ]),
+                      li({'class': 'nav-item li-create-new dropdown-menu-header'}, [
+                        form({'action': '#'}, [
+                          #ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
+                          a({'class': "btn btn-default navbar-btn crt-btn",
+                             'href': get_current_hash(),
+                              'onclick': self.display_share_project_modal},
+                             "Share")
+                        ]),
+                      ])
 
                    ] + [
                      span({'style':{'color': 'white', # TODO: This is a really hacky way to display this. Add better styling
