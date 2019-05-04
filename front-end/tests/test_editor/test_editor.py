@@ -3760,6 +3760,9 @@ from binarycrate.controls import Form
 
 class Travel(Form):
     file_location = __file__
+
+    def __init__(self, *args, **kwargs):
+        super(self, Travel).__init__(*args, **kwargs)
 """
 
     def test_new_file_graphical_python_historygraph(self, monkeypatch):
@@ -3932,4 +3935,7 @@ from binarycrate.historygraphfrontend import documentcollection as dc
 
 class Travel(Form):
     file_location = __file__
+
+    def __init__(self, *args, **kwargs):
+        super(self, Travel).__init__(*args, **kwargs)
 """

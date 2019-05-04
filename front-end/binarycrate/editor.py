@@ -1647,7 +1647,7 @@ class EditorView(BCChrome):
                     svg_width = max(svg_width,  form_item['x'] + form_item['width'])
                     svg_height = max(svg_height,  form_item['y'] + form_item['height'])
             if self.selected_item != '':
-                #print('self.selected_item=', self.selected_item)
+                #print('get_selected_de_form_controls self.selected_item=', self.selected_item)
                 selected_form_item = \
                 [form_item for form_item in self.selected_de['form_items'] if self.selected_item == form_item['id']][0]
                 if selected_form_item['type'] == 'line':
@@ -2028,12 +2028,15 @@ class EditorView(BCChrome):
         class_name = file_name[:file_name.find('.')]
         class_name = class_name[0].upper() + class_name[1:]
         content = 'from __future__ import unicode_literals, absolute_import, print_function\n'
-        print("""str(form_values['selFileType'])=""", str(form_values['selFileType']))
+        #print("""str(form_values['selFileType'])=""", str(form_values['selFileType']))
         if str(form_values['selFileType']) == 'graphical-py-file':
             content += """from binarycrate.controls import Form
 """ + ('from binarycrate.historygraphfrontend import documentcollection as dc\n' if project['type'] == 2 else '' ) + """
 class """ + class_name + """(Form):
     file_location = __file__
+
+    def __init__(self, *args, **kwargs):
+        super(self, """ + class_name + """).__init__(*args, **kwargs)
 """
         first_non_document_file = len([de for de in project['directory_entry'] if de['is_file'] and de['name'] != 'documents.py']) == 0
         new_de = {'id': str(uuid.uuid4()),
@@ -2048,6 +2051,7 @@ class """ + class_name + """(Form):
         project['directory_entry'].append(new_de)
         self.selected_de = new_de
         self.selected_file_de = new_de
+        self.selected_item = ""
         self.reset_file_method_cache()
         self.mount_redraw()
         Router.router.ResetHashChange()
