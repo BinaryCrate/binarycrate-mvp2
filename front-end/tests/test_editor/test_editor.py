@@ -2930,19 +2930,19 @@ print('Hello folder i={}'.format(i))
 
         form = view.form_stack[-1]
 
-        Router.router.on_body_keyup(Mock())
+        Router.router.on_body_keyup(Mock(which=0))
         assert counter['keyup'] == 1
         assert counter['keydown'] == 0
         assert counter['keypress'] == 0
         assert len(counter) == 3
 
-        Router.router.on_body_keydown(Mock())
+        Router.router.on_body_keydown(Mock(which=0))
         assert counter['keyup'] == 1
         assert counter['keydown'] == 1
         assert counter['keypress'] == 0
         assert len(counter) == 3
 
-        Router.router.on_body_keypress(Mock())
+        Router.router.on_body_keypress(Mock(which=0))
         assert counter['keyup'] == 1
         assert counter['keydown'] == 1
         assert counter['keypress'] == 1
@@ -3056,9 +3056,9 @@ print('Hello folder i={}'.format(i))
 
         form = view.form_stack[-1]
 
-        Router.router.on_body_keyup(Mock())
-        Router.router.on_body_keydown(Mock())
-        Router.router.on_body_keypress(Mock())
+        Router.router.on_body_keyup(Mock(which=0))
+        Router.router.on_body_keydown(Mock(which=0))
+        Router.router.on_body_keypress(Mock(which=0))
         assert counter['keyup'] == 0
         assert counter['keydown'] == 0
         assert counter['keypress'] == 0

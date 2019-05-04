@@ -54,6 +54,8 @@ from binarycrate.frontend_utils import get_controls_height, get_controls_width
 from .formpropertiesmodal import FormPropertiesModal
 from .formitempropertiesmodal import FormItemPropertiesModal
 from binarycrate.enums import Redraw
+from munch import *
+
 
 HANDLE_NONE = 0
 HANDLE_TOPLEFT = 1
@@ -404,6 +406,22 @@ def smart_int(s):
         return int(s)
     except ValueError as ex:
         return 0
+
+class KeyboardEvent(Munch):
+    # This class exists to translate a javascript
+    def __init__(self, e):
+        # e = The Javascript KeyboardEvent object sent from the browser
+        self.altKey = bool(e.altKey)
+        self.charCode = str(e.charCode)
+        self.code = str(e.code)
+        self.ctrlKey = bool(e.ctrlKey)
+        self.isComposing = bool(e.isComposing)
+        self.key = str(e.key)
+        self.keyCode = str(e.keyCode)
+        self.metaKey = bool(e.metaKey)
+        self.repeat = bool(e.repeat)
+        self.shiftKey = bool(e.shiftKey)
+        self.which = int(e.which)
 
 class EditorView(BCChrome):
     def save_project(self, e):
@@ -1098,19 +1116,22 @@ class EditorView(BCChrome):
 
     def on_body_keyup(self, e):
         if self.program_is_running:
-            if self.form_stack[-1].on_body_keyup(e) != Redraw.dont_redraw:
+            if self.form_stack[-1].on_body_keyup(KeyboardEvent(e)) \
+               != Redraw.dont_redraw:
                 self.mount_redraw()
                 Router.router.ResetHashChange()
 
     def on_body_keydown(self, e):
         if self.program_is_running:
-            if self.form_stack[-1].on_body_keydown(e) != Redraw.dont_redraw:
+            if self.form_stack[-1].on_body_keydown(KeyboardEvent(e)) \
+               != Redraw.dont_redraw:
                 self.mount_redraw()
                 Router.router.ResetHashChange()
 
     def on_body_keypress(self, e):
         if self.program_is_running:
-            if self.form_stack[-1].on_body_keypress(e) != Redraw.dont_redraw:
+            if self.form_stack[-1].on_body_keypress(KeyboardEvent(e)) \
+               != Redraw.dont_redraw:
                 self.mount_redraw()
                 Router.router.ResetHashChange()
 
