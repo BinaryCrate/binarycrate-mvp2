@@ -446,7 +446,7 @@ class TestEditor(object):
         assert root_folder.get_display_title() == '/'
         assert folder.get_display_title() == 'folder'
 
-        # Test no content set
+        # Test default file content set
         assert len(node.code_mirror.get_children()) == 1
         assert type(node.code_mirror.get_children()[0]) == t
         assert node.code_mirror.get_children()[0].text() == hello_folder_content
