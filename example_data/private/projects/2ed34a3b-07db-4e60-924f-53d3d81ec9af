@@ -7,11 +7,10 @@ class Main(Form):
     file_location = __file__
 
     class Missile(object):
-        def __init__(self, x, y, screen_object, form):
+        def __init__(self, x, y, screen_object):
             self.x = x
             self.y = y
             self.screen_object = screen_object
-            self.form = form
 
     def __init__(self, *args, **kwargs):
         super(Main, self).__init__(*args, **kwargs)
@@ -23,9 +22,6 @@ class Main(Form):
     def on_body_mousemove(self, x, y):
         self.ufo_x = x - self.imgufo.width / 2
         self.ufo_y = y - self.imgufo.height / 2
-        #self.imgufo.x = x - self.imgufo.width / 2
-        #self.imgufo.y = y - self.imgufo.height / 2
-        #return True
     
     def on_body_click(self):
         from binarycrate.controls.bcform import Circle
@@ -41,15 +37,12 @@ class Main(Form):
              'fill': 'rgb(255,0,0)',
              'visible': True})
 
-        m = Main.Missile(x, y, screen_object, self)
+        m = Main.Missile(x, y, screen_object)
         
         self.missiles.append(m)
         self.add_control(screen_object)
-
-        return True
     
     def interval_10(self):
-        #print('interval_10 len(self.missiles)=', len(self.missiles))
         for m in self.missiles:
             if m.y < MISSILE_SPEED:
                 self.missiles.remove(m)
