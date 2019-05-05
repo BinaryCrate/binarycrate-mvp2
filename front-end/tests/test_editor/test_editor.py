@@ -3764,6 +3764,7 @@ class TestNewFileContentPythonProject(object):
         print(new_de['content'])
         assert new_de['content'] == """from __future__ import unicode_literals, absolute_import, print_function
 from binarycrate.controls import Form
+from binarycrate.enums import Redraw
 
 class Travel(Form):
     file_location = __file__
@@ -3938,6 +3939,7 @@ class Travel(Form):
         print(new_de['content'])
         assert new_de['content'] == """from __future__ import unicode_literals, absolute_import, print_function
 from binarycrate.controls import Form
+from binarycrate.enums import Redraw
 from binarycrate.historygraphfrontend import documentcollection as dc
 
 class Travel(Form):

@@ -2036,6 +2036,7 @@ class EditorView(BCChrome):
         #print("""str(form_values['selFileType'])=""", str(form_values['selFileType']))
         if str(form_values['selFileType']) == 'graphical-py-file':
             content += """from binarycrate.controls import Form
+from binarycrate.enums import Redraw
 """ + ('from binarycrate.historygraphfrontend import documentcollection as dc\n' if project['type'] == 2 else '' ) + """
 class """ + class_name + """(Form):
     file_location = __file__
