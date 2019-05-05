@@ -155,6 +155,10 @@ class TestEditor(object):
             else:
                 assert de['form_properties'] == {"width": "200", "height": "400"}
 
+        # Test that the default file is selected when querying a new project
+        assert node.selected_de['id'] == '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a'
+        assert node.selected_file_de['id'] == '6a05e63e-6db4-4898-a3eb-2aad50dd5f9a'
+
         tree = node.get_project_tree()
 
         root_folder, hello_world, folder, hello_folder = get_tree_important_nodes(tree)
@@ -177,10 +181,10 @@ class TestEditor(object):
         assert root_folder.get_display_title() == '/'
         assert folder.get_display_title() == 'folder'
 
-        # Test no content set
+        # Test the default files content is displayed
         assert len(node.code_mirror.get_children()) == 1
         assert type(node.code_mirror.get_children()[0]) == t
-        assert node.code_mirror.get_children()[0].text() == ''
+        assert node.code_mirror.get_children()[0].text() == hello_folder_content
 
         node.code_mirror.editor = Mock(setValue=Mock())
         hello_world.on_click(None)
@@ -445,7 +449,7 @@ class TestEditor(object):
         # Test no content set
         assert len(node.code_mirror.get_children()) == 1
         assert type(node.code_mirror.get_children()[0]) == t
-        assert node.code_mirror.get_children()[0].text() == ''
+        assert node.code_mirror.get_children()[0].text() == hello_folder_content
 
         node.code_mirror.editor = Mock(setValue=Mock())
         hello_world.on_click(None)

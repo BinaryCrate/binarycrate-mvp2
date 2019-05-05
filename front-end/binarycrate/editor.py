@@ -667,10 +667,15 @@ class EditorView(BCChrome):
             global project
             new_project = json.loads(str(xmlhttp.responseText))
             if project  != new_project:
-                self.selected_de = None
-                self.selected_file_de = None
-                self.reset_file_method_cache()
                 project = new_project
+                default_de = [de for de in project['directory_entry'] if de['is_default'] and de['is_file']]
+                if len(default_de) == 0:
+                    self.selected_de = None
+                    self.selected_file_de = None
+                else:
+                    self.selected_de = default_de[0]
+                    self.selected_file_de = default_de[0]
+                self.reset_file_method_cache()
                 project['deleted_directory_entries'] = list()
                 for de in project['directory_entry']:
                     if de['form_items'] == '':
@@ -704,7 +709,7 @@ class EditorView(BCChrome):
     def query_images(self):
         def images_api_ajax_result_handler2(xmlhttp, response):
             # Get the images first then the projects
-            #TODO: Do this all in one query. Otherwise it get brittle
+            #TODO: Do this all in one query. Otherwise it gets brittle
             #print('images_api_ajax_result_handler2')
             #self.images_api_ajax_result_handler(xmlhttp, response)
             if xmlhttp.status >= 200 and xmlhttp.status <= 299:
