@@ -2,6 +2,7 @@ from __future__ import unicode_literals, absolute_import, print_function
 from binarycrate.controls import Form
 
 MISSILE_SPEED = 10
+MOVEMENT_DELAY = 4
 
 class Main(Form):
     file_location = __file__
@@ -11,17 +12,25 @@ class Main(Form):
             self.x = x
             self.y = y
             self.screen_object = screen_object
+            
+    class UFOPosition(object):
+        def __init__(self, x, y, form):
+            self.x = x
+            self.y = y
+            self.wait_until = form.tick_count + MOVEMENT_DELAY
 
     def __init__(self, *args, **kwargs):
         super(Main, self).__init__(*args, **kwargs)
         self.missiles = []
+        self.tick_count = 0
+        self.ufo_pos_queue = []
         self.set_interval(self.interval_10, 10)
-        self.ufo_x = None
-        self.ufo_y = None
 
     def on_body_mousemove(self, x, y):
-        self.ufo_x = x - self.imgufo.width / 2
-        self.ufo_y = y - self.imgufo.height / 2
+        self.ufo_pos_queue.append(Main.UFOPosition(
+            x - self.imgufo.width / 2,
+            y - self.imgufo.height / 2,
+            self))
     
     def on_body_click(self):
         from binarycrate.controls.bcform import Circle
@@ -51,7 +60,11 @@ class Main(Form):
                 m.y -= MISSILE_SPEED
                 m.screen_object.y = m.y - 3
         
-        if self.ufo_x is not None:
-            self.imgufo.x = self.ufo_x
-            self.imgufo.y = self.ufo_y
+        if len(self.ufo_pos_queue) > 0:
+            next_pos = self.ufo_pos_queue[0]
+            if next_pos.wait_until < self.tick_count:
+                self.imgufo.x = next_pos.x
+                self.imgufo.y = next_pos.y
+                self.ufo_pos_queue = self.ufo_pos_queue[1:]
             
+        self.tick_count += 1
