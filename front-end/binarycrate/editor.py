@@ -1672,6 +1672,7 @@ class EditorView(BCChrome):
                                            'height': selected_form_item_height,
                                            'style':"fill:None;stroke-width:5;stroke:rgb(255,0,0)",
                                            'onmouseup': self.on_mouse_up,
+                                           'onmousedown': lambda e, form_item_id=selected_form_item['id']: self.select_new_item(form_item_id, e),
                                            'oncontextmenu': lambda e, form_item_id=selected_form_item['id']: self.contextmenu_control(form_item_id, e)}),
                               svg('rect', {'id': 'handle-top-left', 'x': selected_form_item_x - 5,
                                            'y':selected_form_item_y - 5,
