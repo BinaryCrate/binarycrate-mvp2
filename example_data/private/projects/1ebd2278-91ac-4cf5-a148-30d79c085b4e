@@ -1,6 +1,7 @@
 from __future__ import unicode_literals, absolute_import, print_function
 from binarycrate.controls import Form
 import math
+from binarycrate.enums import Redraw
 
 UP = 0
 DOWN = 1
@@ -57,3 +58,6 @@ class Main(Form):
        self.charge += int(distance / 4)
        self.last_x = x
        self.last_y = y
+    
+       return Redraw.dont_redraw
+    
