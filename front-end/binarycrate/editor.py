@@ -585,6 +585,7 @@ class EditorView(BCChrome):
 
     def run_project(self, e):
         self.designer_visible = True
+        self.output_area_up = False
         js.globals.document.reset_program_output()
         self.mount_redraw()
         Router.router.ResetHashChange()
