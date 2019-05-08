@@ -15,37 +15,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import, unicode_literals
-import os
-from .base import *
+from __future__ import absolute_import, print_function, unicode_literals
 
-ALLOWED_HOSTS = ['*']
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = ''
-
-# Database
-# https://docs.djangoproject.com/en/1.11/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': '',
-        'HOST': '',
-        'USER': '',
-        'CONN_MAX_AGE': 600,
-    }
-}
-
-# Email
-
-EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
-
-SENDGRID_API_KEY = "xxx"
-
-SENDGRID_SANDBOX_MODE_IN_DEBUG = False
-
-SENDGRID_ECHO_TO_STDOUT = False
+class Redraw(object):
+    should_redraw = 1
+    dont_redraw = 2

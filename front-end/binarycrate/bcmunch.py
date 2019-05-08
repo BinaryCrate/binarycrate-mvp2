@@ -30,5 +30,5 @@ class BCMunch(Munch):
         #print('self[\'type\']=', self['type'])
 
         # TODO: Re-enable this check
-        #assert set(self._members)  == set(self.keys()) - {'id', 'type'} - \
-        #    set(self._optional_members)
+        assert set(self._members)  == set(self.keys()) - {'id', 'type'} - \
+            set(self._optional_members)

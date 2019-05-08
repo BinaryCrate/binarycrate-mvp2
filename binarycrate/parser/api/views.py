@@ -24,6 +24,7 @@ from rest_framework import status
 from redbaron import RedBaron
 from .serializers import MemberFunctionsSerializer, AddMemberFunctionSerializer
 from baron import GroupingError, UntreatedError, ParsingError
+from baron.tokenizer import UnknowItem
 from redbaron.nodes import ClassNode
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -39,6 +40,8 @@ def process_prog(prog_text):
     except GroupingError as ex:
         return None
     except UntreatedError as ex:
+        return None
+    except UnknowItem as ex:
         return None
     #classes = red.find_all("ClassNode")
     #assert len(classes) == 1, str(classes)

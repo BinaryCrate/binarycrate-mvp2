@@ -51,6 +51,16 @@ class SharedView(EditorView):
                  'href': '/accounts/signup/', 'target':'_blank'}, "Sign Up"),
             ]),
           ]),
+          li({'class': 'nav-item li-create-new',
+              'style': 'margin-left: 8px'}, [
+            form({'action': '#'}, [
+              #ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Share", "#shareProj"),
+              a({'class': "btn btn-default navbar-btn crt-btn",
+                 'href': get_current_hash(),
+                  'onclick': self.display_share_project_modal},
+                 "Share")
+            ]),
+          ])
         ]
 
     def on_about_click(self, e):

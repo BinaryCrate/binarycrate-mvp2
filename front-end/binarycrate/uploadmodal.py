@@ -226,6 +226,7 @@ class UploadModal(object):
     def on_submit_upload(self, e):
         def ajaxpost_result_handler(xmlhttp, response):
             self.query_images()
+            self.ownerview.query_images()
 
         e.preventDefault()
         file_upload_element = js.globals.document.getElementById('image-upload-form-control')
