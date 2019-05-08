@@ -614,6 +614,7 @@ class EditorView(BCChrome):
                 self.form_stack.append(form_classes[0](editorview=self))
                 self.mount_redraw()
                 Router.router.ResetHashChange()
+                #print('EditorView run_project setting force_redraw_all to false')
                 cavorite.force_redraw_all = False
             else:
                 #print('EditorView run_project Found  no usable class')
@@ -926,32 +927,7 @@ class EditorView(BCChrome):
                 ])
 
     def get_central_content(self):
-        """
-        return    c("div", {'class': "container-fluid code-area", 'style': 'padding-left: 1px; padding-top:1px height:100%;'}, [
-                    div({'class': 'row row-wrapper'}, [
-                      div({'class': "project-fnf col-ms-2"}, [
-                        div({'class': 'top-tree'}, [
-                          p({'style': 'display:inline'}, 'Files'),
-                        ] + self.get_new_file_folder_icons()),
-                        self.get_project_tree(),
-                      ]),
-                      article({'class': 'col-md-12 row', 'id': 'editor'}, [
-                        self.code_mirror,
-                        div({'class': 'row col-md-5 output-col'}, [
-                          #iframe({'id': 'preview', 'class': 'col-12 code-output'}),
-                          div({'id': 'preview', 'class': 'col-12 code-output', 'oncontextmenu': self.contextmenu_preview, 'style': 'padding-left: 0px', 'onmousedown': self.clear_selected_item, 'onmouseup': self.on_mouse_up}, self.get_selected_de_form_controls()),
-                          div({'id': 'console', 'class': 'console-editor col-12'}, [
-                            pre({'id': 'secondary-output', 'class': 'logMessage'}, [
-                              #span('//: '),
-                              #t('request sent'),
-                            ]),
-                          ]),
-                        ]),
-                      ]),
-                    ]),
-                  ] +
-                  ([style('.CodeMirror { background-color: darkgrey;}')] if self.get_code_mirror_read_only() else []))
-"""
+        #print("get_central_content called")
         global project
         return c("div",
                  {'class': "container-fluid code-area", 'style': 'padding-left: 1px; padding-top:1px height:100%;'}, [

@@ -291,6 +291,8 @@ class Form(object):
                 html_controls[form_item['name']] = control
                 ret.append(control)
         svg_list = list()
+        svg_width = self.form_width
+        svg_height = self.form_height
         if self.form_height > 0 and self.form_width > 0:
             svg_list.append(svg('rect', {'x': 0,
                          'y':0,
@@ -311,6 +313,8 @@ class Form(object):
                              'stroke': form_item['stroke'],
                              #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)", 'onmouseup': self.on_mouse_up, 'onmousedown': lambda e, form_item_id=form_item['id']: self.select_new_item(form_item_id, e), 'oncontextmenu': lambda e, form_item_id=form_item['id']: self.contextmenu_control(form_item_id, e)}))
                              })
+                svg_width = max(svg_width,  form_item['x'] + form_item['width'])
+                svg_height = max(svg_height,  form_item['y'] + form_item['height'])
             if form_item['type'] == 'circle':
                 control = svg('circle', {'cx': form_item['x'] + form_item['width'] / 2,
                              'cy':form_item['y'] + form_item['height'] / 2,
@@ -321,6 +325,8 @@ class Form(object):
                              'stroke': form_item['stroke'],
                              #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
                              })
+                svg_width = max(svg_width,  form_item['x'] + form_item['width'])
+                svg_height = max(svg_height,  form_item['y'] + form_item['height'])
             if form_item['type'] == 'ellipse':
                 control = svg('ellipse', {'cx': form_item['x'] + form_item['width'] / 2,
                              'cy':form_item['y'] + form_item['height'] / 2,
@@ -331,6 +337,8 @@ class Form(object):
                              'stroke': form_item['stroke'],
                              #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
                              })
+                svg_width = max(svg_width,  form_item['x'] + form_item['width'])
+                svg_height = max(svg_height,  form_item['y'] + form_item['height'])
             if form_item['type'] == 'line':
                 control = svg('line', {'x1': form_item['x1'],
                              'y1':form_item['y1'],
@@ -341,6 +349,8 @@ class Form(object):
                              'stroke': form_item['stroke'],
                              #'style':"fill:None;stroke-width:5;stroke:rgb(0,255,0)",
                              })
+                svg_width = max(svg_width,  form_item['x2'])
+                svg_height = max(svg_height,  form_item['y2'])
             if form_item['type'] == 'hexagon':
                 # Draw a hexagon
                 x1 = form_item['x'] + form_item['width'] / 2
@@ -360,18 +370,20 @@ class Form(object):
                              'fill': form_item['fill'],
                              'stroke-width':  form_item['stroke_width'],
                              'stroke': form_item['stroke']})
+                svg_width = max(svg_width,  form_item['x'] + form_item['width'])
+                svg_height = max(svg_height,  form_item['y'] + form_item['height'])
             if control is not None:
                 svg_list.append(control)
                 html_controls[form_item['name']] = control
 
-        if self.form_height == 0:
+        """if self.form_height == 0:
             svg_height = '100%'
         else:
             svg_height = self.form_height
         if self.form_width == 0:
             svg_width = '100%'
         else:
-            svg_width = self.form_width
+            svg_width = self.form_width"""
         ret.append(svg('svg', {'id': 'preview-svg', 'height': svg_height, 'width': svg_width}, svg_list))
         return ret
 
