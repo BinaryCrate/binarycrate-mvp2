@@ -692,6 +692,10 @@ class EditorView(BCChrome):
                         de['form_properties'] = {}
                     else:
                         de['form_properties'] = json.loads(de['form_properties'])
+
+                # Parse the file functions for the newly loaded project
+                self.query_file_functions()
+
                 self.mount_redraw()
                 Router.router.ResetHashChange()
 
@@ -859,11 +863,11 @@ class EditorView(BCChrome):
             #print('process_selected_function is_present=False selected_function=', selected_function)
             if selected_function['name'] == 'on_body_mousemove':
                 function_code = """def {}(self, x, y):
-    pass
+    return Redraw.dont_redraw
 """.format(selected_function['name'])
             elif selected_function['name'] == 'on_body_click':
                 function_code = """def {}(self):
-    pass
+    return Redraw.dont_redraw
 """.format(selected_function['name'])
             else:
                 function_code = """def {}(self, e):
