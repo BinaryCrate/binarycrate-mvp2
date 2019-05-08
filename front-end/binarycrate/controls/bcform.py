@@ -376,14 +376,10 @@ class Form(object):
                 svg_list.append(control)
                 html_controls[form_item['name']] = control
 
-        """if self.form_height == 0:
-            svg_height = '100%'
-        else:
+        if self.form_height != 0:
             svg_height = self.form_height
-        if self.form_width == 0:
-            svg_width = '100%'
-        else:
-            svg_width = self.form_width"""
+        if self.form_width != 0:
+            svg_width = self.form_width
         ret.append(svg('svg', {'id': 'preview-svg', 'height': svg_height, 'width': svg_width}, svg_list))
         return ret
 
