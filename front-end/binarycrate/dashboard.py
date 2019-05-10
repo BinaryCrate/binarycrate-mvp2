@@ -35,6 +35,7 @@ import traceback
 import sys
 from .urllib import urlencode
 from .licencemodal import LicenceModal
+from .createnewhelpermodal import CreateNewHelperModal
 
 
 projects = []
@@ -132,6 +133,8 @@ class DashboardView(BCChrome):
     def __init__(self):
         self.selected_project = None
         self.projects_loaded = False
+        self.new_project_popup_ever_displayed = False
+        self.create_new_helper = None
         super(DashboardView, self).__init__([
                           li({'class': 'nav-item li-create-new'}, [
                             form({'action': '#'}, [
@@ -158,6 +161,11 @@ class DashboardView(BCChrome):
         e.stopPropagation()
         e.preventDefault()
 
+    def close_create_new_helper_modal(self, e):
+        self.create_new_helper = False
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
 
     def get_project_name(self):
         return self.selected_project['name'] if self.selected_project is not None else 'No project'
@@ -181,8 +189,17 @@ class DashboardView(BCChrome):
             self.projects_loaded = True
             global projects
             new_projects = json.loads(str(xmlhttp.responseText))
+            if len(new_projects) == 0 and \
+               self.new_project_popup_ever_displayed == False:
+                # If there are no project display a modal to help the user add a new one
+                self.create_new_helper = CreateNewHelperModal(self)
+                self.new_project_popup_ever_displayed = True
+
+                self.mount_redraw()
+                Router.router.ResetHashChange()
             if projects != new_projects:
                 projects = new_projects
+
                 self.mount_redraw()
                 Router.router.ResetHashChange()
 
@@ -254,7 +271,8 @@ class DashboardView(BCChrome):
                           ]),
                         ]),
                       ], self.createNew_ok),
-                    ] + (self.licence_modal.get_modal_vnodes() if self.licence_modal else [])
+                    ] + (self.licence_modal.get_modal_vnodes() if self.licence_modal else []) \
+                     + (self.create_new_helper.get_modal_vnodes() if self.create_new_helper else [])
 
     def projects_api_ajax_post_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
