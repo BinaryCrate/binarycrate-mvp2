@@ -1,10 +1,13 @@
 from __future__ import unicode_literals, absolute_import, print_function
 from binarycrate.controls import Form
+from binarycrate.enums import Redraw
 
 class Aa(Form):
     file_location = __file__
     def button1_onclick(self, e):
          self.button1['x'] += 10
          self.image1['y'] -= 10
-        
-        
+    def on_body_click(self):
+        return Redraw.dont_redraw
+    def on_body_mousemove(self, x, y):
+        return Redraw.dont_redraw
