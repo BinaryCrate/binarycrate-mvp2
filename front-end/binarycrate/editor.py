@@ -2105,6 +2105,7 @@ class """ + class_name + """(Form):
 
     def upload_images(self, e):
         #print('upload images called')
+        self.save_project(e)
         self.upload_modal = UploadModal(self)
         self.mount_redraw()
         Router.router.ResetHashChange()
