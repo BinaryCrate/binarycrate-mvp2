@@ -3770,7 +3770,7 @@ class Travel(Form):
     file_location = __file__
 
     def __init__(self, *args, **kwargs):
-        super(self, Travel).__init__(*args, **kwargs)
+        super(Travel, self).__init__(*args, **kwargs)
 """
 
     def test_new_file_graphical_python_historygraph(self, monkeypatch):
@@ -3946,5 +3946,5 @@ class Travel(Form):
     file_location = __file__
 
     def __init__(self, *args, **kwargs):
-        super(self, Travel).__init__(*args, **kwargs)
+        super(Travel, self).__init__(*args, **kwargs)
 """

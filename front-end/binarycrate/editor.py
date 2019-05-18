@@ -2024,7 +2024,7 @@ class """ + class_name + """(Form):
     file_location = __file__
 
     def __init__(self, *args, **kwargs):
-        super(self, """ + class_name + """).__init__(*args, **kwargs)
+        super(""" + class_name + """, self).__init__(*args, **kwargs)
 """
         first_non_document_file = len([de for de in project['directory_entry'] if de['is_file'] and de['name'] != 'documents.py']) == 0
         new_de = {'id': str(uuid.uuid4()),
