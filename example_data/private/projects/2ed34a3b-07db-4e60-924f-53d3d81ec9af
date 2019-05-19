@@ -3,70 +3,43 @@ from binarycrate.controls import Form
 from binarycrate.enums import Redraw
 
 MISSILE_SPEED = 10
-MOVEMENT_DELAY = 4
+MISSILE_RADIUS = 3
 
 class Main(Form):
     file_location = __file__
 
-    class Missile(object):
-        def __init__(self, x, y, screen_object):
-            self.x = x
-            self.y = y
-            self.screen_object = screen_object
-            
-    class UFOPosition(object):
-        def __init__(self, x, y, form):
-            self.x = x
-            self.y = y
-            self.wait_until = form.tick_count + MOVEMENT_DELAY
-
     def __init__(self, *args, **kwargs):
         super(Main, self).__init__(*args, **kwargs)
         self.missiles = []
-        self.tick_count = 0
-        self.ufo_pos_queue = []
         self.set_interval(self.interval_10, 10)
 
     def on_body_mousemove(self, x, y):
-        self.ufo_pos_queue.append(Main.UFOPosition(
-            x - self.imgufo.width / 2,
-            y - self.imgufo.height / 2,
-            self))
-        return Redraw.dont_redraw
+        self.imgufo.x = x - self.imgufo.width / 2
+        self.imgufo.y = y - self.imgufo.height / 2
+        return Redraw.should_redraw
     
     def on_body_click(self):
         from binarycrate.controls.bcform import Circle
         x = self.imgufo.x + self.imgufo.width / 2
         y = self.imgufo.y
-        screen_object = Circle({'width': 6,
-             'height': 6,
-             'x': x - 3,
-             'y': y - 3,
+        screen_object = Circle({'width': MISSILE_RADIUS*2,
+             'height': MISSILE_RADIUS*2,
+             'x': x - MISSILE_RADIUS,
+             'y': y - MISSILE_RADIUS,
              'name': 'circle',
              'stroke_width': 1,
              'stroke': 'rgb(255,0,0)',
              'fill': 'rgb(255,0,0)',
              'visible': True})
 
-        m = Main.Missile(x, y, screen_object)
-        
-        self.missiles.append(m)
+        self.missiles.append(screen_object)
         self.add_control(screen_object)
     
     def interval_10(self):
         for m in self.missiles:
-            if m.y < MISSILE_SPEED:
+            if (m.y + MISSILE_RADIUS) < MISSILE_SPEED:
                 self.missiles.remove(m)
-                self.remove_dynamic_control(m.screen_object)
+                self.remove_dynamic_control(m)
             else:
                 m.y -= MISSILE_SPEED
-                m.screen_object.y = m.y - 3
         
-        if len(self.ufo_pos_queue) > 0:
-            next_pos = self.ufo_pos_queue[0]
-            if next_pos.wait_until < self.tick_count:
-                self.imgufo.x = next_pos.x
-                self.imgufo.y = next_pos.y
-                self.ufo_pos_queue = self.ufo_pos_queue[1:]
-            
-        self.tick_count += 1

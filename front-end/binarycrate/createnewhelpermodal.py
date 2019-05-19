@@ -36,7 +36,7 @@ class CreateNewHelperModal(object):
                         div({'class': 'upload-files-modal-content'}, [
                           div({'style': {'width': '100%', 'height': 'calc(100% - 40px - 10px)',
                                          'padding': '20px', 'box-shadow': 'inset 0 0 10px darkgrey'}}, [
-                            p('It doesn''t lok like you have any project right now. You can create a new one by clicking the'),
+                            p('It doesn''t look like you have any project right now. You can create a new one by clicking the'),
                             #li({'class': 'nav-item li-create-new'}, [
                             #  form({'action': '#'}, [
                                 a({'class': "btn btn-default navbar-btn crt-btn", 'href': get_current_hash()}, "Create New"),
