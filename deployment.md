@@ -21,6 +21,12 @@ Check on changes in on the develop branch.
 git checkout master
 ```
 
+Ensure your local copy of master is up to date with the server
+
+```
+git pull
+```
+
 Now the are on the master branch. First we want to update from the develop branch.
 
 ```
@@ -112,13 +118,14 @@ sudo git checkout Build000004
 
 sudo git submodule sync
 
-sudo git submodule update
+sudo git submodule update --init
 ```
 
 We need to go into the pypyjs directory and undo any updates caused by previous preloads.
 ```
 cd pypyjs-release/pypyjs-release/
 sudo git checkout -- .
+sudo git clean -f -d
 cd /srv/binarycrate-mvp2
 ```
 
@@ -148,22 +155,31 @@ sudo ./binarycrate/bin/fab development.create_version_file
 We now load the new frontend code into the pypysjs-release area.
 
 ```
+cd /srv/binarycrate-mvp2
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ cavorite/cavorite/
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ front-end/binarycrate/
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ historygraph/historygraph/
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ pypyjs_modules/munch/munch/
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ pypyjs_modules/six/six.py
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py add pypyjs-release/pypyjs-release/lib/modules/ pypyjs_modules/beautifulsoup4-4.6.0/bs4/
 ```
 
 Next we tell pypyjs to preload all of our modules - this greatly improves the load time
 
 ```
+cd /srv/binarycrate-mvp2
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ cavorite
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ binarycrate
 sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ historygraph
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ munch
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ six
+sudo python pypyjs-release/pypyjs-release/tools/module_bundler.py preload pypyjs-release/pypyjs-release/lib/modules/ bs4
 ```
 
-We now update the django static. Note this is different to the above step in that we put all pypyjs files including standard modules and the pypyjs interpreter
+We now update the django static files. Note this is different to the above step in that we put all pypyjs files including standard modules and the pypyjs interpreter
 in the correct Django static area.
 ```
+cd /srv/binarycrate-mvp2
 sudo ./binarycrate/bin/python binarycrate/manage.py collectstatic --noinput
 ```
 
@@ -182,9 +198,9 @@ Turn the webserver back on
 sudo service nginx start
 ```
 
-We are now deployed, you can use the method above to check the build number.
+We are now deployed, you can use the method above to check the build number on the production server.
 
-We is useful to update the ubuntu requirements on the erver as frequently as possible. Whenever we are logged into it that is a good time.
+We is useful to update the ubuntu requirements on the server as frequently as possible. Whenever we are logged into it that is a good time.
 
 ```
 sudo apt-get update

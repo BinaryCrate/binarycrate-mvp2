@@ -1,5 +1,21 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals, print_function
+# BinaryCrate -  BinaryCrate an in browser python IDE. Design to make learning coding easy.
+# Copyright (C) 2018 BinaryCrate Pty Ltd
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from __future__ import absolute_import, print_function, unicode_literals
 from binarycrate import historygraphfrontend
 import uuid
 from historygraph import DocumentCollection, Document
@@ -32,9 +48,11 @@ class TestHistoryGraph(object):
         assert historygraphfrontend.documentcollection.id == project_id
         historygraphfrontend.documentcollection.register(Score)
 
-        js.globals.cavorite_ajaxGet = Mock()
+        js.globals.cavorite_ajaxPost = Mock()
         historygraphfrontend.download_document_collection()
-        js.globals.cavorite_ajaxGet.assert_called_with('/api/historygraph/' + str(project_id) + '/', str(dummy_uuid()))
+        js.globals.cavorite_ajaxPost.assert_called_with(
+            '/api/historygraph/' + str(project_id) + '/list/',
+            str(dummy_uuid()), {u'hashes': '[]'})
         assert historygraphfrontend.documentcollection_download_ready == False
 
         response = {'history': [], 'immutableobjects': []}
@@ -56,6 +74,8 @@ class TestHistoryGraph(object):
         #js.globals.cavorite_ajaxPost.assert_called_with('/api/historygraph/' + str(project_id) + '/', str(dummy_uuid()))
         #js.globals.cavorite_ajaxPost.assert_called()
         assert js.globals.cavorite_ajaxPost.call_count == 1
+        assert js.globals.cavorite_ajaxPost.call_args[0][0] == \
+            '/api/historygraph/' + str(project_id) + '/write/'
         dc_edges = js.globals.cavorite_ajaxPost.call_args[0][2]
         assert len(dc_edges) == 2
         assert len(json.loads(dc_edges['immutableobjects'])) == 0
@@ -63,12 +83,16 @@ class TestHistoryGraph(object):
 
         historygraphfrontend.initialise_document_collection(project_id, None)
         historygraphfrontend.documentcollection.register(Score)
-        js.globals.cavorite_ajaxGet = Mock()
+        js.globals.cavorite_ajaxPost = Mock()
         historygraphfrontend.download_document_collection()
-        js.globals.cavorite_ajaxGet.assert_called_with('/api/historygraph/' + str(project_id) + '/', str(dummy_uuid()))
-        dc_edges2 = {'history': json.loads(dc_edges['history']), 'immutableobjects': json.loads(dc_edges['immutableobjects'])}
-        historygraphfrontend.historygraph_ajaxget_handler(Mock(status=200, responseText=json.dumps(dc_edges2)),
-                                              dc_edges2)
+        js.globals.cavorite_ajaxPost.assert_called_with(
+            '/api/historygraph/' + str(project_id) + '/list/',
+            str(dummy_uuid()), {u'hashes': '[]'})
+        dc_edges2 = {'history': json.loads(dc_edges['history']),
+                     'immutableobjects':
+                     json.loads(dc_edges['immutableobjects'])}
+        historygraphfrontend.historygraph_ajaxget_handler(
+            Mock(status=200, responseText=json.dumps(dc_edges2)), dc_edges2)
 
         scores = historygraphfrontend.documentcollection.get_by_class(Score)
 
@@ -77,9 +101,18 @@ class TestHistoryGraph(object):
         assert scores[0].current_count.get() == 1
 
         # Test that reloading when we already have edges just works
-        js.globals.cavorite_ajaxGet = Mock()
+        js.globals.cavorite_ajaxPost = Mock()
         historygraphfrontend.download_document_collection()
-        js.globals.cavorite_ajaxGet.assert_called_with('/api/historygraph/' + str(project_id) + '/', str(dummy_uuid()))
+        js.globals.cavorite_ajaxPost.assert_called_once()
+        assert js.globals.cavorite_ajaxPost.call_args[0][0] == \
+            '/api/historygraph/' + str(project_id) + '/list/'
+        assert js.globals.cavorite_ajaxPost.call_args[0][1] == str(dummy_uuid())
+        payload = js.globals.cavorite_ajaxPost.call_args[0][2]
+        assert len(payload) == 1
+        hashes = json.loads(payload['hashes'])
+        assert len(hashes) == 1
+        assert hashes == [{'documentid':scores[0].id,
+                             'clockhash': scores[0]._clockhash}]
 
         historygraphfrontend.historygraph_ajaxget_handler(Mock(status=200, responseText=json.dumps(dc_edges2)),
                                               dc_edges2)
@@ -89,6 +122,3 @@ class TestHistoryGraph(object):
         assert len(scores) == 1
         assert scores[0].id == score.id
         assert scores[0].current_count.get() == 1
-
-
-

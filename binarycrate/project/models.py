@@ -1,5 +1,21 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals, print_function
+# BinaryCrate -  BinaryCrate an in browser python IDE. Design to make learning coding easy.
+# Copyright (C) 2018 BinaryCrate Pty Ltd
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from __future__ import absolute_import, print_function, unicode_literals
 
 from django.db import models
 import uuid
@@ -30,12 +46,21 @@ class DirectoryEntry(MPTTModel):
     def form_items(self, value):
         self._form_items = value
 
+    @property
+    def form_properties(self):
+        return self._form_properties
+
+    @form_properties.setter
+    def form_properties(self, value):
+        self._form_properties = value
+
     class MPTTMeta:
         order_insertion_by = ['name']
 
     def __init__(self, *args, **kwargs):
         self._content = ''
         self._form_items = '[]'
+        self._form_properties = '{}'
         super(DirectoryEntry, self).__init__(*args, **kwargs)
 
 class ProjectTypes(ChoiceEnum):
@@ -54,6 +79,10 @@ class Project(models.Model):
     def get_directory_entries(self):
         return self.root_folder.get_descendants(include_self=True)
 
+    def create_files(self):
+        DirectoryEntry.objects.create(parent=self.root_folder, name='index.html', is_file=True)
+        DirectoryEntry.objects.create(parent=self.root_folder, name='styles.css', is_file=True)
+        DirectoryEntry.objects.create(parent=self.root_folder, name='scripts.js', is_file=True)
 
 class Image(models.Model):
     # Represents an image uploaded by a user

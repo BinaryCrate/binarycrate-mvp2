@@ -1,3 +1,21 @@
+# -*- coding: utf-8 -*-
+# BinaryCrate -  BinaryCrate an in browser python IDE. Design to make learning coding easy.
+# Copyright (C) 2018 BinaryCrate Pty Ltd
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from __future__ import absolute_import, print_function, unicode_literals
 from fabric.api import abort, lcd, local, task, warn_only
 from fabric.colors import green, red, yellow
 from sys import platform
@@ -30,7 +48,11 @@ def shell():
 
 @task
 def run(**kwargs):
+    print(yellow('Updating version file...'))
     create_version_file()
+    print(yellow('Reseting pypyjs environment...'))
+    with lcd('./pypyjs-release/pypyjs-release'):
+        local('git checkout -- .')#, capture=True)
     command = kwargs.get('command', 'check')
     print(yellow('Running docker process...'))
     with lcd('.'):
@@ -58,6 +80,11 @@ def run(**kwargs):
 
 @task
 def migrate():
+    print(yellow('Updating version file...'))
+    create_version_file()
+    print(yellow('Reseting pypyjs environment...'))
+    with lcd('./pypyjs-release/pypyjs-release'):
+        local('git checkout -- .')#, capture=True)
     print(yellow('Running docker process...'))
     with lcd('.'):
         local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --publish=8000:8000 "' + project_name + '" migrate')
@@ -70,7 +97,9 @@ def test(testname=None):
     else:
         testcommand = ""
     with lcd('.'):
-        local('docker run --tty --interactive --volume "' + local_pwd + '":/opt/project --entrypoint="pytest" "' + project_name + '"' + testcommand)
+        local('docker run --tty --interactive '
+              '--volume "' + local_pwd + '":/opt/project '
+              '--entrypoint="/opt/project/run-backend-tests" "' + project_name + '"' + testcommand)
 
 @task
 def frontend_test(testname=None):
@@ -144,4 +173,3 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 VERSION_HASH = '{}'
 '''.format(output.stdout))
-        print('output=', type(output),',',output.stdout)

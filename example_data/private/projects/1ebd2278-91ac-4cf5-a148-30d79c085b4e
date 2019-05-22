@@ -1,0 +1,63 @@
+from __future__ import unicode_literals, absolute_import, print_function
+from binarycrate.controls import Form
+import math
+from binarycrate.enums import Redraw
+
+UP = 0
+DOWN = 1
+
+class Main(Form):
+   file_location = __file__
+   
+   def __init__(self, *args, **kwargs):
+       super(Main, self).__init__(*args, **kwargs)
+       self.charge = 0
+       self.set_interval(self.interval_10, 10)
+       self.last_x = None
+       self.last_y = None
+       self.direction = UP
+       self.position = 0
+       
+   def interval_10(self):
+       if self.charge > 0:
+           if self.direction == UP:
+               self.position += 5
+               if self.position > 50:
+                   self.position = 50
+                   self.direction = DOWN
+           else:
+               self.position -= 5
+               if self.position < 0:
+                   self.position = 0
+                   self.direction = UP
+       else:
+           self.direction = UP
+           self.position -= 3
+           if self.position < 0:
+               self.position = 0;
+       self.charge -= 5
+       if self.charge < 0:
+           self.charge = 0
+       self.draw()
+       
+   def draw(self):
+       #print('draw self.charge=', self.charge)
+       self.legright.y2 = self.legright.y1 + (50 - self.position)
+       self.legleft.y1 = self.legleft.y2 + (50 - self.position)
+       self.armright.y2 = self.armright.y1 + self.position - 25
+       self.armleft.y1 = self.armleft.y2 + self.position - 25
+
+   def on_body_mousemove(self, x, y):
+       if self.last_x is None:
+           self.last_x = x
+           self.last_y = y
+           return
+       #distance = math.sqrt((self.last_x - x)**2 + (self.last_y - y)**2)
+       #self.charge += int(distance / 4)
+       distance = abs(self.last_x - x) + abs(self.last_y - y)
+       self.charge += int(distance / 4)
+       self.last_x = x
+       self.last_y = y
+    
+       return Redraw.dont_redraw
+    

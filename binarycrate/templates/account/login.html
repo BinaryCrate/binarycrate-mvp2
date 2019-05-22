@@ -48,16 +48,20 @@
             <div class="card-body">
                 <form method="POST" action="{% url 'account_login' %}">
                     {% csrf_token %}
+                    {% include "account/_login_form_error.html" with error_list=form.non_field_errors %}
                     <div class="form-group"><label for="exampleInputEmail1">Email</label><input name='login' class="form-control" id="exampleInputEmail1" type="email" aria-describedby="emailHelp" placeholder="Enter email"></div>
+                    {% include "account/_login_form_error.html" with error_list=form.login.errors %}
                     <div class="form-group"><label for="exampleInputPassword1">Password</label><input name='password' class="form-control" id="exampleInputPassword1" type="password" placeholder="Password"></div>
+                    {% include "account/_login_form_error.html" with error_list=form.password.errors %}
                     <div class="form-group">
                         <div class="form-check"><label class="id_remember2">Remember Me</label><input name='remember' id='id_remember2' class="form-check-input" type="checkbox"></div>
-                    </div><button class="btn btn-primary btn-block" type="submit">Login</button>{#<a class="btn btn-primary btn-block" href="index.html">Login</a>#}
+                    </div><button class="btn btn-primary btn-block" type="submit">Login</button>
                 {% if redirect_field_value %}
                 <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
                 {% endif %}
                 </form>
                 <div class="text-center"><a class="d-block small mt-3" href="/accounts/signup/">Sign Up</a><a class="d-block small" href="{% url 'account_reset_password' %}">Forgot Password?</a></div>
+                {% comment %}
                 <div class="form-group">
                   <div class="form-group text-center">
                     <div class="form-group social__signup"><div class="strike"><span>or</span></div></div>
@@ -66,6 +70,7 @@
                     <a class="btn col-sm-2 my-1 mx-1 social social-media-login-link" href="/accounts/github/login/?process=login&next=%2F" tabindex="3" id="github" data-toggle="tooltip" data-placement="top" title="Login with GitHub"><i class="fa fa-github"></i><span class="d-inline-block d-sm-none">GitHub</span></a><small class="form-text text-muted" id="emailHelp">We'll not post without your permission.</small>
                   </div>
                 </div>
+                {% endcomment %}
             </div>
         </div>
     </div>

@@ -1,4 +1,21 @@
-from __future__ import absolute_import, print_function
+# -*- coding: utf-8 -*-
+# BinaryCrate -  BinaryCrate an in browser python IDE. Design to make learning coding easy.
+# Copyright (C) 2018 BinaryCrate Pty Ltd
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from __future__ import absolute_import, print_function, unicode_literals
 from cavorite import c, t, Router, callbacks, timeouts, get_current_hash
 from cavorite.HTML import *
 try:
@@ -11,11 +28,12 @@ import uuid
 from cavorite.bootstrap.modals import ModalTrigger, Modal
 
 
-def navitem(title, icon_class, href):
-    return li({'class':"nav-item", 'data-toggle':"tooltip", 'data-placement':"right", 'title':title}, [
-             a({'class':"nav-link", 'href': href, 'style': {'min-height': '56px'}}, children=[
-               i(cssClass=["fa", "fa-fw"] + [icon_class]),
-               span({'class':"nav-link-text"}, title),
+def navitem(title, icon_class, href, onclick=None):
+    return li({'class':"nav-item", 'data-toggle':"tooltip", 'data-placement':"right", 'title':title, 'onclick': onclick}, [
+             a({'class':"nav-link", 'href': href, 'style': {'min-height': '56px'}, 'onclick': onclick}, children=[
+             #a({'class':"nav-link", 'style': {'min-height': '56px'}, 'onclick': onclick}, children=[
+               i({'class': ["fa", "fa-fw"] + [icon_class], 'onclick': onclick}),
+               span({'class':"nav-link-text", 'onclick': onclick}, title),
              ]),
            ])
 
@@ -45,7 +63,7 @@ class BCChrome(div):
         jquery = js.globals['$']
         jquery(".navbar-sidenav .nav-link-collapse").addClass("collapsed");
         jquery(".navbar-sidenav .sidenav-second-level, .navbar-sidenav .sidenav-third-level").removeClass("show");
-        e.preventDefault()    
+        e.preventDefault()
         return False
 
     def __init__(self, top_navbar_items, central_content, modals):
@@ -54,6 +72,7 @@ class BCChrome(div):
         self.central_content = central_content
         self.modals = modals
         self.context_menu = None
+        self.licence_modal = None
         super(BCChrome, self).__init__()
 
     def get_top_navbar_items(self):
@@ -63,33 +82,26 @@ class BCChrome(div):
         return self.central_content
 
     def get_modals(self):
-        return self.modals
-
-    def get_context_menu(self):
-        return None
+        return self.modals + (self.licence_modal.get_modal_vnodes() if self.licence_modal else [])
 
     def get_context_menu_list(self):
-        context_menu = self.get_context_menu()
-        if context_menu is None:
-            return []
-        else:
-            return [context_menu]
+        return []
 
     def get_sidebar_nav_items(self):
         return [
                  navitem('Dashboard', 'fa-dashboard', '#!'),
-                 navitem('Editor', 'fa-code', '#!editor'),
-                 navitem('Classroom', 'fa-laptop', '#!classroom'),
-                 navsubmenu('Settings', 'exampleAccordion', 'collapseComponents', [
-                   navsubmenuitem('Navbar', '#!navbar'),
-                   navsubmenuitem('Cards', '#!cards'),
-                 ])
+                 #navitem('Editor', 'fa-code', '#!editor'),
+                 #navitem('Classroom', 'fa-laptop', '#!classroom'),
+                 #navsubmenu('Settings', 'exampleAccordion', 'collapseComponents', [
+                 #  navsubmenuitem('Navbar', '#!navbar'),
+                 #  navsubmenuitem('Cards', '#!cards'),
+                 #])
                ]
 
     def get_logout_link(self):
         #TODO: It makes no logical sense for this function to be seperate from get_sidebar_nav_items
         # Find a way to roll them together
-        return [           
+        return [
                  ul({'class': 'navbar-nav ml-auto'}, [
                    li({'class': 'nav-item'}, [
                      ModalTrigger({'class':"nav-link"}, [
@@ -103,8 +115,14 @@ class BCChrome(div):
     def logout_clicked(self, e, form_values):
         js.globals.window.location.href = '/accounts/logout'
 
+    def close_licence_modal(self, e):
+        self.licence_modal = False
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
+
     def get_children(self):
-        return [ 
+        return [
                 nav({'class': "navbar navbar-expand-lg navbar-dark bg-dark fixed-top", 'id': 'mainNav'}, [
                   a({'class': "nav-link", 'id':"sidenavToggler", 'style':"padding: 0px 10px 0px 0px; color:white;"}, [
                     i({'class': "fa fa-fw fa-bars", "onclick": self.collapse_menu})
@@ -122,15 +140,7 @@ class BCChrome(div):
                   ] + self.get_logout_link()),
                 ]),
                 div({'class': "content-wrapper", 'style': {'padding-top': '1px'}}, [self.get_central_content()]),
-                footer({'class': "sticky-footer"}, [
-                  div({'class':"container"}, [
-                    div({'class':"text-center"}, [
-                      small("Copyright (C) Binary Crate 2018"),
-                    ]),
-                  ]),
-                ]),
                 Modal("logoutModal", "Logout", [
                   div("Select \"Logout\" below if you are ready to end your current session."),
                 ], self.logout_clicked),
               ] + self.get_modals() + self.get_context_menu_list()
-

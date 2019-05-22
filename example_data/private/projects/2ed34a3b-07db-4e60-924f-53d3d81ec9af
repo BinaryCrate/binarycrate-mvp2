@@ -1,0 +1,45 @@
+from __future__ import unicode_literals, absolute_import, print_function
+from binarycrate.controls import Form
+from binarycrate.enums import Redraw
+
+MISSILE_SPEED = 10
+MISSILE_RADIUS = 3
+
+class Main(Form):
+    file_location = __file__
+
+    def __init__(self, *args, **kwargs):
+        super(Main, self).__init__(*args, **kwargs)
+        self.missiles = []
+        self.set_interval(self.interval_10, 10)
+
+    def on_body_mousemove(self, x, y):
+        self.imgufo.x = x - self.imgufo.width / 2
+        self.imgufo.y = y - self.imgufo.height / 2
+        return Redraw.should_redraw
+    
+    def on_body_click(self):
+        from binarycrate.controls.bcform import Circle
+        x = self.imgufo.x + self.imgufo.width / 2
+        y = self.imgufo.y
+        screen_object = Circle({'width': MISSILE_RADIUS*2,
+             'height': MISSILE_RADIUS*2,
+             'x': x - MISSILE_RADIUS,
+             'y': y - MISSILE_RADIUS,
+             'name': 'circle',
+             'stroke_width': 1,
+             'stroke': 'rgb(255,0,0)',
+             'fill': 'rgb(255,0,0)',
+             'visible': True})
+
+        self.missiles.append(screen_object)
+        self.add_control(screen_object)
+    
+    def interval_10(self):
+        for m in self.missiles:
+            if (m.y + MISSILE_RADIUS) < MISSILE_SPEED:
+                self.missiles.remove(m)
+                self.remove_dynamic_control(m)
+            else:
+                m.y -= MISSILE_SPEED
+        

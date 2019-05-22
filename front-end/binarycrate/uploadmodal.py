@@ -1,4 +1,21 @@
-from __future__ import unicode_literals, absolute_import, print_function
+# -*- coding: utf-8 -*-
+# BinaryCrate -  BinaryCrate an in browser python IDE. Design to make learning coding easy.
+# Copyright (C) 2018 BinaryCrate Pty Ltd
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from __future__ import absolute_import, print_function, unicode_literals
 from cavorite.HTML import *
 from cavorite import c, t, Router, timeouts, get_current_hash
 try:
@@ -10,39 +27,9 @@ import json
 import traceback
 import sys
 import uuid
+from binarycrate.controls import ContextMenu
 
-
-class ContextMenu2(div):
-    # An improved context menu which can hopefully take care of collapsing itself
-    def __init__(self, owner, posx, posy, menu_items, *args, **kwargs):
-        self.owner = owner
-        self.menu_items = menu_items
-        self.posx = posx
-        self.posy = posy
-        super(ContextMenu2, self).__init__({'onclick': self.owner.close_context_menu,
-                                           'style': {'position': 'fixed',
-                                                     'left': '0',
-                                                     'top': '0',
-                                                     'height': '100%',
-                                                     'width': '100%',
-                                                     'background-color': 'rgba(0, 0, 0, 0)',
-                                                     'padding': '40px',
-                                                     'z-index':'10001'}}, *args, **kwargs)
-
-    def get_children(self):
-        menu_items = [
-                                li({'class': "context-menu__item"}, [
-                                  a({'href': get_current_hash(), 'class': "context-menu__link", 'onclick': mi[1]}, [
-                                    #i({'class': 'fa fa-eye'}),
-                                    t(mi[0]),
-                                  ]),
-                                ]) for mi in self.menu_items]
-
-        return [
-                 nav({'class': "context-menu", 'style': 'left: {}px; top:{}px'.format(self.posx, self.posy)}, [
-                   ul({'class': 'context-menu__items'}, menu_items),
-                 ])
-               ]
+#TODO: There appear to be no unit tests for anything in this file. Please make them
 
 
 class ConfirmRenamePopup(div):
@@ -102,8 +89,8 @@ class ConfirmRenamePopup(div):
               ]),
             ]),
           ]
-          
-        
+
+
 
 class ConfirmDeletePopup(div):
     # This pops up a deletion confirmation dialog over this popup to confirm this
@@ -146,8 +133,8 @@ class ConfirmDeletePopup(div):
               ]),
             ]),
           ]
-          
-        
+
+
 
 class UploadedImage(div):
     def __init__(self, owner, image):
@@ -155,24 +142,12 @@ class UploadedImage(div):
         self.context_menu = None
         self.owner = owner
         super(UploadedImage, self).__init__({'oncontextmenu': self.popup_contextmenu,
-                                             'style': {'width':'165px', 
+                                             'style': {'width':'165px',
                                                        'height': '150px',
                                                        #'border': '1px solid red'
                                                        'overflow': 'hidden',
                                                        'display': 'inline-block',
                                                        }})
-
-    def xy_from_e(self, e):
-        #TODO: Shared code put in a library
-        if e.pageX or e.pageY:
-            posx = e.pageX
-            posy = e.pageY
-        elif e.clientX or e.clientY:
-            posx = e.clientX + js.globals.document.body.scrollLeft + \
-                               js.globals.document.documentElement.scrollLeft
-            posy = e.clientY + js.globals.document.body.scrollTop + \
-                               js.globals.document.documentElement.scrollTop
-        return posx, posy
 
     def rename_image(self, e):
         self.owner.popup = ConfirmRenamePopup(self.owner, self.image)
@@ -195,9 +170,9 @@ class UploadedImage(div):
         self.owner.popup = ConfirmDeletePopup(self.owner, self.image)
 
     def popup_contextmenu(self, e):
-        posx, posy = self.xy_from_e(e)
-        self.owner.ownerview.context_menu = ContextMenu2(self, posx, posy, (
-                                        ('Rename Image', self.rename_image), 
+        posx, posy = ContextMenu.xy_from_e(e)
+        self.owner.ownerview.context_menu = ContextMenu(self, posx, posy, (
+                                        ('Rename Image', self.rename_image),
                                         ('Delete Image', self.delete_image),
                                         ))
         self.owner.ownerview.mount_redraw()
@@ -209,7 +184,7 @@ class UploadedImage(div):
         self.owner.ownerview.context_menu = None
         self.owner.ownerview.mount_redraw()
         Router.router.ResetHashChange()
-                                           
+
     def get_children(self):
         return [
                  img({'src': self.image['image_url'],
@@ -218,7 +193,7 @@ class UploadedImage(div):
                                 'height': '95px',
                                 'margin': '10px',
                                 }
-                      }), 
+                      }),
                  p({'oncontextmenu': self.popup_contextmenu,
                     'style': {'font-size': '12px',
                               'margin': '4px'
@@ -242,7 +217,7 @@ class UploadModal(object):
             Router.router.ResetHashChange()
 
     def get_images_for_display(self):
-        return [UploadedImage(self, image) for image in self.images]      
+        return [UploadedImage(self, image) for image in self.images]
 
     def query_images(self):
         ajaxget('/api/projects/image-list/' + self.ownerview.get_project()['id'],
@@ -251,6 +226,7 @@ class UploadModal(object):
     def on_submit_upload(self, e):
         def ajaxpost_result_handler(xmlhttp, response):
             self.query_images()
+            self.ownerview.query_images()
 
         e.preventDefault()
         file_upload_element = js.globals.document.getElementById('image-upload-form-control')
@@ -293,5 +269,3 @@ class UploadModal(object):
         self.context_menu = None
         self.ownerview.mount_redraw()
         Router.router.ResetHashChange()
-
-

@@ -1,4 +1,21 @@
-from __future__ import absolute_import, print_function
+# -*- coding: utf-8 -*-
+# BinaryCrate -  BinaryCrate an in browser python IDE. Design to make learning coding easy.
+# Copyright (C) 2018 BinaryCrate Pty Ltd
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from __future__ import absolute_import, print_function, unicode_literals
 import cavorite
 from cavorite import c, t, Router, get_current_hash
 from cavorite.HTML import *
@@ -16,6 +33,9 @@ import json
 from . import editor
 import traceback
 import sys
+from .urllib import urlencode
+from .licencemodal import LicenceModal
+from .createnewhelpermodal import CreateNewHelperModal
 
 
 projects = []
@@ -110,21 +130,76 @@ class Project(div):
         return ret
 
 class DashboardView(BCChrome):
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         self.selected_project = None
         self.projects_loaded = False
-        super(DashboardView, self).__init__(*args, **kwargs)
+        self.new_project_popup_ever_displayed = False
+        self.create_new_helper = None
+        super(DashboardView, self).__init__([
+                          li({'class': 'nav-item li-create-new'}, [
+                            form({'action': '#'}, [
+                              ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Create New", "#createNew"),
+                            ]),
+                          ]),
+                          li({'class': 'nav-item li-create-new',
+                              'style': 'margin-left: 8px'}, [
+                            form({'action': '#'}, [
+                              a({'class': "btn btn-default navbar-btn crt-btn",
+                                 'href': get_current_hash(),
+                                 'onclick': self.on_about_click}, "About"),
+                            ]),
+                          ]),
+                        ],
+                        None,
+                        None)
+
+    def on_about_click(self, e):
+        #print('on_about_click called')
+        self.licence_modal = LicenceModal(self)
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+        e.stopPropagation()
+        e.preventDefault()
+
+    def close_create_new_helper_modal(self, e):
+        self.create_new_helper = False
+        self.mount_redraw()
+        Router.router.ResetHashChange()
+
 
     def get_project_name(self):
         return self.selected_project['name'] if self.selected_project is not None else 'No project'
+
+    def get_share_url(self):
+        return str(js.globals.window.location.origin) + "/share/" + \
+            self.selected_project.get('id', '') + "/" \
+            if self.selected_project is not None else 'No project'
+
+    def get_facebook_iframe_src(self):
+        return  'https://www.facebook.com/plugins/share_button.php?' + \
+                              urlencode({'href': self.get_share_url(),
+                                         'layout':'button',
+                                         'size':'small',
+                                         'mobile_iframe':'true',
+                                         'width':'59',
+                                         'height':'20'})  + "&appId"
 
     def projects_api_ajax_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
             self.projects_loaded = True
             global projects
             new_projects = json.loads(str(xmlhttp.responseText))
+            if len(new_projects) == 0 and \
+               self.new_project_popup_ever_displayed == False:
+                # If there are no project display a modal to help the user add a new one
+                self.create_new_helper = CreateNewHelperModal(self)
+                self.new_project_popup_ever_displayed = True
+
+                self.mount_redraw()
+                Router.router.ResetHashChange()
             if projects != new_projects:
                 projects = new_projects
+
                 self.mount_redraw()
                 Router.router.ResetHashChange()
 
@@ -163,13 +238,18 @@ class DashboardView(BCChrome):
                         form([
                           div({'class': 'form-group'}, [
                             label({'class':"col-form-label", 'for':"formGroupExampleInput"}, 'Title'),
-                            html_input({'type': "text", 'class':"form-control", 'id':"formGroupExampleInput", 'placeholder':"http://bc.com/o82Ssdms/"}),
+                            html_input({'type': "text", 'class':"form-control", 'id':"formGroupExampleInput", 'placeholder':self.get_share_url}),
                           ]),
                           div({'class': 'form-group'}, [
-                            label({'for':"exampleFormControlTextarea1"}, 'Share On:'),
-                            i({'class': 'fa fa-facebook', 'aria-hidden': 'true'}),
-                            i({'class': 'fa fa-twitter', 'aria-hidden': 'true'}),
-                            i({'class': 'fa fa-envelope-o', 'aria-hidden': 'true'}),
+                            p('Share On:'),
+                            iframe({'src':self.get_facebook_iframe_src,
+                                    'width':"59",
+                                    'height':"20",
+                                    'style':"border:none;overflow:hidden",
+                                    'scrolling':"no",
+                                    'frameborder':"0",
+                                    'allowTransparency':"true",
+                                    'allow':"encrypted-media"}),
                           ]),
                         ]),
                       ], None),
@@ -191,11 +271,13 @@ class DashboardView(BCChrome):
                           ]),
                         ]),
                       ], self.createNew_ok),
-                    ]
+                    ] + (self.licence_modal.get_modal_vnodes() if self.licence_modal else []) \
+                     + (self.create_new_helper.get_modal_vnodes() if self.create_new_helper else [])
 
     def projects_api_ajax_post_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
-            self.query_projects()
+            new_project = json.loads(str(xmlhttp.responseText))
+            js.globals.document.location = '/#!editor/' + new_project['id']
 
     def projects_api_ajax_put_result_handler(self, xmlhttp, response):
         if xmlhttp.status >= 200 and xmlhttp.status <= 299:
@@ -207,10 +289,13 @@ class DashboardView(BCChrome):
 
     def createNew_ok(self, e, form_values):
         self.projects_loaded = False
-        data = {'name': form_values['txtProjectName'],
-                'type': form_values['selectProjectType'],
-                'public': True}
-        ajaxpost('/api/projects/', data, self.projects_api_ajax_post_result_handler)
+        if form_values['txtProjectName'] == '':
+            js.globals.window.alert('A project name is required')
+        else:
+            data = {'name': form_values['txtProjectName'],
+                    'type': form_values['selectProjectType'],
+                    'public': True}
+            ajaxpost('/api/projects/', data, self.projects_api_ajax_post_result_handler)
 
     def renameProj_ok(self, e, form_values):
         self.projects_loaded = False
@@ -231,14 +316,6 @@ class DashboardView(BCChrome):
 
 
 def dashboard_view():
-    dv = DashboardView([
-                      li({'class': 'nav-item li-create-new'}, [
-                        form({'action': '#'}, [
-                          ModalTrigger({'class': "btn btn-default navbar-btn crt-btn"}, "Create New", "#createNew"),
-                        ]),
-                      ]),
-                    ],
-                    None,
-                    None)
+    dv = DashboardView()
 
     return dv

@@ -1,5 +1,21 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals, print_function
+# BinaryCrate -  BinaryCrate an in browser python IDE. Design to make learning coding easy.
+# Copyright (C) 2018 BinaryCrate Pty Ltd
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from __future__ import absolute_import, print_function, unicode_literals
 
 from ..models import Project, Image
 from .serializers import (ProjectGetSerializer, ProjectPostSerializer,
@@ -9,7 +25,7 @@ from rest_framework import mixins
 from rest_framework import generics
 from rest_framework import permissions
 #from .permissions import IsOwner
-from project.models import DirectoryEntry
+from project.models import DirectoryEntry, Project
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
@@ -23,6 +39,7 @@ from .permissions import IsReadOnlyOrAuthenticated
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
+    #TODO: This class appears in multiple places remove or put in library
 
     def enforce_csrf(self, request):
         return  # To not perform the csrf check previously happening
@@ -69,6 +86,7 @@ class ProjectDetail(APIView):
         serializer = ProjectGetSerializer(project)
         return Response(serializer.data)
 
+    # test that project is html, return error code
     def delete(self, request,pk, format=None):
         project = self.get_object(pk)
         if project.owner != request.user:
@@ -103,30 +121,70 @@ class DirectoryEntryDetail(APIView):
         except DirectoryEntry.DoesNotExist:
             return DirectoryEntry(id=pk, is_file=True)
 
+    def de_exists(self, pk):
+        return (DirectoryEntry.objects.filter(pk=pk).count() == 1)
+
     def put(self, request, pk, format=None):
         de = self.get_or_create_object(pk)
-        #print('DirectoryEntryDetail de=', de)
+        # print('DirectoryEntryDetail de=', de)
         serializer = DirectoryEntrySerializer(de, data=request.data)
         if serializer.is_valid():
-            de = serializer.save()
-            de.content = request.data['content'] # TODO: Add some validation here
-            de.form_items = request.data['form_items'] # TODO: Add some validation here
-            if request.data['parent_id'] is None:
-                de.parent = None
+            parentid = request.data['parent_id']
+            parent_de = DirectoryEntry.objects.get(id=parentid)
+            html_projects = Project.objects.filter(type=1)
+            is_html = html_projects.filter(root_folder=parent_de.get_root()).count() == 1
+            #Existing HTML project files
+            if is_html and self.de_exists(pk):
+                old_de = DirectoryEntry.objects.get(pk=pk)
+                #If attempting to rename html file, fail immediately
+                if request.data['name'] != old_de.name:
+                    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                else:
+                    de = serializer.save()
+                    de.content = request.data['content']
+                    de.form_items = request.data['form_items']
+                    if request.data['parent_id'] is None:
+                        de.parent = None
+                    else:
+                        de.parent = DirectoryEntry.objects.get(id=request.data['parent_id'])
+                    de.save()
+                    # print('DirectoryEntryDetail de=', de)
+                    response_data = copy.copy(serializer.data)
+                    response_data['content'] = de.content
+                    response_data['form_items'] = de.form_items
+                return Response(response_data)
+            #HTML project files that do not exist
+            elif is_html and self.de_exists(pk) is False:
+                return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            #All Python project files
             else:
-                de.parent = DirectoryEntry.objects.get(id=request.data['parent_id'])
-            de.save()
-            #print('DirectoryEntryDetail de=', de)
-            response_data = copy.copy(serializer.validated_data)
-            response_data['content'] = de.content
-            response_data['form_items'] = de.form_items
-            return Response(response_data)
+                de = serializer.save()
+                de.content = request.data['content']  # TODO: Add some validation here
+                de.form_items = request.data['form_items']  # TODO: Add some validation here
+                de.form_properties = request.data['form_properties']  # TODO: Add some validation here
+                if request.data['parent_id'] is None:
+                    de.parent = None
+                else:
+                    de.parent = DirectoryEntry.objects.get(id=request.data['parent_id'])
+                de.save()
+                # print('DirectoryEntryDetail de=', de)
+                response_data = copy.copy(serializer.data)
+                response_data['content'] = de.content
+                response_data['form_items'] = de.form_items
+                return Response(response_data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
         de = self.get_object(pk)
-        de.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        de_root = de.get_root()
+        html_projects = Project.objects.filter(type=1)
+        is_html = html_projects.filter(root_folder=de_root).count() == 1
+        #Only allow deletion of python files
+        if is_html:
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        else:
+            de.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 class ImageUploadView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
@@ -192,4 +250,3 @@ class ImageListView(APIView):
             raise PermissionDenied()
         serializer = ImageGetSerializer(images, many=True)
         return Response(serializer.data)
-

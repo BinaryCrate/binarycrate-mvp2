@@ -1,5 +1,21 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals, print_function
+# BinaryCrate -  BinaryCrate an in browser python IDE. Design to make learning coding easy.
+# Copyright (C) 2018 BinaryCrate Pty Ltd
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from __future__ import absolute_import, print_function, unicode_literals
 from binarycrate import dashboard
 import cavorite_tests.fakejs as js
 from cavorite import callbacks, ajaxget, timeouts, Router
@@ -111,13 +127,78 @@ class TestDashboard(object):
 
         js.IterateElements(rendered_modal, setup_mock_modal_callback)
 
+        js.globals.cavorite_ajaxPost = Mock()
+
         result['createNew_OK_handler'](Mock())
 
         js.globals.cavorite_ajaxPost.assert_called_with('/api/projects/', str(dummy_uuid()), {'name':'Test 2', 'type':0, 'public':True })
 
-        node.projects_api_ajax_post_result_handler(Mock(status=200, responseText=json.dumps('OK')), 'OK')
+        project_id = str(uuid.uuid4())
 
-        js.globals.cavorite_ajaxGet.assert_called_with('/api/projects/', str(dummy_uuid()))
+        node.projects_api_ajax_post_result_handler(Mock(status=200,
+            responseText=json.dumps({'id': project_id})), {'id': project_id})
+
+        assert js.globals.document.location == '/#!editor/' + project_id
+
+
+    def test_calls_blank_project_name_alerts_correctly(self, monkeypatch):
+        def dummy_uuid():
+            return uuid.UUID('531cb169-91f4-4102-9a0a-2cd5e9659071')
+
+        monkeypatch.setattr(dashboard.cavorite, 'js', js)
+        monkeypatch.setattr(callbacks, 'js', js)
+        monkeypatch.setattr(ajaxget, 'js', js)
+        monkeypatch.setattr(ajaxget, 'get_uuid', dummy_uuid)
+        monkeypatch.setattr(timeouts, 'js', js)
+        monkeypatch.setattr(dashboard, 'js', js)
+        monkeypatch.setattr(dashboard.modals, 'js', js)
+        callbacks.initialise_global_callbacks()
+        ajaxget.initialise_ajaxget_callbacks()
+        timeouts.initialise_timeout_callbacks()
+
+        js.globals.cavorite_ajaxGet = Mock()
+        js.globals.cavorite_ajaxPost = Mock()
+        Router.router = Mock()
+
+        result = dict()
+
+        def mock_element_iterator_callback(vnode):
+            if hasattr(vnode, 'get_attribs') and vnode.get_attribs().get('id') == 'createNew':
+
+                def mock_element_iterator_callback2(vnode):
+                    if hasattr(vnode, 'get_tag_name'):
+                        if vnode.get_tag_name() == 'button' and vnode.get_attribs().get('class') == "btn btn-primary":
+                            result['createNew_OK_handler'] = vnode.get_attribs()['onclick']
+                        if vnode.get_tag_name() == 'input' and vnode.get_attribs().get('id') == "txtProjectName":
+                            node.value = 'Porject2'
+                        if vnode.get_tag_name() == 'select' and vnode.get_attribs().get('id') == "selectProjectType":
+                            node.value = 'Porject2'
+                IterateVirtualDOM(vnode, mock_element_iterator_callback2)
+
+        node = dashboard.dashboard_view()
+        node.mount_redraw = Mock()
+
+        virtual_node = node._build_virtual_dom()
+        IterateVirtualDOM(virtual_node, mock_element_iterator_callback)
+
+        # Call the modal handler
+        rendered_modal = node._render(None)
+        cavorite.bootstrap.modals.js.return_get_element_by_id = {'createNew': rendered_modal}
+
+        def setup_mock_modal_callback(node):
+            if isinstance(node, js.MockElement) and node.getAttribute('id') == 'txtProjectName':
+                node.value = ''
+            if isinstance(node, js.MockElement) and node.getAttribute('id') == 'selectProjectType':
+                node.value = 0
+
+        js.IterateElements(rendered_modal, setup_mock_modal_callback)
+
+        result['createNew_OK_handler'](Mock())
+
+        js.globals.cavorite_ajaxPost.assert_not_called()
+
+        js.globals.window.alert.assert_called_with('A project name is required')
+
 
     def test_calls_ajax_put_rename_correctly(self, monkeypatch):
         def dummy_uuid():
