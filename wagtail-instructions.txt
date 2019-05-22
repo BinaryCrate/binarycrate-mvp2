@@ -18,7 +18,7 @@ Click 'Blog Index page'
 Set the title to 'Labs'
 Leave intro empty
 Click on Publish (their is an arror button at the bottom of the page it is in that submenu)
-You will now be presented with a list of pages underneath 'Welcome to your new Wagtail site'
+You will now be presented with a list of pages underneath 'Landing Page'
 There is a + sign that pops up if you mouse over the Right Hand side 'Add a new child page'
 
 Click Blog page
@@ -39,5 +39,3 @@ Click Save once set
 
 http://0.0.0.0:8000/content/ is the landing page
 http://0.0.0.0:8000/labs is the labs page
-
-
