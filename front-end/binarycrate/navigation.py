@@ -26,11 +26,13 @@ import copy
 from .controls import CodeMirrorHandlerVNode
 import uuid
 from cavorite.bootstrap.modals import ModalTrigger, Modal
+from .utils import merge_dicts
 
 
-def navitem(title, icon_class, href, onclick=None):
+def navitem(title, icon_class, href, onclick=None, open_new_tab=False):
     return li({'class':"nav-item", 'data-toggle':"tooltip", 'data-placement':"right", 'title':title, 'onclick': onclick}, [
-             a({'class':"nav-link", 'href': href, 'style': {'min-height': '56px'}, 'onclick': onclick}, children=[
+             a(merge_dicts({'class':"nav-link", 'href': href, 'style': {'min-height': '56px'}, 'onclick': onclick},
+             {"target": "_blank"} if open_new_tab else {}), children=[
              #a({'class':"nav-link", 'style': {'min-height': '56px'}, 'onclick': onclick}, children=[
                i({'class': ["fa", "fa-fw"] + [icon_class], 'onclick': onclick}),
                span({'class':"nav-link-text", 'onclick': onclick}, title),
@@ -91,7 +93,7 @@ class BCChrome(div):
         return [
                  navitem('Dashboard', 'fa-dashboard', '#!'),
                  #navitem('Editor', 'fa-code', '#!editor'),
-                 #navitem('Classroom', 'fa-laptop', '#!classroom'),
+                 navitem('Labs', 'fa-laptop', '/labs', open_new_tab=True),
                  #navsubmenu('Settings', 'exampleAccordion', 'collapseComponents', [
                  #  navsubmenuitem('Navbar', '#!navbar'),
                  #  navsubmenuitem('Cards', '#!cards'),
