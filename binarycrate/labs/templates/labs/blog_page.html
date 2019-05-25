@@ -1,17 +1,77 @@
-{% extends "base.html" %}
+{% extends "labs/blog_base.html" %}
 
 {% load wagtailcore_tags %}
+{% load static %}
 
-{% block body_class %}template-blogpage{% endblock %}
+{% block body_class %}fixed-nav sticky-footer bg-dark{% endblock %}
+{% block body_id %}page-top{% endblock %}
+
+{% block extra_css %}
+<meta name="description" content="">
+<meta name="author" content="">
+{# Bootstrap core CSS #}
+<link href="{% static "bootstrap/css/bootstrap.min.css" %}" rel="stylesheet">
+{# Custom fonts for this template #}
+<link href="{% static "font-awesome/css/font-awesome.min.css" %}" rel="stylesheet" type="text/css">
+{# Custom styles for this template #}
+<link href="{% static "css/sb-admin.css" %}" type="text/css" rel="stylesheet">
+<link href="{% static "css/bc-custom.css" %}" type="text/css" rel="stylesheet">
+{% endblock %}
 
 {% block content %}
-    <h1>{{ page.title }}</h1>
-    <p class="meta">{{ page.date }}</p>
+<div class="content-wrapper">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Post Content Column -->
+            <div class="col-md-6 main-lab">
 
-    <div class="intro">{{ page.intro }}</div>
+                <!-- Title -->
+                <h3 class="lab-title">{{ page.title }}</h3>
 
-    {{ page.body|richtext }}
 
-    <p><a href="{{ page.get_parent.url }}">Return to blog</a></p>
+                {# Date/Time #}
+                {#<p>Author: <strong>John Doe</strong> | Version: <strong>1.2.3</strong> </p>#}
+                <p>Published: <strong>{{ page.date }}</strong></p>
 
+
+                <!-- Post Content -->
+                <div class="main-content lab-content">
+                  {{ page.body|richtext }}
+                </div>
+            </div>
+
+            {% comment %}
+            {# Commented out because we currently don't support multi-part labs #}
+            <div class="col-md-3 side-bar-labs-list">
+                <h5 class="">Labs</h5>
+                <hr>
+                <ul class="list-unstyled labs-list-sidebar">
+                    <li>Lab 1 :Maecenas eget commodo </li>
+                    <li>Lab 2 :Maecenas eget commodo </li>
+                    <li>Lab 3 :Maecenas eget commodo </li>
+                    <li>Lab 4 :Maecenas eget commodo </li>
+                    <li>Lab 5 :Maecenas eget commodo </li>
+
+                </ul>
+                </div>
+
+            </div>
+            {% endcomment %}
+
+
+            </div>
+            <!-- /.row -->
+    </div>
+    <!-- /.container-fluid-->
+    <!-- /.content-wrapper-->
+{% endblock %}
+
+{% block extra_js %}
+{# Bootstrap core JavaScript#}
+<script src="{% static "jquery/jquery.min.js" %}"></script>
+<script src="{% static "bootstrap/js/bootstrap.bundle.min.js" %}"></script>
+{# Core plugin JavaScript#}
+<script src="{% static "jquery-easing/jquery.easing.min.js" %}"></script>
+{# Custom scripts for all pages#}
+<script src="{% static "js/sb-admin.min.js" %}"></script>
 {% endblock %}
