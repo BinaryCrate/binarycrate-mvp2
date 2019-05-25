@@ -5,6 +5,11 @@ Install everything from the repo and start up a blank binary crate database as p
 Browse to 0.0.0.0:8000/cms and it will force me to login with wagtail's login page
 Login and go to the Dashboard page in wagtail
 
+We will set up the pages by first creating the landing page, then the blog index page under that
+then each blog (lab) page under that.
+
+Then we then set the Landing page to be the root page of the site.
+
 Click on Pages -> Welcome to your new Wagtail site
 Click Add Child Page
 Click Home Page
