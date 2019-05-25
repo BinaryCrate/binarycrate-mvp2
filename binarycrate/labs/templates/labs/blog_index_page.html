@@ -1,10 +1,157 @@
 {% extends "base.html" %}
 
 {% load wagtailcore_tags %}
+{% load static %}
 
 {% block body_class %}template-blogindexpage{% endblock %}
 
+{% block extra_css %}
+<meta name="description" content="">
+<meta name="author" content="">
+{# Bootstrap core CSS #}
+<link href="{% static "bootstrap/css/bootstrap.min.css" %}" rel="stylesheet">
+{# Custom fonts for this template #}
+<link href="{% static "font-awesome/css/font-awesome.min.css" %}" rel="stylesheet" type="text/css">
+{# Custom styles for this template #}
+<link href="{% static "css/sb-admin.css" %}" type="text/css" rel="stylesheet">
+<link href="{% static "css/bc-custom.css" %}" type="text/css" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
+
+<!-- Navigation-->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id="mainNav">
+    <a class="nav-link" id="sidenavToggler" style="padding: 0px 10px 0px 0px; color:white;">
+  <i class="fa fa-fw fa-bars"></i>
+</a>
+    <a class="navbar-brand" href="index.html">Binary Crate</a>
+    <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+  <span class="navbar-toggler-icon"></span>
+</button>
+    <div class="collapse navbar-collapse" id="navbarResponsive">
+        <ul class="navbar-nav navbar-sidenav" id="exampleAccordion">
+            <li class="nav-item" data-toggle="tooltip" data-placement="right" title="Dashboard">
+                <a class="nav-link" href="index.html">
+        <i class="fa fa-fw fa-dashboard"></i>
+        <span class="nav-link-text">Dashboard</span>
+      </a>
+            </li>
+            <li class="nav-item" data-toggle="tooltip" data-placement="right" title="Editor">
+                <a class="nav-link" href="editor.html">
+        <i class="fa fa-fw fa-code"></i>
+        <span class="nav-link-text">Editor</span>
+      </a>
+            </li>
+            <li class="nav-item" data-toggle="tooltip" data-placement="right" title="Tables">
+                <a class="nav-link" href="classroom.html">
+        <i class="fa fa-fw fa-laptop"></i>
+        <span class="nav-link-text">Classroom</span>
+      </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="settings.html">
+        <i class="fa fa-fw fa-wrench"></i>
+        <span class="nav-link-text">Settings</span>
+      </a>
+            </li>
+        </ul>
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <form action="#">
+                    <a class="btn btn-default navbar-btn crt-btn" href="#" data-toggle="modal" data-target="#createNew">Create New</a>
+                </form>
+            </li>
+        </ul>
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="modal" data-target="#exampleModal">
+        <i class="fa fa-fw fa-sign-out"></i>Logout</a>
+            </li>
+
+        </ul>
+    </div>
+</nav>
+<div class="content-wrapper">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-10">
+                <!-- Lab Filters -->
+                <nav class="nav nav-pills labs-filter nav-justified">
+                    <a class="nav-item nav-link labs-active-filter" href="#">All</a>
+                    <a class="nav-item nav-link labs-filter-item" href="#">Python</a>
+                    <a class="nav-item nav-link labs-filter-item" href="#">HTML/CSS</a>
+                    <a class="nav-item nav-link labs-filter-item" href="#">CSS</a>
+                    <a class="nav-item nav-link labs-filter-item" href="#">JavaScript</a>
+                </nav><!-- End -->
+
+            </div>
+
+            {% for post in page.get_children %}
+            <div class="card" style="width:430px">
+                <img class="card-img-top" src="img/labs_bg.png" alt="Card image">
+                <div class="card-body tb-grid">
+                    <h4 class="card-title a">{{ post.title }}</h4>
+                    <p class="card-text e">{{ post.specific.intro }}</p>
+                    <div class="b">
+                    <img src="img/icons/clock-1315.svg"
+    class="labs-time">
+                    <strong class="bc-stats">1 hours/strong>
+                    </div>
+                    <div class="c">
+                    <img src="img/icons/container-1312.svg"
+    class="labs-no">
+                    <strong class="bc-stats">1 lab</strong>
+                    </div>
+                    <div class="d">
+                        <a href="#" class="btn lab-btn">Start</a>
+                    </div>
+                </div>
+            </div><!-- End-->
+            {% comment %}
+                <h2><a href="{% pageurl post %}">{{ post.title }}</a></h2>
+                {{ post.specific.intro }}
+                {{ post.specific.body|richtext }}
+            {% endcomment %}
+            {% endfor %}
+
+          </div>
+      </div>
+      <!-- /.container-fluid-->
+      <!-- /.content-wrapper-->
+      <footer class="sticky-footer">
+          <div class="container-fluid">
+              <div class="text-center">
+                  <small>Copyright © Binary Crate 2019</small>
+              </div>
+          </div>
+      </footer>
+      <!-- Scroll to Top Button-->
+      <a class="scroll-to-top rounded" href="#page-top">
+    <i class="fa fa-angle-up"></i>
+  </a>
+
+{% endblock %}
+
+{% block extra_js %}
+{# Bootstrap core JavaScript#}
+<script src="jquery/jquery.min.js"></script>
+<script src="bootstrap/js/bootstrap.bundle.min.js"></script>
+{# Core plugin JavaScript#}
+<script src="jquery-easing/jquery.easing.min.js"></script>
+{# Custom scripts for all pages#}
+<script src="js/sb-admin.min.js"></script>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+{% comment %}
     <h1>{{ page.title }}</h1>
 
     <div class="intro">{{ page.intro|richtext }}</div>
@@ -16,3 +163,4 @@
     {% endfor %}
 
 {% endblock %}
+{% endcomment %}

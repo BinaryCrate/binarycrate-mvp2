@@ -19,7 +19,10 @@
             {% endblock %}
         </title>
         <meta name="description" content="" />
+        {% block viewport %}
+        {# Override this in templates to change the viewport settings #}
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {% endblock %}
 
         {# Global stylesheets #}
         <link rel="stylesheet" type="text/css" href="{% static 'css/mysite.css' %}">
@@ -29,7 +32,7 @@
         {% endblock %}
     </head>
 
-    <body class="{% block body_class %}{% endblock %}">
+    <body class="{% block body_class %}{% endblock %}" id="{% block body_id %}{% endblock %}">
         {% wagtailuserbar %}
 
         {% block content %}{% endblock %}
