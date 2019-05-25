@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "labs/blog_base.html" %}
 
 {% load wagtailcore_tags %}
 {% load static %}
@@ -19,63 +19,6 @@
 {% endblock %}
 
 {% block content %}
-
-<!-- Navigation-->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id="mainNav">
-    <a class="nav-link" id="sidenavToggler" style="padding: 0px 10px 0px 0px; color:white;">
-  <i class="fa fa-fw fa-bars"></i>
-</a>
-    <a class="navbar-brand" href="/">Binary Crate</a>
-    <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-  <span class="navbar-toggler-icon"></span>
-</button>
-    <div class="collapse navbar-collapse" id="navbarResponsive">
-        <ul class="navbar-nav navbar-sidenav" id="exampleAccordion">
-            <li class="nav-item" data-toggle="tooltip" data-placement="right" title="Dashboard">
-                <a class="nav-link" href="/">
-        <i class="fa fa-fw fa-dashboard"></i>
-        <span class="nav-link-text">Dashboard</span>
-      </a>
-            </li>
-            {% comment %}
-            <li class="nav-item" data-toggle="tooltip" data-placement="right" title="Editor">
-                <a class="nav-link" href="editor.html">
-        <i class="fa fa-fw fa-code"></i>
-        <span class="nav-link-text">Editor</span>
-      </a>
-            </li>
-            <li class="nav-item" data-toggle="tooltip" data-placement="right" title="Tables">
-                <a class="nav-link" href="classroom.html">
-        <i class="fa fa-fw fa-laptop"></i>
-        <span class="nav-link-text">Classroom</span>
-      </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="settings.html">
-        <i class="fa fa-fw fa-wrench"></i>
-        <span class="nav-link-text">Settings</span>
-      </a>
-            </li>
-            {% endcomment %}
-        </ul>
-        {% comment %}
-        <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-                <form action="#">
-                    <a class="btn btn-default navbar-btn crt-btn" href="#" data-toggle="modal" data-target="#createNew">Create New</a>
-                </form>
-            </li>
-        </ul>
-        <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-                <a class="nav-link" data-toggle="modal" data-target="#exampleModal">
-        <i class="fa fa-fw fa-sign-out"></i>Logout</a>
-            </li>
-
-        </ul>
-        {% endcomment %}
-    </div>
-</nav>
 <div class="content-wrapper">
     <div class="labs-container-fluid">
         <div class="row">
@@ -118,22 +61,6 @@
 
           </div>
       </div>
-      <!-- /.labs-container-fluid-->
-      <!-- /.content-wrapper-->
-      {% comment %}
-      <footer class="sticky-footer">
-          <div class="labs-container-fluid">
-              <div class="text-center">
-                  <small>Copyright © Binary Crate 2019</small>
-              </div>
-          </div>
-      </footer>
-      {% endcomment %}
-      <!-- Scroll to Top Button-->
-      <a class="scroll-to-top rounded" href="#page-top">
-    <i class="fa fa-angle-up"></i>
-  </a>
-
 {% endblock %}
 
 {% block extra_js %}
