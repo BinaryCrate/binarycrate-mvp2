@@ -1053,8 +1053,15 @@ __________________________________________________________________*/
 }
 
 .lab-content h3 {
-  /*background-color: green;*/
   font-size: 30px;
+
+}
+
+.lab-content h4 {
+  /*font-size: 30px;*/
+  font-family: Courier, Monaco, monospace;
+  background-color: lightgray;
+  padding: 5px;
 
 }
 
