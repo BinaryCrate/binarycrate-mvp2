@@ -1,18 +1,74 @@
-{% extends "base.html" %}
+{% extends "labs/blog_base.html" %}
 
 {% load wagtailcore_tags %}
+{% load static %}
 
-{% block body_class %}template-blogindexpage{% endblock %}
+{% block body_class %}fixed-nav sticky-footer bg-dark{% endblock %}
+{% block body_id %}page-top{% endblock %}
+
+{% block extra_css %}
+<meta name="description" content="">
+<meta name="author" content="">
+{# Bootstrap core CSS #}
+<link href="{% static "bootstrap/css/bootstrap.min.css" %}" rel="stylesheet">
+{# Custom fonts for this template #}
+<link href="{% static "font-awesome/css/font-awesome.min.css" %}" rel="stylesheet" type="text/css">
+{# Custom styles for this template #}
+<link href="{% static "css/sb-admin.css" %}" type="text/css" rel="stylesheet">
+<link href="{% static "css/bc-custom.css" %}" type="text/css" rel="stylesheet">
+{% endblock %}
 
 {% block content %}
-    <h1>{{ page.title }}</h1>
+<div class="content-wrapper">
+    <div class="labs-container-fluid">
+        <div class="row">
+            <div class="col-md-10">
+                <!-- Lab Filters -->
+                <nav class="nav nav-pills labs-filter nav-justified">
+                    <a class="nav-item nav-link labs-active-filter" href="#">All</a>
+                    <a class="nav-item nav-link labs-filter-item" href="#">Python</a>
+                    {% comment %}
+                    <a class="nav-item nav-link labs-filter-item" href="#">HTML/CSS</a>
+                    <a class="nav-item nav-link labs-filter-item" href="#">CSS</a>
+                    <a class="nav-item nav-link labs-filter-item" href="#">JavaScript</a>
+                    {% endcomment %}
+                </nav><!-- End -->
 
-    <div class="intro">{{ page.intro|richtext }}</div>
+            </div>
 
-    {% for post in page.get_children %}
-        <h2><a href="{% pageurl post %}">{{ post.title }}</a></h2>
-        {{ post.specific.intro }}
-        {{ post.specific.body|richtext }}
-    {% endfor %}
+            {% for post in page.get_children %}
+            <div class="card" style="width:430px">
+                <img class="card-img-top" src="{% static "img/labs_bg.png" %}" alt="Card image">
+                <div class="card-body tb-grid">
+                    <h4 class="card-title a">{{ post.title }}</h4>
+                    <p class="card-text e">{{ post.specific.intro }}</p>
+                    <div class="b">
+                    <img src="{% static "img/icons/clock-1315.svg" %}"
+    class="labs-time">
+                    <strong class="bc-stats">{{ post.specific.length}} hours</strong>
+                    </div>
+                    <div class="c">
+                    <img src="{% static "img/icons/container-1312.svg" %}"
+    class="labs-no">
+                    <strong class="bc-stats">1 lab</strong>
+                    </div>
+                    <div class="d">
+                        <a href="{% pageurl post %}" class="btn lab-btn">Start</a>
+                    </div>
+                </div>
+            </div><!-- End-->
+            {% endfor %}
 
+          </div>
+      </div>
+{% endblock %}
+
+{% block extra_js %}
+{# Bootstrap core JavaScript#}
+<script src="{% static "jquery/jquery.min.js" %}"></script>
+<script src="{% static "bootstrap/js/bootstrap.bundle.min.js" %}"></script>
+{# Core plugin JavaScript#}
+<script src="{% static "jquery-easing/jquery.easing.min.js" %}"></script>
+{# Custom scripts for all pages#}
+<script src="{% static "js/sb-admin.min.js" %}"></script>
 {% endblock %}

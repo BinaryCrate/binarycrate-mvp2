@@ -55,6 +55,7 @@ from .formpropertiesmodal import FormPropertiesModal
 from .formitempropertiesmodal import FormItemPropertiesModal
 from binarycrate.enums import Redraw
 from munch import *
+from .utils import merge_dicts
 
 
 HANDLE_NONE = 0
@@ -75,13 +76,6 @@ project = {}
 original_modules = set()
 
 project_files = [] #All the project files we have written to the virtual file system
-
-
-def merge_dicts(*args):
-    ret = copy.copy(args[0])
-    for d in args[1:]:
-        ret.update(d)
-    return ret
 
 
 class BCProjectTree(ol):
@@ -649,6 +643,7 @@ class EditorView(BCChrome):
         else:
             return [
                      navitem('Dashboard', 'fa-dashboard', '#!', onclick=dashboad_click_handler),
+                     navitem('Labs', 'fa-laptop', '/labs', open_new_tab=True),
                    ]
             #return super(EditorView, self).get_sidebar_nav_items()
 

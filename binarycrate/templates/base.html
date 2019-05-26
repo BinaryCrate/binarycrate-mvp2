@@ -19,23 +19,26 @@
             {% endblock %}
         </title>
         <meta name="description" content="" />
+        {% block viewport %}
+        {# Override this in templates to change the viewport settings #}
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {% endblock %}
 
         {# Global stylesheets #}
-        <link rel="stylesheet" type="text/css" href="{% static 'css/mysite.css' %}">
+        {#<link rel="stylesheet" type="text/css" href="{% static 'css/mysite.css' %}">#}
 
         {% block extra_css %}
             {# Override this in templates to add extra stylesheets #}
         {% endblock %}
     </head>
 
-    <body class="{% block body_class %}{% endblock %}">
-        {% wagtailuserbar %}
+    <body class="{% block body_class %}{% endblock %}" id="{% block body_id %}{% endblock %}">
+        {#{% wagtailuserbar %}#}
 
         {% block content %}{% endblock %}
 
         {# Global javascript #}
-        <script type="text/javascript" src="{% static 'js/mysite.js' %}"></script>
+        {#<script type="text/javascript" src="{% static 'js/mysite.js' %}"></script>#}
 
         {% block extra_js %}
             {# Override this in templates to add extra javascript #}

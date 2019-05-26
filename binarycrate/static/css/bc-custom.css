@@ -21,6 +21,13 @@ Date Last Updated:
   margin: 0px;
 }
 
+.labs-container-fluid {
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
 
 .share-wrapper{
   height: 100%;
@@ -873,4 +880,196 @@ a.social-media-login-link {
   padding: 240px;
   width: 100%;
   height: 100%;
+}
+
+/* CMS Styles
+____________________________________________________________________________ */
+
+.card{
+    margin-top: 40px;
+    margin-left: 50px;
+    box-shadow: 5px 5px 22px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  .card-img-top{
+    width: 430px;
+    height: 145.2px;
+    background-color: #272d34;
+  }
+
+  .card-title{
+    padding: 0px;
+    margin: 0px;
+  }
+
+  .card-body{
+    margin:0px;
+
+  }
+
+  .card-text{
+    width: 246px;
+    height: 80px;
+    font-size: 14px;
+    font-weight: normal;
+    font-style: normal;
+    font-stretch: normal;
+    line-height: normal;
+    letter-spacing: normal;
+    color: #3f4a58;
+    color: var(--gunmetal-four);
+    padding-top: 19px;
+  }
+
+  .btn{
+    float: right;
+  }
+
+
+  .tb-grid{
+    display: grid;
+    grid-gap:10px;
+    grid-template-columns: 1fr 120px;
+
+  }
+
+  .a {
+    grid-column: 1;
+    grid-row: 1;
+    place-self: center stretch;
+  }
+  .b {
+    grid-column: 2 ;
+    grid-row:  1;
+    place-self: center;
+    justify-self: end;
+  }
+  .c {
+    grid-column:  2;
+    grid-row:  2;
+    place-self: start center;
+    justify-self: end;
+  }
+  .d {
+    grid-column: 2;
+    grid-row: 3;
+    place-self: center stretch;
+  }
+
+  .e{
+    grid-column:1 ;
+    grid-row: 2/3;
+    place-self: center stretch;
+  }
+
+.labs-stats{
+  display:inline;
+  font-size: 12px;
+}
+
+.labs-time .labs-no {
+  width: 14px;
+  height: 20px;
+  object-fit: contain;
+  background-color: #000000;
+}
+
+.lab-btn{
+  width: 100px;
+  border-radius: 10px;
+  box-shadow: 2px 2px 5px 0 rgba(0, 0, 0, 0.25);
+  background-color: #ffffff;
+  border: solid 1px #50e3c2;
+  color: #000;
+  text-align: center;
+  font-size: 14px;
+  font-weight:bold;
+
+}
+
+.labs-filter{
+font-size: 18px;
+text-align: center;
+color: #ffffff;
+margin-left: 40px;
+display: grid;
+grid-gap:20px;
+grid-template-columns: 140px 140px 140px 140px 140px;
+}
+
+
+.labs_nav_pill{
+border-radius: 15px;
+background-color: rgba(186, 186, 186, 0.75);
+}
+
+.labs-active-filter{
+  background-color: rgba(255, 255, 255, 0.75);
+  border: solid 1px #bababa;
+  border-radius: 1px;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  color: #bababa;
+
+}
+
+.labs-filter-item{
+  font-size: 14px;
+  font-weight:bold;
+  color: #fff;
+  text-align: center;
+  border-radius: 15px;
+  background-color: rgba(186, 186, 186, 0.75);
+
+}
+
+/* Content section
+__________________________________________________________________*/
+
+.main-lab{
+   margin-left: 120px;
+   margin-top: 63px;
+}
+.lab-title{
+    font-size: 42px;
+}
+.main-content{
+    margin-top:22px;
+}
+
+.main-content p{
+    font-size: 14px;
+    font-weight: normal;
+    font-style: normal;
+    font-stretch: normal;
+    line-height: 25px;
+    letter-spacing: normal;
+    color: #000000;
+}
+
+.lab-sub-title{
+    font-size: 30px;
+}
+
+.lab-content h3 {
+  font-size: 30px;
+
+}
+
+.lab-content h4 {
+  /*font-size: 30px;*/
+  font-family: Courier, Monaco, monospace;
+  background-color: lightgray;
+  padding: 5px;
+
+}
+
+.side-bar-labs-list{
+    margin-top: 170px;
+}
+
+.labs-list-sidebar li{
+    margin-top: 5px;
+    margin-bottom: 5px;
 }

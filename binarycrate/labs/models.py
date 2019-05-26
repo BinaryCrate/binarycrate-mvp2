@@ -38,6 +38,7 @@ class BlogPage(Page):
     date = models.DateField("Post date")
     intro = models.CharField(max_length=250)
     body = RichTextField(blank=True)
+    length = models.IntegerField(help_text="How long the lab will take to complete, in hours", default=0)
 
     search_fields = Page.search_fields + [
         index.SearchField('intro'),
@@ -47,5 +48,6 @@ class BlogPage(Page):
     content_panels = Page.content_panels + [
         FieldPanel('date'),
         FieldPanel('intro'),
+        FieldPanel('length'),
         FieldPanel('body', classname="full"),
     ]
