@@ -27,7 +27,7 @@ Ensure your local copy of master is up to date with the server
 git pull
 ```
 
-Now the are on the master branch. First we want to update from the develop branch.
+Now we are on the master branch. First we want to update from the develop branch.
 
 ```
 git merge develop --no-ff
