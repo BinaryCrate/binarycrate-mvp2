@@ -1,5 +1,5 @@
 backports.tempfile==1.0
-django==1.11.20
+django==1.11.22
 django-allauth==0.38.0
 django-mptt==0.9.1
 djangorestframework==3.6.4
